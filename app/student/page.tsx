@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function StudentPage() {
   const router = useRouter();
+
   const [name, setName] = useState("Student");
   const [loading, setLoading] = useState(true);
 
@@ -69,9 +70,7 @@ export default function StudentPage() {
           MPSC / UPSC
         </div>
 
-        <h1>
-          Student Dashboard
-        </h1>
+        <h1>Student Dashboard</h1>
 
         <p className="muted">
           Welcome, {name}. Your account has been approved.
@@ -79,37 +78,54 @@ export default function StudentPage() {
 
         <div className="dashboard-grid">
 
-          <div className="dashboard-item">
+          <button
+            type="button"
+            className="dashboard-item"
+            onClick={() => router.push("/subjects")}
+          >
             <strong>📚 Subjects</strong>
             <span>
               Study MPSC/UPSC subjects
             </span>
-          </div>
+          </button>
 
-          <div className="dashboard-item">
+          <button
+            type="button"
+            className="dashboard-item"
+            onClick={() => router.push("/tests")}
+          >
             <strong>📝 Tests</strong>
             <span>
               Practice objective and descriptive tests
             </span>
-          </div>
+          </button>
 
-          <div className="dashboard-item">
+          <button
+            type="button"
+            className="dashboard-item"
+            onClick={() => router.push("/answer-papers")}
+          >
             <strong>📄 Answer Papers</strong>
             <span>
               Upload descriptive answer sheets
             </span>
-          </div>
+          </button>
 
-          <div className="dashboard-item">
+          <button
+            type="button"
+            className="dashboard-item"
+            onClick={() => router.push("/ai-evaluation")}
+          >
             <strong>🤖 AI Evaluation</strong>
             <span>
               Get marks and detailed feedback
             </span>
-          </div>
+          </button>
 
         </div>
 
         <button
+          type="button"
           className="primary"
           onClick={logout}
         >
