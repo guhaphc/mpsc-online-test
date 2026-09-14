@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const DEFAULT_MODEL = "gpt-5.4-mini";
+// Gemini 2.5 Flash supports JSON schemas and is available on the Gemini API free tier.
+const DEFAULT_MODEL = "gemini-2.5-flash";
 const GENERATION_UNAVAILABLE = "Question generation is temporarily unavailable. Please try again in a few minutes.";
 
 type RequestBody = { stage: string; paper: string; subject: string; topic?: string; count: number; difficulty: string; language: string; instructions?: string; referenceText?: string; marks: number; singleQuestion?: boolean };
-type OpenAIResponse = { output_text?: string; status?: string; incomplete_details?: { reason?: string }; output?: Array<{ content?: Array<{ type?: string; text?: string }> }> };
-type OpenAIErrorResponse = { error?: { type?: string; code?: string } };
+type GeminiResponse = {
+  candidates?: Array<{
+    finishReason?: string;
+    content?: { parts?: Array<{ text?: string }> };
+  }>;
+};
+type GeminiErrorResponse = { error?: { code?: number; status?: string } };
 
 const questionSchema = {
   type: "object",
@@ -48,15 +54,14 @@ async function requireAdmin(request: NextRequest) {
   return data[0]?.role === "admin" && data[0]?.access_status === "approved";
 }
 
-function outputText(data: OpenAIResponse) {
-  if (data.output_text) return data.output_text;
-  return data.output?.flatMap((item) => item.content ?? []).find((content) => content.type === "output_text")?.text;
+function responseText(data: GeminiResponse) {
+  return data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("");
 }
 
-function openAIDiagnostics(response: Response, providerError?: OpenAIErrorResponse) {
+function geminiDiagnostics(response: Response, providerError?: GeminiErrorResponse) {
   return {
     status: response.status,
-    errorType: providerError?.error?.type ?? null,
+    errorStatus: providerError?.error?.status ?? null,
     errorCode: providerError?.error?.code ?? null,
     providerRequestId: response.headers.get("x-request-id"),
   };
@@ -67,9 +72,9 @@ export async function POST(request: NextRequest) {
 
   if (!(await requireAdmin(request))) return NextResponse.json({ error: "Admin authorization is required." }, { status: 403 });
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.error("AI mock-test generation is not configured", { requestId, hasOpenAIKey: false });
+    console.error("Gemini mock-test generation is not configured", { requestId, hasGeminiKey: false });
     return NextResponse.json({ error: "Question generation is not configured. Contact an administrator." }, { status: 503 });
   }
 
@@ -89,62 +94,57 @@ export async function POST(request: NextRequest) {
 
   let response: Response;
   try {
-    response = await fetch("https://api.openai.com/v1/responses", {
+    const model = process.env.GEMINI_MOCK_TEST_MODEL || DEFAULT_MODEL;
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        model: process.env.OPENAI_MOCK_TEST_MODEL || DEFAULT_MODEL,
-        store: false,
-        // A structured MCQ and explanation commonly needs more than the API's
-        // small default output budget, even for the smallest ten-question test.
-        max_output_tokens: Math.min(questionCount * 500, 75_000),
-        input: [
-          { role: "developer", content: "You generate reliable examination questions. Follow the supplied JSON schema exactly." },
-          { role: "user", content: prompt },
-        ],
-        text: { format: { type: "json_schema", name: "mock_test_questions", strict: true, schema: questionSchema } },
+        systemInstruction: { parts: [{ text: "You generate reliable examination questions. Follow the supplied JSON schema exactly." }] },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseJsonSchema: questionSchema,
+          maxOutputTokens: Math.min(questionCount * 500, 65_536),
+        },
       }),
     });
   } catch (error) {
-    console.error("OpenAI mock-test request failed before receiving a response", {
+    console.error("Gemini mock-test request failed before receiving a response", {
       requestId,
-      status: null,
       errorType: error instanceof Error ? error.name : "unknown",
-      errorCode: null,
-      providerRequestId: null,
     });
     return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
   }
 
   if (!response.ok) {
-    const providerError = await response.json().catch(() => null) as OpenAIErrorResponse | null;
-    console.error("OpenAI mock-test request was rejected", {
+    const providerError = await response.json().catch(() => null) as GeminiErrorResponse | null;
+    console.error("Gemini mock-test request was rejected", {
       requestId,
-      ...openAIDiagnostics(response, providerError ?? undefined),
+      ...geminiDiagnostics(response, providerError ?? undefined),
     });
     return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
   }
 
   try {
-    const data = await response.json() as OpenAIResponse;
-    const text = outputText(data);
-    if (data.status === "incomplete") {
-      console.error("OpenAI mock-test response was incomplete", {
+    const data = await response.json() as GeminiResponse;
+    const text = responseText(data);
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (!text || (finishReason && finishReason !== "STOP")) {
+      console.error("Gemini mock-test response was incomplete", {
         requestId,
-        ...openAIDiagnostics(response),
-        incompleteReason: data.incomplete_details?.reason ?? null,
+        ...geminiDiagnostics(response),
+        finishReason: finishReason ?? null,
       });
       return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
     }
-    const parsed = JSON.parse(text || "{}") as { questions?: unknown[] };
-    if (!Array.isArray(parsed.questions)) throw new Error("OpenAI response did not include a questions array.");
+    const parsed = JSON.parse(text) as { questions?: unknown[] };
+    if (!Array.isArray(parsed.questions) || parsed.questions.length !== questionCount) throw new Error("Gemini response did not include the requested questions array.");
     return NextResponse.json({ questions: parsed.questions });
   } catch (error) {
-    console.error("OpenAI mock-test response could not be parsed", {
+    console.error("Gemini mock-test response could not be parsed", {
       requestId,
-      ...openAIDiagnostics(response),
+      ...geminiDiagnostics(response),
       errorType: error instanceof Error ? error.name : "unknown",
-      errorCode: null,
     });
     return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 502 });
   }
