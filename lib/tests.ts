@@ -20,6 +20,8 @@ export type Question = {
   option_d: string;
   correct_option: string;
   marks: number;
+  explanation?: string | null;
+  sort_order?: number;
 };
 
 export type SyllabusItem = {

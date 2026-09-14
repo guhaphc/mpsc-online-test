@@ -140,6 +140,16 @@ export default function AdminPage() {
           </button>
         </div>
 
+        <div className="admin-tools">
+          <div>
+            <strong>Test management</strong>
+            <span>Create, publish, and maintain practice tests.</span>
+          </div>
+          <button type="button" className="secondary" onClick={() => router.push("/admin/tests")}>
+            Manage Tests
+          </button>
+        </div>
+
         {error && (
           <p className="form-error">
             {error}
