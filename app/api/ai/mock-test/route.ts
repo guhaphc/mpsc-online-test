@@ -2,7 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+const DEFAULT_MODEL = "gpt-5.4-mini";
+const GENERATION_UNAVAILABLE = "Question generation is temporarily unavailable. Please try again in a few minutes.";
+
 type RequestBody = { stage: string; paper: string; subject: string; topic?: string; count: number; difficulty: string; language: string; instructions?: string; referenceText?: string; marks: number; singleQuestion?: boolean };
+type OpenAIResponse = { output_text?: string; output?: Array<{ content?: Array<{ type?: string; text?: string }> }> };
+
+const questionSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["questions"],
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["question_text", "option_a", "option_b", "option_c", "option_d", "correct_answer", "explanation"],
+        properties: {
+          question_text: { type: "string" },
+          option_a: { type: "string" },
+          option_b: { type: "string" },
+          option_c: { type: "string" },
+          option_d: { type: "string" },
+          correct_answer: { type: "string", enum: ["A", "B", "C", "D"] },
+          explanation: { type: "string" },
+        },
+      },
+    },
+  },
+} as const;
 
 async function requireAdmin(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,20 +47,78 @@ async function requireAdmin(request: NextRequest) {
   return data[0]?.role === "admin" && data[0]?.access_status === "approved";
 }
 
+function outputText(data: OpenAIResponse) {
+  if (data.output_text) return data.output_text;
+  return data.output?.flatMap((item) => item.content ?? []).find((content) => content.type === "output_text")?.text;
+}
+
 export async function POST(request: NextRequest) {
+  const requestId = crypto.randomUUID();
+
   if (!(await requireAdmin(request))) return NextResponse.json({ error: "Admin authorization is required." }, { status: 403 });
+
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "AI generation is not configured. Set OPENAI_API_KEY on the server; no key is exposed to the browser." }, { status: 503 });
-  const body = await request.json() as RequestBody;
+  if (!apiKey) {
+    console.error("AI mock-test generation is not configured", { requestId, hasOpenAIKey: false });
+    return NextResponse.json({ error: "Question generation is not configured. Contact an administrator." }, { status: 503 });
+  }
+
+  let body: RequestBody;
+  try {
+    body = await request.json() as RequestBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid mock-test request." }, { status: 400 });
+  }
+
   if (!body.stage || !body.paper || !body.subject || ![10, 25, 50, 100, 150].includes(body.count) || !Number.isFinite(body.marks) || body.marks <= 0) return NextResponse.json({ error: "Invalid mock-test request." }, { status: 400 });
+
   const reference = body.referenceText?.trim();
   const sourceRule = reference ? `REFERENCE DOCUMENT (primary source; preserve terminology and do not contradict it):\n${reference.slice(0, 60000)}\nIf it is insufficient, use broader established syllabus knowledge and say so in the explanation where material is broader.` : "No reference was supplied; use established MPSC/UPSC-style knowledge only.";
-  const prompt = `Create ${body.singleQuestion ? 1 : body.count} high-quality competitive-exam MCQs. Scope is strictly Stage: ${body.stage}; Paper: ${body.paper}; Subject: ${body.subject}; Topic: ${body.topic || "entire subject"}. Difficulty: ${body.difficulty}. Write in ${body.language}. ${sourceRule}\n${body.instructions ? `Additional instructions: ${body.instructions}` : ""}\nReturn ONLY a JSON object {"questions":[...]}. Each question must have question_text, option_a, option_b, option_c, option_d, correct_answer (A/B/C/D), explanation. Exactly four non-empty options and exactly one unambiguous correct answer. Avoid duplicates, unsupported claims, and material outside scope. Include a concise explanation.`;
-  const response = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` }, body: JSON.stringify({ model: process.env.OPENAI_MOCK_TEST_MODEL || "gpt-4o-mini", temperature: 0.35, response_format: { type: "json_object" }, messages: [{ role: "system", content: "You generate reliable examination questions as strict JSON." }, { role: "user", content: prompt }] }) });
-  if (!response.ok) return NextResponse.json({ error: "The AI provider could not generate this draft. Please try again." }, { status: 502 });
+  const questionCount = body.singleQuestion ? 1 : body.count;
+  const prompt = `Create ${questionCount} high-quality competitive-exam MCQs. Scope is strictly Stage: ${body.stage}; Paper: ${body.paper}; Subject: ${body.subject}; Topic: ${body.topic || "entire subject"}. Difficulty: ${body.difficulty}. Write in ${body.language}. ${sourceRule}\n${body.instructions ? `Additional instructions: ${body.instructions}` : ""}\nReturn exactly ${questionCount} questions. Each question must have question_text, option_a, option_b, option_c, option_d, correct_answer (A/B/C/D), explanation. Exactly four non-empty options and exactly one unambiguous correct answer. Avoid duplicates, unsupported claims, and material outside scope. Include a concise explanation.`;
+
+  let response: Response;
   try {
-    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const parsed = JSON.parse(data.choices?.[0]?.message?.content || "{}") as { questions?: unknown[] };
-    return NextResponse.json({ questions: parsed.questions ?? [] });
-  } catch { return NextResponse.json({ error: "The AI provider returned an unreadable response." }, { status: 502 }); }
+    response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: process.env.OPENAI_MOCK_TEST_MODEL || DEFAULT_MODEL,
+        store: false,
+        input: [
+          { role: "developer", content: "You generate reliable examination questions. Follow the supplied JSON schema exactly." },
+          { role: "user", content: prompt },
+        ],
+        text: { format: { type: "json_schema", name: "mock_test_questions", strict: true, schema: questionSchema } },
+      }),
+    });
+  } catch (error) {
+    console.error("OpenAI mock-test request failed", { requestId, error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
+  }
+
+  if (!response.ok) {
+    const providerRequestId = response.headers.get("x-request-id");
+    const providerError = await response.json().catch(() => null) as { error?: { type?: string; code?: string; message?: string } } | null;
+    console.error("OpenAI mock-test request was rejected", {
+      requestId,
+      status: response.status,
+      providerRequestId,
+      errorType: providerError?.error?.type,
+      errorCode: providerError?.error?.code,
+      errorMessage: providerError?.error?.message,
+    });
+    return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
+  }
+
+  try {
+    const data = await response.json() as OpenAIResponse;
+    const text = outputText(data);
+    const parsed = JSON.parse(text || "{}") as { questions?: unknown[] };
+    if (!Array.isArray(parsed.questions)) throw new Error("OpenAI response did not include a questions array.");
+    return NextResponse.json({ questions: parsed.questions });
+  } catch (error) {
+    console.error("OpenAI mock-test response could not be parsed", { requestId, error: error instanceof Error ? error.message : String(error) });
+    return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 502 });
+  }
 }
