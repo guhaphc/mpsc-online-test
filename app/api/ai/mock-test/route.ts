@@ -6,7 +6,8 @@ const DEFAULT_MODEL = "gpt-5.4-mini";
 const GENERATION_UNAVAILABLE = "Question generation is temporarily unavailable. Please try again in a few minutes.";
 
 type RequestBody = { stage: string; paper: string; subject: string; topic?: string; count: number; difficulty: string; language: string; instructions?: string; referenceText?: string; marks: number; singleQuestion?: boolean };
-type OpenAIResponse = { output_text?: string; output?: Array<{ content?: Array<{ type?: string; text?: string }> }> };
+type OpenAIResponse = { output_text?: string; status?: string; incomplete_details?: { reason?: string }; output?: Array<{ content?: Array<{ type?: string; text?: string }> }> };
+type OpenAIErrorResponse = { error?: { type?: string; code?: string } };
 
 const questionSchema = {
   type: "object",
@@ -52,6 +53,15 @@ function outputText(data: OpenAIResponse) {
   return data.output?.flatMap((item) => item.content ?? []).find((content) => content.type === "output_text")?.text;
 }
 
+function openAIDiagnostics(response: Response, providerError?: OpenAIErrorResponse) {
+  return {
+    status: response.status,
+    errorType: providerError?.error?.type ?? null,
+    errorCode: providerError?.error?.code ?? null,
+    providerRequestId: response.headers.get("x-request-id"),
+  };
+}
+
 export async function POST(request: NextRequest) {
   const requestId = crypto.randomUUID();
 
@@ -85,6 +95,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: process.env.OPENAI_MOCK_TEST_MODEL || DEFAULT_MODEL,
         store: false,
+        // A structured MCQ and explanation commonly needs more than the API's
+        // small default output budget, even for the smallest ten-question test.
+        max_output_tokens: Math.min(questionCount * 500, 75_000),
         input: [
           { role: "developer", content: "You generate reliable examination questions. Follow the supplied JSON schema exactly." },
           { role: "user", content: prompt },
@@ -93,20 +106,21 @@ export async function POST(request: NextRequest) {
       }),
     });
   } catch (error) {
-    console.error("OpenAI mock-test request failed", { requestId, error: error instanceof Error ? error.message : String(error) });
+    console.error("OpenAI mock-test request failed before receiving a response", {
+      requestId,
+      status: null,
+      errorType: error instanceof Error ? error.name : "unknown",
+      errorCode: null,
+      providerRequestId: null,
+    });
     return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
   }
 
   if (!response.ok) {
-    const providerRequestId = response.headers.get("x-request-id");
-    const providerError = await response.json().catch(() => null) as { error?: { type?: string; code?: string; message?: string } } | null;
+    const providerError = await response.json().catch(() => null) as OpenAIErrorResponse | null;
     console.error("OpenAI mock-test request was rejected", {
       requestId,
-      status: response.status,
-      providerRequestId,
-      errorType: providerError?.error?.type,
-      errorCode: providerError?.error?.code,
-      errorMessage: providerError?.error?.message,
+      ...openAIDiagnostics(response, providerError ?? undefined),
     });
     return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
   }
@@ -114,11 +128,24 @@ export async function POST(request: NextRequest) {
   try {
     const data = await response.json() as OpenAIResponse;
     const text = outputText(data);
+    if (data.status === "incomplete") {
+      console.error("OpenAI mock-test response was incomplete", {
+        requestId,
+        ...openAIDiagnostics(response),
+        incompleteReason: data.incomplete_details?.reason ?? null,
+      });
+      return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 503 });
+    }
     const parsed = JSON.parse(text || "{}") as { questions?: unknown[] };
     if (!Array.isArray(parsed.questions)) throw new Error("OpenAI response did not include a questions array.");
     return NextResponse.json({ questions: parsed.questions });
   } catch (error) {
-    console.error("OpenAI mock-test response could not be parsed", { requestId, error: error instanceof Error ? error.message : String(error) });
+    console.error("OpenAI mock-test response could not be parsed", {
+      requestId,
+      ...openAIDiagnostics(response),
+      errorType: error instanceof Error ? error.name : "unknown",
+      errorCode: null,
+    });
     return NextResponse.json({ error: GENERATION_UNAVAILABLE }, { status: 502 });
   }
 }
