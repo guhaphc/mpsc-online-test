@@ -3,10 +3,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { formatDuration, formatPenalty, optionKeys, Question, TestRecord } from "@/lib/tests";
+import { formatDuration, formatPenalty, optionKeys, Paper, Question, TestRecord } from "@/lib/tests";
 
 type Stage = { id: number; name: string; sort_order: number };
-type Paper = { id: number; stage_id: number; paper_no: number; name: string; sort_order: number };
 type SyllabusItem = { id: number; paper_id: number; parent_id: number | null; item_type: string; name: string; sort_order: number };
 type TestForm = { title: string; stage_id: string; paper_id: string; subject_id: string; syllabus_item_id: string; duration_minutes: string; total_marks: string; negative_marking: string; is_published: boolean };
 type QuestionForm = { id?: number; question_text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_option: string; marks: string; explanation: string; sort_order: string };
@@ -49,7 +48,8 @@ export default function AdminTestsPage() {
     setEditing(test); setSuccess(""); setError("");
     const selected = items.find((item) => item.id === test.syllabus_item_id);
     const subject = selected?.item_type === "subject" ? selected : items.find((item) => item.id === selected?.parent_id);
-    setForm({ title: test.title, stage_id: test.stage_id?.toString() ?? "", paper_id: test.paper_id?.toString() ?? "", subject_id: subject?.id.toString() ?? "", syllabus_item_id: test.syllabus_item_id?.toString() ?? "", duration_minutes: String(test.duration_minutes), total_marks: String(test.total_marks), negative_marking: String(test.negative_marking ?? 0), is_published: test.is_published });
+    const paper = papers.find((entry) => entry.id === test.paper_id);
+    setForm({ title: test.title, stage_id: paper?.stage_id.toString() ?? "", paper_id: test.paper_id?.toString() ?? "", subject_id: subject?.id.toString() ?? "", syllabus_item_id: test.syllabus_item_id?.toString() ?? "", duration_minutes: String(test.duration_minutes), total_marks: String(test.total_marks), negative_marking: String(test.negative_marking ?? 0), is_published: test.is_published });
     const { data, error: questionError } = await supabase.from("mpsc_questions").select("*").eq("test_id", test.id).order("sort_order");
     if (questionError) setError(questionError.message); else setQuestions((data ?? []) as Question[]);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -58,8 +58,11 @@ export default function AdminTestsPage() {
     event.preventDefault(); setError(""); setSuccess("");
     if (!form.title.trim() || !form.stage_id || !form.paper_id || !form.subject_id || !form.duration_minutes || !form.total_marks) { setError("Please complete the title and syllabus fields, duration, and total marks."); return; }
     const syllabusId = form.syllabus_item_id || form.subject_id;
+    const selectedPaper = papers.find((paper) => paper.id === Number(form.paper_id));
+    const selectedSyllabusItem = items.find((item) => item.id === Number(syllabusId));
+    if (!selectedPaper || !selectedSyllabusItem || selectedPaper.stage_id !== Number(form.stage_id) || selectedSyllabusItem.paper_id !== selectedPaper.id) { setError("Select a paper and syllabus item that belong to the selected examination stage."); return; }
     setSaving(true);
-    const payload = { title: form.title.trim(), stage_id: Number(form.stage_id), paper_id: Number(form.paper_id), syllabus_item_id: Number(syllabusId), duration_minutes: Number(form.duration_minutes), total_marks: Number(form.total_marks), negative_marking: Number(form.negative_marking || 0), is_published: form.is_published };
+    const payload = { title: form.title.trim(), paper_id: selectedPaper.id, syllabus_item_id: selectedSyllabusItem.id, duration_minutes: Number(form.duration_minutes), total_marks: Number(form.total_marks), negative_marking: Number(form.negative_marking || 0), is_published: form.is_published };
     const result = editing ? await supabase.from("mpsc_tests").update(payload).eq("id", editing.id).select().single() : await supabase.from("mpsc_tests").insert(payload).select().single();
     setSaving(false);
     if (result.error || !result.data) { setError(result.error?.message || "The test could not be saved."); return; }

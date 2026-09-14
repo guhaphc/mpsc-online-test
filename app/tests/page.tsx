@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { formatDuration, formatPenalty, SyllabusItem, TestRecord } from "@/lib/tests";
+import { formatDuration, formatPenalty, Paper, stageIdForTest, SyllabusItem, TestRecord } from "@/lib/tests";
 
 type Stage = { id: number; name: string; sort_order: number };
-type Paper = { id: number; stage_id: number; paper_no: number; name: string; sort_order: number };
 
 export default function TestsPage() {
   const router = useRouter();
@@ -42,8 +41,8 @@ export default function TestsPage() {
   const visiblePapers = useMemo(() => papers.filter((paper) => !stageId || paper.stage_id === Number(stageId)), [papers, stageId]);
   const visibleItems = useMemo(() => items.filter((item) => !paperId || item.paper_id === Number(paperId)), [items, paperId]);
   const filteredTests = useMemo(() => tests.filter((test) =>
-    (!stageId || test.stage_id === Number(stageId)) && (!paperId || test.paper_id === Number(paperId)) && (!itemId || test.syllabus_item_id === Number(itemId))
-  ), [tests, stageId, paperId, itemId]);
+    (!stageId || stageIdForTest(test, papers) === Number(stageId)) && (!paperId || test.paper_id === Number(paperId)) && (!itemId || test.syllabus_item_id === Number(itemId))
+  ), [tests, papers, stageId, paperId, itemId]);
   const stageName = (id: number | null) => stages.find((stage) => stage.id === id)?.name;
   const paperName = (id: number | null) => { const paper = papers.find((entry) => entry.id === id); return paper ? `Paper ${paper.paper_no} · ${paper.name}` : undefined; };
   const itemName = (id: number | null) => items.find((item) => item.id === id)?.name;
@@ -56,7 +55,7 @@ export default function TestsPage() {
         <label>Paper<select value={paperId} onChange={(event) => { setPaperId(event.target.value); setItemId(""); }}><option value="">All papers</option>{visiblePapers.map((paper) => <option key={paper.id} value={paper.id}>Paper {paper.paper_no} · {paper.name}</option>)}</select></label>
         <label>Subject / topic<select value={itemId} onChange={(event) => setItemId(event.target.value)}><option value="">All subjects and topics</option>{visibleItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       </div>
-      <div className="test-list">{filteredTests.length === 0 ? <div className="empty-box"><strong>No published tests found</strong><span>Try clearing a filter or check back when a new test is published.</span></div> : filteredTests.map((test) => <article className="test-card" key={test.id}><div className="test-card-main"><div className="test-meta">{stageName(test.stage_id) || "MPSC / UPSC"}</div><h2>{test.title}</h2><p>{paperName(test.paper_id) || "General test"}{itemName(test.syllabus_item_id) ? ` · ${itemName(test.syllabus_item_id)}` : ""}</p><div className="test-details"><span>⏱ {formatDuration(Number(test.duration_minutes))}</span><span>🏅 {test.total_marks} marks</span><span>− {formatPenalty(test.negative_marking)}</span></div></div><button className="primary test-start" onClick={() => router.push(`/tests/${test.id}`)}>Start Test</button></article>)}</div>
+      <div className="test-list">{filteredTests.length === 0 ? <div className="empty-box"><strong>No published tests found</strong><span>Try clearing a filter or check back when a new test is published.</span></div> : filteredTests.map((test) => <article className="test-card" key={test.id}><div className="test-card-main"><div className="test-meta">{stageName(stageIdForTest(test, papers)) || "MPSC / UPSC"}</div><h2>{test.title}</h2><p>{paperName(test.paper_id) || "General test"}{itemName(test.syllabus_item_id) ? ` · ${itemName(test.syllabus_item_id)}` : ""}</p><div className="test-details"><span>⏱ {formatDuration(Number(test.duration_minutes))}</span><span>🏅 {test.total_marks} marks</span><span>− {formatPenalty(test.negative_marking)}</span></div></div><button className="primary test-start" onClick={() => router.push(`/tests/${test.id}`)}>Start Test</button></article>)}</div>
     </>}
   </section></main>;
 }
