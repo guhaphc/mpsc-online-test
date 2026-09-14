@@ -43,8 +43,9 @@ type GeminiErrorResponse = {
 /*
  * Gemini structured-output schema.
  *
- * Keep this schema simple because Gemini's structured-output
- * schema does not need additionalProperties for this use case.
+ * IMPORTANT:
+ * - No additionalProperties.
+ * - Uses the REST generateContent schema format.
  */
 const questionSchema = {
   type: "object",
@@ -90,7 +91,7 @@ const questionSchema = {
     },
   },
   required: ["questions"],
-};
+} as const;
 
 async function requireAdmin(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -314,8 +315,16 @@ Rules:
   let response: Response;
 
   try {
+    /*
+     * Fixed model.
+     *
+     * Do NOT use GEMINI_MODEL or GEMINI_MOCK_TEST_MODEL.
+     */
     const model = DEFAULT_MODEL;
 
+    /*
+     * Gemini generateContent REST endpoint.
+     */
     const endpoint =
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
@@ -324,6 +333,11 @@ Rules:
 
       headers: {
         "Content-Type": "application/json",
+
+        /*
+         * Keep API key on the server.
+         * Never send it to the browser.
+         */
         "x-goog-api-key": apiKey,
       },
 
@@ -348,16 +362,16 @@ Rules:
           },
         ],
 
+        /*
+         * IMPORTANT:
+         *
+         * Use responseMimeType + responseSchema.
+         *
+         * Do NOT use responseFormat here.
+         */
         generationConfig: {
-          /*
-           * Gemini 3 structured JSON output.
-           */
-          responseFormat: {
-            text: {
-              mimeType: "application/json",
-              schema: questionSchema,
-            },
-          },
+          responseMimeType: "application/json",
+          responseSchema: questionSchema,
 
           maxOutputTokens: Math.min(
             questionCount * 500,
@@ -433,6 +447,9 @@ Rules:
     const finishReason =
       data.candidates?.[0]?.finishReason;
 
+    /*
+     * Do not parse incomplete output.
+     */
     if (
       !text ||
       (finishReason &&
@@ -504,4 +521,4 @@ Rules:
       }
     );
   }
-      }
+}
