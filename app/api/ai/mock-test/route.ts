@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const DEFAULT_MODEL = "gemini-3.1-flash-lite";
 
 const GENERATION_UNAVAILABLE =
   "Question generation is temporarily unavailable. Please try again in a few minutes.";
@@ -43,27 +43,16 @@ type GeminiErrorResponse = {
 /*
  * Gemini structured-output schema.
  *
- * IMPORTANT:
- * Do not add "additionalProperties" here.
- * Gemini's REST responseSchema does not accept it.
+ * Keep this schema simple because Gemini's structured-output
+ * schema does not need additionalProperties for this use case.
  */
 const questionSchema = {
   type: "object",
-  required: ["questions"],
   properties: {
     questions: {
       type: "array",
       items: {
         type: "object",
-        required: [
-          "question_text",
-          "option_a",
-          "option_b",
-          "option_c",
-          "option_d",
-          "correct_answer",
-          "explanation",
-        ],
         properties: {
           question_text: {
             type: "string",
@@ -88,10 +77,20 @@ const questionSchema = {
             type: "string",
           },
         },
+        required: [
+          "question_text",
+          "option_a",
+          "option_b",
+          "option_c",
+          "option_d",
+          "correct_answer",
+          "explanation",
+        ],
       },
     },
   },
-} as const;
+  required: ["questions"],
+};
 
 async function requireAdmin(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -315,13 +314,6 @@ Rules:
   let response: Response;
 
   try {
-    /*
-     * Use a fixed known-valid model.
-     *
-     * We intentionally do NOT use GEMINI_MODEL or
-     * GEMINI_MOCK_TEST_MODEL from Vercel here.
-     */
-
     const model = DEFAULT_MODEL;
 
     const endpoint =
@@ -332,8 +324,6 @@ Rules:
 
       headers: {
         "Content-Type": "application/json",
-
-        // API key remains server-side.
         "x-goog-api-key": apiKey,
       },
 
@@ -342,7 +332,7 @@ Rules:
           parts: [
             {
               text:
-                "You generate reliable examination questions. Follow the supplied JSON schema exactly.",
+                "You generate reliable MPSC and UPSC examination questions. Follow the supplied JSON schema exactly.",
             },
           ],
         },
@@ -359,12 +349,15 @@ Rules:
         ],
 
         generationConfig: {
-          responseMimeType: "application/json",
-
           /*
-           * Correct Gemini REST structured-output field.
+           * Gemini 3 structured JSON output.
            */
-          responseSchema: questionSchema,
+          responseFormat: {
+            text: {
+              mimeType: "application/json",
+              schema: questionSchema,
+            },
+          },
 
           maxOutputTokens: Math.min(
             questionCount * 500,
@@ -440,10 +433,6 @@ Rules:
     const finishReason =
       data.candidates?.[0]?.finishReason;
 
-    /*
-     * Don't attempt to parse incomplete output.
-     */
-
     if (
       !text ||
       (finishReason &&
@@ -453,9 +442,7 @@ Rules:
         "Gemini mock-test response was incomplete",
         {
           requestId,
-
           ...geminiDiagnostics(response),
-
           finishReason:
             finishReason ?? null,
         }
@@ -500,9 +487,7 @@ Rules:
       "Gemini mock-test response could not be parsed",
       {
         requestId,
-
         ...geminiDiagnostics(response),
-
         errorType:
           error instanceof Error
             ? error.name
@@ -519,4 +504,4 @@ Rules:
       }
     );
   }
-}
+      }
