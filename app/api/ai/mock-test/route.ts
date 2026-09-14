@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-// Known-valid Gemini model.
-// Keep this fixed so an invalid Vercel model environment variable
-// cannot cause a 404 error.
 const DEFAULT_MODEL = "gemini-2.5-flash";
 
 const GENERATION_UNAVAILABLE =
@@ -43,16 +40,21 @@ type GeminiErrorResponse = {
   };
 };
 
+/*
+ * Gemini structured-output schema.
+ *
+ * IMPORTANT:
+ * Do not add "additionalProperties" here.
+ * Gemini's REST responseSchema does not accept it.
+ */
 const questionSchema = {
   type: "object",
-  additionalProperties: false,
   required: ["questions"],
   properties: {
     questions: {
       type: "array",
       items: {
         type: "object",
-        additionalProperties: false,
         required: [
           "question_text",
           "option_a",
@@ -172,6 +174,7 @@ export async function POST(request: NextRequest) {
   // ------------------------------------------------------------
   // ADMIN AUTHORIZATION
   // ------------------------------------------------------------
+
   if (!(await requireAdmin(request))) {
     return NextResponse.json(
       {
@@ -186,13 +189,17 @@ export async function POST(request: NextRequest) {
   // ------------------------------------------------------------
   // GEMINI API KEY
   // ------------------------------------------------------------
+
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
-    console.error("Gemini mock-test generation is not configured", {
-      requestId,
-      hasGeminiKey: false,
-    });
+    console.error(
+      "Gemini mock-test generation is not configured",
+      {
+        requestId,
+        hasGeminiKey: false,
+      }
+    );
 
     return NextResponse.json(
       {
@@ -208,6 +215,7 @@ export async function POST(request: NextRequest) {
   // ------------------------------------------------------------
   // READ REQUEST
   // ------------------------------------------------------------
+
   let body: RequestBody;
 
   try {
@@ -226,6 +234,7 @@ export async function POST(request: NextRequest) {
   // ------------------------------------------------------------
   // VALIDATE REQUEST
   // ------------------------------------------------------------
+
   if (
     !body.stage ||
     !body.paper ||
@@ -252,11 +261,14 @@ ${reference.slice(0, 60000)}
 If it is insufficient, use broader established syllabus knowledge and say so in the explanation where material is broader.`
     : "No reference was supplied; use established MPSC/UPSC-style knowledge only.";
 
-  const questionCount = body.singleQuestion ? 1 : body.count;
+  const questionCount = body.singleQuestion
+    ? 1
+    : body.count;
 
   // ------------------------------------------------------------
   // PROMPT
   // ------------------------------------------------------------
+
   const prompt = `Create ${questionCount} high-quality competitive-exam MCQs.
 
 Scope:
@@ -299,15 +311,21 @@ Rules:
   // ------------------------------------------------------------
   // GEMINI API REQUEST
   // ------------------------------------------------------------
+
   let response: Response;
 
   try {
-    // IMPORTANT:
-    // Do not use GEMINI_MOCK_TEST_MODEL from Vercel.
-    // A bad model value was capable of producing the 404 error.
+    /*
+     * Use a fixed known-valid model.
+     *
+     * We intentionally do NOT use GEMINI_MODEL or
+     * GEMINI_MOCK_TEST_MODEL from Vercel here.
+     */
+
     const model = DEFAULT_MODEL;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const endpoint =
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     response = await fetch(endpoint, {
       method: "POST",
@@ -315,8 +333,7 @@ Rules:
       headers: {
         "Content-Type": "application/json",
 
-        // Keep the Gemini API key server-side.
-        // Never expose it to the browser.
+        // API key remains server-side.
         "x-goog-api-key": apiKey,
       },
 
@@ -344,7 +361,9 @@ Rules:
         generationConfig: {
           responseMimeType: "application/json",
 
-          // Gemini structured JSON output.
+          /*
+           * Correct Gemini REST structured-output field.
+           */
           responseSchema: questionSchema,
 
           maxOutputTokens: Math.min(
@@ -360,7 +379,9 @@ Rules:
       {
         requestId,
         errorType:
-          error instanceof Error ? error.name : "unknown",
+          error instanceof Error
+            ? error.name
+            : "unknown",
       }
     );
 
@@ -377,20 +398,24 @@ Rules:
   // ------------------------------------------------------------
   // GEMINI ERROR RESPONSE
   // ------------------------------------------------------------
+
   if (!response.ok) {
     const providerError =
       (await response
         .json()
         .catch(() => null)) as GeminiErrorResponse | null;
 
-    console.error("Gemini mock-test request was rejected", {
-      requestId,
+    console.error(
+      "Gemini mock-test request was rejected",
+      {
+        requestId,
 
-      ...geminiDiagnostics(
-        response,
-        providerError ?? undefined
-      ),
-    });
+        ...geminiDiagnostics(
+          response,
+          providerError ?? undefined
+        ),
+      }
+    );
 
     return NextResponse.json(
       {
@@ -405,18 +430,24 @@ Rules:
   // ------------------------------------------------------------
   // PROCESS GEMINI RESPONSE
   // ------------------------------------------------------------
+
   try {
-    const data = (await response.json()) as GeminiResponse;
+    const data =
+      (await response.json()) as GeminiResponse;
 
     const text = responseText(data);
 
     const finishReason =
       data.candidates?.[0]?.finishReason;
 
-    // Do not attempt to parse incomplete output.
+    /*
+     * Don't attempt to parse incomplete output.
+     */
+
     if (
       !text ||
-      (finishReason && finishReason !== "STOP")
+      (finishReason &&
+        finishReason !== "STOP")
     ) {
       console.error(
         "Gemini mock-test response was incomplete",
@@ -443,6 +474,7 @@ Rules:
     // ----------------------------------------------------------
     // PARSE STRUCTURED JSON
     // ----------------------------------------------------------
+
     const parsed = JSON.parse(text) as {
       questions?: unknown[];
     };
@@ -459,6 +491,7 @@ Rules:
     // ----------------------------------------------------------
     // SUCCESS
     // ----------------------------------------------------------
+
     return NextResponse.json({
       questions: parsed.questions,
     });
@@ -471,7 +504,9 @@ Rules:
         ...geminiDiagnostics(response),
 
         errorType:
-          error instanceof Error ? error.name : "unknown",
+          error instanceof Error
+            ? error.name
+            : "unknown",
       }
     );
 
