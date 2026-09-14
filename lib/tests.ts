@@ -1,13 +1,20 @@
 export type TestRecord = {
   id: number;
   title: string;
-  stage_id: number | null;
   paper_id: number | null;
   syllabus_item_id: number | null;
   duration_minutes: number;
   total_marks: number;
   negative_marking: number;
   is_published: boolean;
+};
+
+export type Paper = {
+  id: number;
+  stage_id: number;
+  paper_no: number;
+  name: string;
+  sort_order: number;
 };
 
 export type Question = {
@@ -46,6 +53,15 @@ export function formatDuration(minutes: number) {
 export function formatPenalty(value: number) {
   const penalty = Math.abs(Number(value) || 0);
   return penalty ? `-${penalty} mark${penalty === 1 ? "" : "s"}` : "No negative marking";
+}
+
+/**
+ * `mpsc_tests` is linked to an examination stage through its paper. Keeping
+ * this lookup here prevents callers from relying on a non-existent
+ * `mpsc_tests.stage_id` column.
+ */
+export function stageIdForTest(test: Pick<TestRecord, "paper_id">, papers: readonly Paper[]) {
+  return papers.find((paper) => paper.id === test.paper_id)?.stage_id ?? null;
 }
 
 export function questionOption(question: Question, option: OptionKey) {
