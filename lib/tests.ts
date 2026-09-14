@@ -25,10 +25,10 @@ export type Question = {
   option_b: string;
   option_c: string;
   option_d: string;
-  correct_option: string;
+  correct_answer: string;
   marks: number;
   explanation?: string | null;
-  sort_order?: number;
+  question_order?: number;
 };
 
 export type SyllabusItem = {

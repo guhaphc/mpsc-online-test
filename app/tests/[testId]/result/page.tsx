@@ -18,7 +18,7 @@ export default function ResultPage({ params }: { params: Promise<{ testId: strin
     const [attemptResult, testResult, questionResult] = await Promise.all([
       supabase.from("mpsc_attempts").select("id, test_id, user_id, score, submitted_at").eq("id", attemptId).eq("test_id", id).eq("user_id", user.id).single(),
       supabase.from("mpsc_tests").select("*").eq("id", id).single(),
-      supabase.from("mpsc_questions").select("*").eq("test_id", id),
+      supabase.from("mpsc_questions").select("*").eq("test_id", id).order("question_order"),
     ]);
     const firstError = attemptResult.error || testResult.error || questionResult.error;
     if (firstError || !attemptResult.data) setError(firstError?.message || "The result could not be found.");

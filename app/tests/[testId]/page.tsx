@@ -28,7 +28,7 @@ export default function TakeTestPage({ params }: { params: Promise<{ testId: str
     if (profile?.access_status !== "approved") { router.replace("/pending"); return; }
     const [testResult, questionResult] = await Promise.all([
       supabase.from("mpsc_tests").select("*").eq("id", id).eq("is_published", true).single(),
-      supabase.from("mpsc_questions").select("*").eq("test_id", id).order("sort_order"),
+      supabase.from("mpsc_questions").select("*").eq("test_id", id).order("question_order"),
     ]);
     if (testResult.error || questionResult.error) { setError((testResult.error || questionResult.error)?.message || "Unable to load the test."); }
     else if (!testResult.data) setError("This test is not available.");
@@ -52,7 +52,7 @@ export default function TakeTestPage({ params }: { params: Promise<{ testId: str
     if (!user) { router.replace("/"); return; }
     const penalty = Number(test.negative_marking) > 0 ? -Number(test.negative_marking) : Number(test.negative_marking) || 0;
     const summary = questions.reduce((result, question) => {
-      const selected = answers[question.id]; const correct = normaliseOption(question.correct_option);
+      const selected = answers[question.id]; const correct = normaliseOption(question.correct_answer);
       if (!selected) return result;
       if (selected === correct) { result.correct += 1; result.score += Number(question.marks); }
       else { result.incorrect += 1; result.score += penalty; }
@@ -61,7 +61,7 @@ export default function TakeTestPage({ params }: { params: Promise<{ testId: str
     const { data: attempt, error: attemptError } = await supabase.from("mpsc_attempts").insert({ user_id: user.id, test_id: test.id, score: summary.score, submitted_at: new Date().toISOString() }).select("id").single();
     if (attemptError || !attempt) { submitted.current = false; setSubmitting(false); setError(attemptError?.message || "Your attempt could not be saved. Please try again."); return; }
     const answerRows = questions.map((question) => {
-      const selected = answers[question.id] || null; const correct = normaliseOption(question.correct_option); const isCorrect = selected !== null && selected === correct;
+      const selected = answers[question.id] || null; const correct = normaliseOption(question.correct_answer); const isCorrect = selected !== null && selected === correct;
       return { attempt_id: attempt.id, question_id: question.id, selected_option: selected, is_correct: isCorrect, marks_awarded: selected === null ? 0 : isCorrect ? Number(question.marks) : penalty };
     });
     const { error: answersError } = await supabase.from("mpsc_answers").insert(answerRows);
