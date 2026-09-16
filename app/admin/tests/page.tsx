@@ -3,151 +3,3416 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { formatDuration, formatPenalty, optionKeys, Paper, Question, TestRecord } from "@/lib/tests";
-import { GeneratedQuestion, validateGeneratedQuestions } from "@/lib/mock-test";
+import {
+  formatDuration,
+  formatPenalty,
+  optionKeys,
+  Paper,
+  Question,
+  TestRecord,
+} from "@/lib/tests";
+import {
+  GeneratedQuestion,
+  validateGeneratedQuestions,
+} from "@/lib/mock-test";
 
-type Stage = { id: number; name: string; sort_order: number };
-type SyllabusItem = { id: number; paper_id: number; parent_id: number | null; item_type: string; name: string; sort_order: number };
-type TestForm = { title: string; stage_id: string; paper_id: string; subject_id: string; syllabus_item_id: string; duration_minutes: string; total_marks: string; negative_marking: string; is_published: boolean };
-type QuestionForm = { id?: number; question_text: string; option_a: string; option_b: string; option_c: string; option_d: string; correct_answer: string; marks: string; explanation: string; question_order: string };
-type GeneratorForm = { stage_id: string; paper_id: string; subject_id: string; topic_id: string; title: string; count: string; difficulty: string; language: string; marks: string; negative_marking: string; duration: string; instructions: string; referenceText: string; referenceName: string };
+type Stage = {
+  id: number;
+  name: string;
+  sort_order: number;
+};
 
-const blankTest = (): TestForm => ({ title: "", stage_id: "", paper_id: "", subject_id: "", syllabus_item_id: "", duration_minutes: "60", total_marks: "100", negative_marking: "0", is_published: false });
-const blankQuestion = (order = 1): QuestionForm => ({ question_text: "", option_a: "", option_b: "", option_c: "", option_d: "", correct_answer: "A", marks: "1", explanation: "", question_order: String(order) });
-const blankGenerator = (): GeneratorForm => ({ stage_id: "", paper_id: "", subject_id: "", topic_id: "", title: "", count: "10", difficulty: "Mixed", language: "English", marks: "2", negative_marking: "0.66", duration: "60", instructions: "", referenceText: "", referenceName: "" });
+type SyllabusItem = {
+  id: number;
+  paper_id: number;
+  parent_id: number | null;
+  item_type: string;
+  name: string;
+  sort_order: number;
+};
+
+type TestForm = {
+  title: string;
+  stage_id: string;
+  paper_id: string;
+  subject_id: string;
+  syllabus_item_id: string;
+  duration_minutes: string;
+  total_marks: string;
+  negative_marking: string;
+  is_published: boolean;
+};
+
+type QuestionForm = {
+  id?: number;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_answer: string;
+  marks: string;
+  explanation: string;
+  question_order: string;
+};
+
+type GeneratorForm = {
+  stage_id: string;
+  paper_id: string;
+  subject_id: string;
+  topic_id: string;
+  title: string;
+  count: string;
+  difficulty: string;
+  language: string;
+  marks: string;
+  negative_marking: string;
+  duration: string;
+  instructions: string;
+  referenceText: string;
+  referenceName: string;
+
+  // Main Examination settings
+  mainsMode: boolean;
+  wordLimit: string;
+};
+
+type MainsQuestion = {
+  id?: number;
+  question_text: string;
+  marks: number;
+  word_limit: number;
+  model_answer: string;
+  answer_framework: string;
+  key_points: string[];
+  status: "draft" | "published" | "rejected";
+};
+
+const blankTest = (): TestForm => ({
+  title: "",
+  stage_id: "",
+  paper_id: "",
+  subject_id: "",
+  syllabus_item_id: "",
+  duration_minutes: "60",
+  total_marks: "100",
+  negative_marking: "0",
+  is_published: false,
+});
+
+const blankQuestion = (order = 1): QuestionForm => ({
+  question_text: "",
+  option_a: "",
+  option_b: "",
+  option_c: "",
+  option_d: "",
+  correct_answer: "A",
+  marks: "1",
+  explanation: "",
+  question_order: String(order),
+});
+
+const blankGenerator = (): GeneratorForm => ({
+  stage_id: "",
+  paper_id: "",
+  subject_id: "",
+  topic_id: "",
+  title: "",
+  count: "10",
+  difficulty: "Mixed",
+  language: "English",
+  marks: "2",
+  negative_marking: "0.66",
+  duration: "60",
+  instructions: "",
+  referenceText: "",
+  referenceName: "",
+  mainsMode: false,
+  wordLimit: "250",
+});
 
 export default function AdminTestsPage() {
   const router = useRouter();
-  const [tests, setTests] = useState<TestRecord[]>([]); const [stages, setStages] = useState<Stage[]>([]); const [papers, setPapers] = useState<Paper[]>([]); const [items, setItems] = useState<SyllabusItem[]>([]);
-  const [form, setForm] = useState<TestForm>(blankTest()); const [editing, setEditing] = useState<TestRecord | null>(null); const [questions, setQuestions] = useState<Question[]>([]); const [questionForm, setQuestionForm] = useState<QuestionForm | null>(null);
-  const [generator, setGenerator] = useState<GeneratorForm>(blankGenerator()); const [generating, setGenerating] = useState(false); const [progress, setProgress] = useState("");
-  const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [busyId, setBusyId] = useState<number | null>(null); const [error, setError] = useState(""); const [success, setSuccess] = useState("");
 
-  const load = async () => {
-    setLoading(true); setError("");
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.replace("/"); return; }
-    const { data: profile, error: profileError } = await supabase.from("mpsc_profiles").select("role, access_status").eq("id", user.id).single();
-    if (profileError || profile?.role !== "admin" || profile.access_status !== "approved") { router.replace("/"); return; }
-    const [testResult, stageResult, paperResult, itemResult] = await Promise.all([
-      supabase.from("mpsc_tests").select("*").order("created_at", { ascending: false }),
-      supabase.from("mpsc_exam_stages").select("id, name, sort_order").order("sort_order"),
-      supabase.from("mpsc_papers").select("id, stage_id, paper_no, name, sort_order").order("sort_order"),
-      supabase.from("mpsc_syllabus_items").select("id, paper_id, parent_id, item_type, name, sort_order").order("sort_order"),
+  const [tests, setTests] = useState<TestRecord[]>([]);
+  const [stages, setStages] = useState<Stage[]>([]);
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [items, setItems] = useState<SyllabusItem[]>([]);
+
+  const [form, setForm] = useState<TestForm>(blankTest());
+  const [editing, setEditing] = useState<TestRecord | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionForm, setQuestionForm] =
+    useState<QuestionForm | null>(null);
+
+  const [generator, setGenerator] =
+    useState<GeneratorForm>(blankGenerator());
+
+  const [mainsQuestions, setMainsQuestions] =
+    useState<MainsQuestion[]>([]);
+
+  const [selectedMainsQuestion, setSelectedMainsQuestion] =
+    useState<number | null>(null);
+
+  const [generating, setGenerating] = useState(false);
+  const [generatingAnswer, setGeneratingAnswer] =
+    useState<number | null>(null);
+
+  const [progress, setProgress] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const selectedGeneratorStage = useMemo(
+    () =>
+      stages.find(
+        (stage) =>
+          stage.id === Number(generator.stage_id)
+      ),
+    [stages, generator.stage_id]
+  );
+
+  const isMainExamination =
+    selectedGeneratorStage?.name
+      ?.toLowerCase()
+      .includes("main") ?? false;
+    useEffect(() => {
+    if (isMainExamination) {
+      setGenerator((current) => ({
+        ...current,
+        mainsMode: true,
+        marks: current.marks || "10",
+        wordLimit: current.wordLimit || "250",
+      }));
+    } else {
+      setGenerator((current) => ({
+        ...current,
+        mainsMode: false,
+      }));
+    }
+  }, [isMainExamination]);
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function load() {
+    setLoading(true);
+    setError("");
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      router.replace("/login");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("mpsc_profiles")
+      .select("role, access_status")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (
+      profile?.role !== "admin" ||
+      profile?.access_status !== "approved"
+    ) {
+      router.replace("/student");
+      return;
+    }
+
+    const [
+      testsResponse,
+      stagesResponse,
+      papersResponse,
+      itemsResponse,
+    ] = await Promise.all([
+      supabase
+        .from("mpsc_tests")
+        .select("*")
+        .order("created_at", { ascending: false }),
+
+      supabase
+        .from("mpsc_exam_stages")
+        .select("id, name, sort_order")
+        .order("sort_order"),
+
+      supabase
+        .from("mpsc_papers")
+        .select("*")
+        .order("stage_id")
+        .order("paper_no"),
+
+      supabase
+        .from("mpsc_syllabus_items")
+        .select(
+          "id, paper_id, parent_id, item_type, name, sort_order"
+        )
+        .order("paper_id")
+        .order("sort_order"),
     ]);
-    const firstError = testResult.error || stageResult.error || paperResult.error || itemResult.error;
-    if (firstError) setError(firstError.message); else { setTests((testResult.data ?? []) as TestRecord[]); setStages(stageResult.data ?? []); setPapers(paperResult.data ?? []); setItems(itemResult.data ?? []); }
+
+    if (testsResponse.error) {
+      setError(testsResponse.error.message);
+    }
+
+    if (stagesResponse.error) {
+      setError(stagesResponse.error.message);
+    }
+
+    if (papersResponse.error) {
+      setError(papersResponse.error.message);
+    }
+
+    if (itemsResponse.error) {
+      setError(itemsResponse.error.message);
+    }
+
+    setTests((testsResponse.data ?? []) as TestRecord[]);
+    setStages((stagesResponse.data ?? []) as Stage[]);
+    setPapers((papersResponse.data ?? []) as Paper[]);
+    setItems((itemsResponse.data ?? []) as SyllabusItem[]);
+
     setLoading(false);
-  };
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const matchingPapers = useMemo(() => papers.filter((paper) => paper.stage_id === Number(form.stage_id)), [papers, form.stage_id]);
-  const subjects = useMemo(() => items.filter((item) => item.paper_id === Number(form.paper_id) && item.item_type === "subject" && item.parent_id === null), [items, form.paper_id]);
-  const topics = useMemo(() => items.filter((item) => item.parent_id === Number(form.subject_id) && (item.item_type === "topic" || item.item_type === "subtopic")), [items, form.subject_id]);
-  const generatorPapers = useMemo(() => papers.filter((paper) => paper.stage_id === Number(generator.stage_id)), [papers, generator.stage_id]);
-  const generatorSubjects = useMemo(() => items.filter((item) => item.paper_id === Number(generator.paper_id) && item.item_type === "subject" && item.parent_id === null), [items, generator.paper_id]);
-  const generatorTopics = useMemo(() => items.filter((item) => item.parent_id === Number(generator.subject_id) && (item.item_type === "topic" || item.item_type === "subtopic")), [items, generator.subject_id]);
-  const itemName = (id: number | null) => items.find((item) => item.id === id)?.name;
-  const paperName = (id: number | null) => { const paper = papers.find((entry) => entry.id === id); return paper ? `Paper ${paper.paper_no} · ${paper.name}` : "No paper selected"; };
-
-  const suggestedTitle = () => `${items.find((item) => item.id === Number(generator.topic_id || generator.subject_id))?.name || "Syllabus"} · ${generator.language} Mock Test`;
-  async function requestQuestions(singleQuestion = false): Promise<GeneratedQuestion[]> {
-    const { data: { session } } = await supabase.auth.getSession();
-    const stage = stages.find((value) => value.id === Number(generator.stage_id)); const paper = papers.find((value) => value.id === Number(generator.paper_id)); const subject = items.find((value) => value.id === Number(generator.subject_id)); const topic = items.find((value) => value.id === Number(generator.topic_id));
-    const response = await fetch("/api/ai/mock-test", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${session?.access_token ?? ""}` }, body: JSON.stringify({ stage: stage?.name, paper: paper ? `Paper ${paper.paper_no} · ${paper.name}` : "", subject: subject?.name, topic: topic?.name, count: Number(generator.count), difficulty: generator.difficulty, language: generator.language, instructions: generator.instructions, referenceText: generator.referenceText, marks: Number(generator.marks), singleQuestion }) });
-    const result = await response.json() as { questions?: unknown; error?: string };
-    if (!response.ok) throw new Error(result.error || "Generation failed.");
-    return validateGeneratedQuestions(result.questions, singleQuestion ? 1 : Number(generator.count), Number(generator.marks));
   }
-  async function generateDraft() {
-    setError(""); setSuccess("");
-    if (!generator.stage_id || !generator.paper_id || !generator.subject_id) { setError("Select an examination stage, paper, and subject before generating."); return; }
+
+  const selectedStageId = Number(generator.stage_id);
+  const selectedPaperId = Number(generator.paper_id);
+  const selectedSubjectId = Number(generator.subject_id);
+
+  const generatorPapers = useMemo(
+    () =>
+      papers.filter(
+        (paper) =>
+          paper.stage_id === selectedStageId
+      ),
+    [papers, selectedStageId]
+  );
+
+  const generatorSubjects = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          item.paper_id === selectedPaperId &&
+          item.item_type === "subject"
+      ),
+    [items, selectedPaperId]
+  );
+
+  const generatorTopics = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          item.paper_id === selectedPaperId &&
+          item.parent_id === selectedSubjectId &&
+          item.item_type !== "subject"
+      ),
+    [items, selectedPaperId, selectedSubjectId]
+  );
+
+  function updateGenerator(
+    patch: Partial<GeneratorForm>
+  ) {
+    setGenerator((current) => ({
+      ...current,
+      ...patch,
+    }));
+  }
+
+  function handleGeneratorStageChange(
+    stageId: string
+  ) {
+    const stage = stages.find(
+      (value) => value.id === Number(stageId)
+    );
+
+    const mains =
+      stage?.name
+        ?.toLowerCase()
+        .includes("main") ?? false;
+
+    setGenerator((current) => ({
+      ...current,
+      stage_id: stageId,
+      paper_id: "",
+      subject_id: "",
+      topic_id: "",
+      mainsMode: mains,
+      marks: mains ? "10" : "2",
+      wordLimit: mains ? "250" : current.wordLimit,
+      negative_marking: mains
+        ? "0"
+        : current.negative_marking,
+      duration: mains ? "180" : current.duration,
+    }));
+
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+  }
+
+  function handleGeneratorPaperChange(
+    paperId: string
+  ) {
+    setGenerator((current) => ({
+      ...current,
+      paper_id: paperId,
+      subject_id: "",
+      topic_id: "",
+    }));
+
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+  }
+
+  function handleGeneratorSubjectChange(
+    subjectId: string
+  ) {
+    setGenerator((current) => ({
+      ...current,
+      subject_id: subjectId,
+      topic_id: "",
+    }));
+
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+  }
+
+  function handleGeneratorTopicChange(
+    topicId: string
+  ) {
+    setGenerator((current) => ({
+      ...current,
+      topic_id: topicId,
+    }));
+  }
+
+  function resetGenerator() {
+    setGenerator(blankGenerator());
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+    setProgress("");
+  }
+
+  function getSelectedGeneratorContext() {
+    const stage = stages.find(
+      (value) =>
+        value.id === Number(generator.stage_id)
+    );
+
+    const paper = papers.find(
+      (value) =>
+        value.id === Number(generator.paper_id)
+    );
+
+    const subject = items.find(
+      (value) =>
+        value.id === Number(generator.subject_id)
+    );
+
+    const topic = items.find(
+      (value) =>
+        value.id === Number(generator.topic_id)
+    );
+
+    return {
+      stage,
+      paper,
+      subject,
+      topic,
+    };
+  }
+    async function requestQuestions(
+    singleQuestion = false
+  ): Promise<GeneratedQuestion[]> {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
+    const {
+      stage,
+      paper,
+      subject,
+      topic,
+    } = getSelectedGeneratorContext();
+
+    const response = await fetch("/api/ai/mock-test", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        stage: stage?.name,
+        paper: paper
+          ? `Paper ${paper.paper_no} · ${paper.name}`
+          : "",
+        subject: subject?.name,
+        topic: topic?.name,
+        count: Number(generator.count),
+        difficulty: generator.difficulty,
+        language: generator.language,
+        instructions: generator.instructions,
+        referenceText: generator.referenceText,
+        marks: Number(generator.marks),
+        singleQuestion,
+      }),
+    });
+
+    const result = (await response.json()) as {
+      questions?: unknown;
+      error?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "AI question generation failed."
+      );
+    }
+
+    return validateGeneratedQuestions(
+      result.questions,
+      singleQuestion
+        ? 1
+        : Number(generator.count),
+      Number(generator.marks)
+    );
+  }
+
+  async function generateDraft(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setError("");
+    setSuccess("");
+    setProgress("");
+
+    if (isMainExamination) {
+      await generateMainsQuestions();
+      return;
+    }
+
+    if (!generator.stage_id) {
+      setError("Please select an examination stage.");
+      return;
+    }
+
+    if (!generator.paper_id) {
+      setError("Please select a paper.");
+      return;
+    }
+
+    if (!generator.subject_id) {
+      setError("Please select a subject.");
+      return;
+    }
+
+    if (!generator.topic_id) {
+      setError("Please select a topic.");
+      return;
+    }
+
     setGenerating(true);
+
     try {
-      setProgress("Preparing syllabus..."); await new Promise((resolve) => setTimeout(resolve, 100));
-      if (generator.referenceName) setProgress("Preparing reference...");
-      setProgress("Generating questions..."); const generated = await requestQuestions();
-      setProgress("Checking duplicates..."); setProgress("Validating answers...");
-      const title = generator.title.trim() || suggestedTitle(); const syllabusItemId = Number(generator.topic_id || generator.subject_id);
-      setProgress("Saving draft...");
-      const testResult = await supabase.from("mpsc_tests").insert({ title, paper_id: Number(generator.paper_id), syllabus_item_id: syllabusItemId, duration_minutes: Number(generator.duration), total_marks: generated.reduce((sum, question) => sum + question.marks, 0), negative_marking: Number(generator.negative_marking || 0), is_published: false }).select().single();
-      if (testResult.error || !testResult.data) throw new Error(testResult.error?.message || "Could not create the draft.");
-      const test = testResult.data as TestRecord;
-      const questionResult = await supabase.from("mpsc_questions").insert(generated.map((question) => ({ ...question, test_id: test.id, explanation: question.explanation || null })));
-      if (questionResult.error) { await supabase.from("mpsc_tests").delete().eq("id", test.id); throw new Error(questionResult.error.message); }
-      setTests((current) => [test, ...current]); setEditing(test); setQuestions(generated.map((question, index) => ({ ...question, id: -(index + 1), test_id: test.id }))); setForm({ title, stage_id: generator.stage_id, paper_id: generator.paper_id, subject_id: generator.subject_id, syllabus_item_id: String(syllabusItemId), duration_minutes: generator.duration, total_marks: String(test.total_marks), negative_marking: generator.negative_marking, is_published: false }); setProgress("Complete"); setSuccess("AI generated draft — review before publishing."); window.scrollTo({ top: 0, behavior: "smooth" });
-      await edit(test);
-    } catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Generation failed safely; no draft was saved."); setProgress(""); }
-    finally { setGenerating(false); }
+      setProgress("AI is generating questions...");
+
+      const generated = await requestQuestions(false);
+
+      const nextQuestions: Question[] =
+        generated.map((question, index) => ({
+          id: Date.now() + index,
+          test_id: 0,
+          question_text: question.question_text,
+          option_a: question.option_a,
+          option_b: question.option_b,
+          option_c: question.option_c,
+          option_d: question.option_d,
+          correct_answer: question.correct_answer,
+          marks: question.marks,
+          explanation: question.explanation,
+          question_order: index + 1,
+          created_at: new Date().toISOString(),
+        }));
+
+      setQuestions(nextQuestions);
+
+      setForm((current) => ({
+        ...current,
+        title:
+          generator.title ||
+          `${topicName(generator.topic_id)} AI Test`,
+        duration_minutes: generator.duration,
+        total_marks: String(
+          nextQuestions.reduce(
+            (sum, question) =>
+              sum + Number(question.marks || 0),
+            0
+          )
+        ),
+        negative_marking:
+          generator.negative_marking,
+        stage_id: generator.stage_id,
+        paper_id: generator.paper_id,
+        subject_id: generator.subject_id,
+        syllabus_item_id: generator.topic_id,
+      }));
+
+      setProgress(
+        `${nextQuestions.length} questions generated successfully.`
+      );
+      setSuccess(
+        "AI questions generated. Review them before saving."
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Question generation failed."
+      );
+    } finally {
+      setGenerating(false);
+    }
   }
-  async function regenerateQuestion(question: Question) {
-    setGenerating(true); setError(""); setProgress("Generating question...");
-    try { const [generated] = await requestQuestions(true); const result = await supabase.from("mpsc_questions").update({ ...generated, test_id: question.test_id, question_order: question.question_order, explanation: generated.explanation || null }).eq("id", question.id).select().single(); if (result.error || !result.data) throw new Error(result.error?.message || "Could not save regenerated question."); setQuestions((current) => current.map((item) => item.id === question.id ? result.data as Question : item)); setSuccess("Question regenerated. Review it before publishing."); }
-    catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Question regeneration failed."); } finally { setGenerating(false); setProgress(""); }
+
+  function topicName(topicId: string) {
+    return (
+      items.find(
+        (item) => item.id === Number(topicId)
+      )?.name || "MPSC"
+    );
   }
+
+  async function regenerateQuestion(
+    index: number
+  ) {
+    setError("");
+    setSuccess("");
+    setGenerating(true);
+
+    try {
+      const generated =
+        await requestQuestions(true);
+
+      const replacement = generated[0];
+
+      if (!replacement) {
+        throw new Error(
+          "AI did not return a question."
+        );
+      }
+
+      setQuestions((current) =>
+        current.map((question, questionIndex) =>
+          questionIndex === index
+            ? {
+                ...question,
+                question_text:
+                  replacement.question_text,
+                option_a:
+                  replacement.option_a,
+                option_b:
+                  replacement.option_b,
+                option_c:
+                  replacement.option_c,
+                option_d:
+                  replacement.option_d,
+                correct_answer:
+                  replacement.correct_answer,
+                marks: replacement.marks,
+                explanation:
+                  replacement.explanation,
+              }
+            : question
+        )
+      );
+
+      setSuccess(
+        "Question regenerated successfully."
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Question regeneration failed."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function regenerateComplete() {
-    if (!editing || !window.confirm("Replace every question in this draft? Your current question edits will be removed.")) return;
-    setGenerating(true); setError(""); setProgress("Generating questions...");
-    try { const generated = await requestQuestions(); setProgress("Validating answers..."); const remove = await supabase.from("mpsc_questions").delete().eq("test_id", editing.id); if (remove.error) throw new Error(remove.error.message); const inserted = await supabase.from("mpsc_questions").insert(generated.map((question) => ({ ...question, test_id: editing.id, explanation: question.explanation || null }))).select(); if (inserted.error) throw new Error(inserted.error.message); const total = generated.reduce((sum, question) => sum + question.marks, 0); const update = await supabase.from("mpsc_tests").update({ total_marks: total, is_published: false }).eq("id", editing.id).select().single(); if (update.error || !update.data) throw new Error(update.error?.message || "Could not update draft total."); const saved = update.data as TestRecord; setEditing(saved); setQuestions((inserted.data ?? []) as Question[]); setTests((current) => current.map((test) => test.id === saved.id ? saved : test)); setForm((current) => ({ ...current, total_marks: String(total), is_published: false })); setSuccess("Complete draft regenerated — review before publishing."); }
-    catch (generationError) { setError(generationError instanceof Error ? generationError.message : "Complete regeneration failed."); } finally { setGenerating(false); setProgress(""); }
+    setError("");
+    setSuccess("");
+    setGenerating(true);
+
+    try {
+      const generated =
+        await requestQuestions(false);
+
+      const nextQuestions: Question[] =
+        generated.map((question, index) => ({
+          id: Date.now() + index,
+          test_id: 0,
+          question_text: question.question_text,
+          option_a: question.option_a,
+          option_b: question.option_b,
+          option_c: question.option_c,
+          option_d: question.option_d,
+          correct_answer: question.correct_answer,
+          marks: question.marks,
+          explanation: question.explanation,
+          question_order: index + 1,
+          created_at: new Date().toISOString(),
+        }));
+
+      setQuestions(nextQuestions);
+
+      setForm((current) => ({
+        ...current,
+        total_marks: String(
+          nextQuestions.reduce(
+            (sum, question) =>
+              sum + Number(question.marks || 0),
+            0
+          )
+        ),
+      }));
+
+      setSuccess(
+        "Complete AI question set regenerated."
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Regeneration failed."
+      );
+    } finally {
+      setGenerating(false);
+    }
   }
 
-  function startNew() { setEditing(null); setForm(blankTest()); setQuestions([]); setQuestionForm(null); setError(""); setSuccess(""); window.scrollTo({ top: 0, behavior: "smooth" }); }
-  async function edit(test: TestRecord) {
-    setEditing(test); setSuccess(""); setError("");
-    const selected = items.find((item) => item.id === test.syllabus_item_id);
-    const subject = selected?.item_type === "subject" ? selected : items.find((item) => item.id === selected?.parent_id);
-    const paper = papers.find((entry) => entry.id === test.paper_id);
-    setForm({ title: test.title, stage_id: paper?.stage_id.toString() ?? "", paper_id: test.paper_id?.toString() ?? "", subject_id: subject?.id.toString() ?? "", syllabus_item_id: test.syllabus_item_id?.toString() ?? "", duration_minutes: String(test.duration_minutes), total_marks: String(test.total_marks), negative_marking: String(test.negative_marking ?? 0), is_published: test.is_published });
-    const { data, error: questionError } = await supabase.from("mpsc_questions").select("*").eq("test_id", test.id).order("question_order");
-    if (questionError) setError(questionError.message); else setQuestions((data ?? []) as Question[]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  function startNew() {
+    setForm(blankTest());
+    setEditing(null);
+    setQuestions([]);
+    setQuestionForm(null);
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+    setError("");
+    setSuccess("");
+    setProgress("");
   }
-  async function saveTest(event: FormEvent) {
-    event.preventDefault(); setError(""); setSuccess("");
-    if (!form.title.trim() || !form.stage_id || !form.paper_id || !form.subject_id || !form.duration_minutes || !form.total_marks) { setError("Please complete the title and syllabus fields, duration, and total marks."); return; }
-    const syllabusId = form.syllabus_item_id || form.subject_id;
-    const selectedPaper = papers.find((paper) => paper.id === Number(form.paper_id));
-    const selectedSyllabusItem = items.find((item) => item.id === Number(syllabusId));
-    if (!selectedPaper || !selectedSyllabusItem || selectedPaper.stage_id !== Number(form.stage_id) || selectedSyllabusItem.paper_id !== selectedPaper.id) { setError("Select a paper and syllabus item that belong to the selected examination stage."); return; }
-    setSaving(true);
-    const payload = { title: form.title.trim(), paper_id: selectedPaper.id, syllabus_item_id: selectedSyllabusItem.id, duration_minutes: Number(form.duration_minutes), total_marks: Number(form.total_marks), negative_marking: Number(form.negative_marking || 0), is_published: form.is_published };
-    const result = editing ? await supabase.from("mpsc_tests").update(payload).eq("id", editing.id).select().single() : await supabase.from("mpsc_tests").insert(payload).select().single();
-    setSaving(false);
-    if (result.error || !result.data) { setError(result.error?.message || "The test could not be saved."); return; }
-    const saved = result.data as TestRecord; setEditing(saved); setTests((current) => editing ? current.map((test) => test.id === saved.id ? saved : test) : [saved, ...current]); setSuccess(editing ? "Test details updated." : "Draft created. Add questions, then publish when ready.");
-  }
-  async function saveQuestion(event: FormEvent) {
-    event.preventDefault(); if (!editing || !questionForm) return; setError(""); setSuccess("");
-    if (!questionForm.question_text.trim() || optionKeys.some((key) => !questionForm[`option_${key.toLowerCase()}` as "option_a" | "option_b" | "option_c" | "option_d"].trim())) { setError("Add a question and all four answer options."); return; }
-    setSaving(true);
-    const payload = { test_id: editing.id, question_text: questionForm.question_text.trim(), option_a: questionForm.option_a.trim(), option_b: questionForm.option_b.trim(), option_c: questionForm.option_c.trim(), option_d: questionForm.option_d.trim(), correct_answer: questionForm.correct_answer, marks: Number(questionForm.marks), explanation: questionForm.explanation.trim() || null, question_order: Number(questionForm.question_order) };
-    const result = questionForm.id ? await supabase.from("mpsc_questions").update(payload).eq("id", questionForm.id).select().single() : await supabase.from("mpsc_questions").insert(payload).select().single();
-    setSaving(false);
-    if (result.error || !result.data) { setError(result.error?.message || "The question could not be saved."); return; }
-    const saved = result.data as Question; setQuestions((current) => [...current.filter((question) => question.id !== saved.id), saved].sort((a, b) => Number(a.question_order) - Number(b.question_order))); setQuestionForm(null); setSuccess("Question saved.");
-  }
-  async function deleteQuestion(id: number) { if (!window.confirm("Delete this question?")) return; setBusyId(id); const { error: deleteError } = await supabase.from("mpsc_questions").delete().eq("id", id); setBusyId(null); if (deleteError) setError(deleteError.message); else { setQuestions((current) => current.filter((question) => question.id !== id)); setSuccess("Question deleted."); } }
-  async function togglePublish(test: TestRecord) { setBusyId(test.id); setError(""); const { error: updateError } = await supabase.from("mpsc_tests").update({ is_published: !test.is_published }).eq("id", test.id); setBusyId(null); if (updateError) setError(updateError.message); else { setTests((current) => current.map((item) => item.id === test.id ? { ...item, is_published: !item.is_published } : item)); if (editing?.id === test.id) setForm((current) => ({ ...current, is_published: !test.is_published })); setSuccess(test.is_published ? "Test unpublished." : "Test published for students."); } }
-  async function deleteTest(test: TestRecord) { if (!window.confirm(`Delete “${test.title}” and its questions? This cannot be undone.`)) return; setBusyId(test.id); const { error: deleteError } = await supabase.from("mpsc_tests").delete().eq("id", test.id); setBusyId(null); if (deleteError) setError(deleteError.message); else { setTests((current) => current.filter((item) => item.id !== test.id)); if (editing?.id === test.id) startNew(); setSuccess("Test deleted."); } }
 
-  return <main className="page"><section className="card admin-tests-card">
-    <header className="tests-header"><div><div className="eyebrow">ADMIN · TESTS</div><h1>{editing ? "Edit Test" : "Test Management"}</h1><p>Create structured MPSC / UPSC practice tests and publish them when ready.</p></div><button className="secondary" onClick={() => router.push("/admin")}>Admin Dashboard</button></header>
-    {error && <p className="form-error" role="alert">{error}</p>}{success && <p className="form-success" role="status">{success}</p>}
-    <section className="question-editor ai-generator"><div className="section-heading"><div><div className="eyebrow">AI ASSISTED</div><h2>AI Mock Test Generator</h2><p>Creates a private draft only. Review every question before publishing.</p></div></div>
-      <div className="form"><div className="form-grid"><label>Exam stage<select value={generator.stage_id} onChange={(e) => setGenerator({ ...generator, stage_id: e.target.value, paper_id: "", subject_id: "", topic_id: "" })}><option value="">Select stage</option>{stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.name}</option>)}</select></label><label>Paper<select disabled={!generator.stage_id} value={generator.paper_id} onChange={(e) => setGenerator({ ...generator, paper_id: e.target.value, subject_id: "", topic_id: "" })}><option value="">Select paper</option>{generatorPapers.map((paper) => <option key={paper.id} value={paper.id}>Paper {paper.paper_no} · {paper.name}</option>)}</select></label></div><div className="form-grid"><label>Subject<select disabled={!generator.paper_id} value={generator.subject_id} onChange={(e) => setGenerator({ ...generator, subject_id: e.target.value, topic_id: "" })}><option value="">Select subject</option>{generatorSubjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></label><label>Topic <span className="field-optional">Optional</span><select disabled={!generator.subject_id} value={generator.topic_id} onChange={(e) => setGenerator({ ...generator, topic_id: e.target.value })}><option value="">Entire subject</option>{generatorTopics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></label></div><label>Test title <span className="field-optional">Suggested automatically; editable</span><input value={generator.title} placeholder={suggestedTitle()} onChange={(e) => setGenerator({ ...generator, title: e.target.value })} /></label><div className="form-grid"><label>Questions<select value={generator.count} onChange={(e) => setGenerator({ ...generator, count: e.target.value })}>{[10,25,50,100,150].map((count) => <option key={count}>{count}</option>)}</select></label><label>Difficulty<select value={generator.difficulty} onChange={(e) => setGenerator({ ...generator, difficulty: e.target.value })}>{["Easy","Moderate","Difficult","Mixed"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Language<select value={generator.language} onChange={(e) => setGenerator({ ...generator, language: e.target.value })}><option>Marathi</option><option>English</option></select></label></div><div className="form-grid"><label>Marks per question<input type="number" min="0.25" step="0.25" value={generator.marks} onChange={(e) => setGenerator({ ...generator, marks: e.target.value })} /></label><label>Negative marking<input type="number" min="0" step="0.01" value={generator.negative_marking} onChange={(e) => setGenerator({ ...generator, negative_marking: e.target.value })} /></label><label>Duration (minutes)<input type="number" min="1" value={generator.duration} onChange={(e) => setGenerator({ ...generator, duration: e.target.value })} /></label></div><label>Reference document <span className="field-optional">Optional .txt/.md readable text</span><input type="file" accept=".txt,.md,text/plain,application/pdf" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; if (file.type === "application/pdf") { setError("PDF text extraction requires a server-side PDF extractor. Upload a text export of the reference for now; no document content was sent to AI."); return; } setGenerator({ ...generator, referenceName: file.name, referenceText: await file.text() }); }} />{generator.referenceName && <small>Using reference: {generator.referenceName}</small>}</label><label>Generation instructions <span className="field-optional">Optional</span><textarea value={generator.instructions} onChange={(e) => setGenerator({ ...generator, instructions: e.target.value })} placeholder="Focus areas, exclusions, or preferred question styles" /></label><button type="button" className="primary" disabled={generating} onClick={generateDraft}>{generating ? (progress || "Generating...") : "Generate Mock Test"}</button></div>
-    </section>
-    <form className="form admin-test-form" onSubmit={saveTest}><h2>{editing ? "Test details" : "New test"}</h2>
-      <label>Test title<input value={form.title} maxLength={180} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Mains GS Paper I · History" required /></label>
-      <div className="form-grid"><label>Examination stage<select value={form.stage_id} onChange={(e) => setForm({ ...form, stage_id: e.target.value, paper_id: "", subject_id: "", syllabus_item_id: "" })} required><option value="">Select stage</option>{stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.name}</option>)}</select></label><label>Paper<select value={form.paper_id} disabled={!form.stage_id} onChange={(e) => setForm({ ...form, paper_id: e.target.value, subject_id: "", syllabus_item_id: "" })} required><option value="">Select paper</option>{matchingPapers.map((paper) => <option key={paper.id} value={paper.id}>Paper {paper.paper_no} · {paper.name}</option>)}</select></label></div>
-      <div className="form-grid"><label>Subject<select value={form.subject_id} disabled={!form.paper_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value, syllabus_item_id: e.target.value })} required><option value="">Select subject</option>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></label><label>Topic <span className="field-optional">Optional</span><select value={form.syllabus_item_id} disabled={!form.subject_id} onChange={(e) => setForm({ ...form, syllabus_item_id: e.target.value || form.subject_id })}><option value="">Entire subject</option>{topics.map((topic) => <option key={topic.id} value={topic.id}>{topic.name}</option>)}</select></label></div>
-      <div className="form-grid"><label>Duration (minutes)<input type="number" min="1" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} required /></label><label>Total marks<input type="number" min="1" step="0.25" value={form.total_marks} onChange={(e) => setForm({ ...form, total_marks: e.target.value })} required /></label><label>Negative marking<input type="number" min="0" step="0.25" value={form.negative_marking} onChange={(e) => setForm({ ...form, negative_marking: e.target.value })} /></label></div>
-      <label className="check-label"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} /> Publish this test for students</label>
-      <div className="inline-actions"><button className="primary" disabled={saving}>{saving ? "Saving..." : editing ? "Save test details" : "Create draft"}</button>{editing && <button type="button" className="secondary" onClick={startNew}>Create another test</button>}</div>
-    </form>
-    {editing && <section className="question-editor"><div className="section-heading"><div><h2>Questions <span>{questions.length}</span></h2><p>AI generated draft — review before publishing. Total: {questions.reduce((sum, question) => sum + Number(question.marks), 0)} marks.</p></div><div className="actions"><button type="button" className="secondary" disabled={generating} onClick={regenerateComplete}>Regenerate complete test</button><button type="button" className="secondary" onClick={() => setQuestionForm(blankQuestion(questions.length + 1))}>Add question</button></div></div>
-      {questionForm && <form className="form question-form" onSubmit={saveQuestion}><h3>{questionForm.id ? "Edit question" : "New question"}</h3><label>Question text<textarea value={questionForm.question_text} onChange={(e) => setQuestionForm({ ...questionForm, question_text: e.target.value })} required /></label>{optionKeys.map((option) => <label key={option}>Option {option}<input value={questionForm[`option_${option.toLowerCase()}` as "option_a" | "option_b" | "option_c" | "option_d"]} onChange={(e) => setQuestionForm({ ...questionForm, [`option_${option.toLowerCase()}`]: e.target.value })} required /></label>)}<div className="form-grid"><label>Correct answer<select value={questionForm.correct_answer} onChange={(e) => setQuestionForm({ ...questionForm, correct_answer: e.target.value })}>{optionKeys.map((option) => <option key={option}>{option}</option>)}</select></label><label>Marks<input type="number" min="0.25" step="0.25" value={questionForm.marks} onChange={(e) => setQuestionForm({ ...questionForm, marks: e.target.value })} required /></label><label>Question order<input type="number" min="1" value={questionForm.question_order} onChange={(e) => setQuestionForm({ ...questionForm, question_order: e.target.value })} required /></label></div><label>Explanation <span className="field-optional">Optional</span><textarea value={questionForm.explanation} onChange={(e) => setQuestionForm({ ...questionForm, explanation: e.target.value })} /></label><div className="inline-actions"><button className="primary" disabled={saving}>{saving ? "Saving..." : "Save question"}</button><button type="button" className="secondary" onClick={() => setQuestionForm(null)}>Cancel</button></div></form>}
-      {questions.length === 0 ? <div className="empty-box"><strong>No questions yet</strong><span>Add your first MCQ before publishing this test.</span></div> : <div className="admin-question-list">{questions.map((question, index) => <article key={question.id} className="admin-question"><div><span className="question-number">Question {index + 1}</span><strong>{question.question_text}</strong><div className="review-options">{optionKeys.map((option) => <span key={option}>{option}. {question[`option_${option.toLowerCase()}` as "option_a" | "option_b" | "option_c" | "option_d"]}</span>)}</div><small>Correct answer: {question.correct_answer} · {question.marks} marks</small>{question.explanation && <p><b>Explanation:</b> {question.explanation}</p>}</div><div className="actions"><button className="secondary" onClick={() => setQuestionForm({ id: question.id, question_text: question.question_text, option_a: question.option_a, option_b: question.option_b, option_c: question.option_c, option_d: question.option_d, correct_answer: question.correct_answer, marks: String(question.marks), explanation: question.explanation ?? "", question_order: String(question.question_order ?? index + 1) })}>Edit</button><button className="secondary" disabled={generating} onClick={() => regenerateQuestion(question)}>Regenerate</button><button className="reject" disabled={busyId === question.id} onClick={() => deleteQuestion(question.id)}>Delete</button></div></article>)}</div>}</section>}
-    <section className="admin-test-list"><div className="section-heading"><div><h2>All tests</h2><p>Published tests are visible on the student Tests page.</p></div><button type="button" className="secondary" onClick={startNew}>New test</button></div>{loading ? <p className="muted">Loading tests...</p> : tests.length === 0 ? <div className="empty-box"><strong>No tests created</strong><span>Create a draft to begin building your first practice test.</span></div> : <div className="test-list">{tests.map((test) => <article className="test-card admin-test-row" key={test.id}><div className="test-card-main"><div className={test.is_published ? "status published" : "status draft"}>{test.is_published ? "Published" : "Draft"}</div><h2>{test.title}</h2><p>{paperName(test.paper_id)} · {itemName(test.syllabus_item_id) || "General"}</p><div className="test-details"><span>⏱ {formatDuration(Number(test.duration_minutes))}</span><span>🏅 {test.total_marks} marks</span><span>{formatPenalty(test.negative_marking)}</span></div></div><div className="admin-row-actions"><button className="secondary" onClick={() => edit(test)}>Edit</button><button className={test.is_published ? "secondary" : "approve"} disabled={busyId === test.id} onClick={() => togglePublish(test)}>{test.is_published ? "Unpublish" : "Publish"}</button><button className="reject" disabled={busyId === test.id} onClick={() => deleteTest(test)}>Delete</button></div></article>)}</div>}</section>
-  </section></main>;
+  function editQuestion(question: Question) {
+    setQuestionForm({
+      id: question.id,
+      question_text: question.question_text,
+      option_a: question.option_a,
+      option_b: question.option_b,
+      option_c: question.option_c,
+      option_d: question.option_d,
+      correct_answer:
+        question.correct_answer || "A",
+      marks: String(question.marks ?? 1),
+      explanation: question.explanation || "",
+      question_order: String(
+        question.question_order ?? 1
+      ),
+    });
+        }
+    async function generateMainsQuestions() {
+    setError("");
+    setSuccess("");
+    setProgress("");
+
+    if (!generator.stage_id) {
+      setError("Please select an examination stage.");
+      return;
+    }
+
+    if (!isMainExamination) {
+      setError(
+        "Mains question generation is available only for Main Examination."
+      );
+      return;
+    }
+
+    if (!generator.paper_id) {
+      setError("Please select a paper.");
+      return;
+    }
+
+    if (!generator.subject_id) {
+      setError("Please select a subject.");
+      return;
+    }
+
+    if (!generator.topic_id) {
+      setError("Please select a topic.");
+      return;
+    }
+
+    const marks = Number(generator.marks);
+    const wordLimit = Number(generator.wordLimit);
+    const count = Number(generator.count);
+
+    if (!Number.isFinite(marks) || marks <= 0) {
+      setError("Please enter valid marks.");
+      return;
+    }
+
+    if (
+      !Number.isFinite(wordLimit) ||
+      wordLimit < 50
+    ) {
+      setError(
+        "Word limit must be at least 50 words."
+      );
+      return;
+    }
+
+    if (
+      !Number.isFinite(count) ||
+      count < 1 ||
+      count > 20
+    ) {
+      setError(
+        "Question count must be between 1 and 20."
+      );
+      return;
+    }
+
+    setGenerating(true);
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      const {
+        stage,
+        paper,
+        subject,
+        topic,
+      } = getSelectedGeneratorContext();
+
+      setProgress(
+        "AI is creating UPSC/MPSC Mains questions..."
+      );
+
+      const response = await fetch(
+        "/api/ai/mains-question",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            stage: stage?.name || "",
+            paper: paper
+              ? `Paper ${paper.paper_no} · ${paper.name}`
+              : "",
+            subject: subject?.name || "",
+            topic: topic?.name || "",
+            count,
+            marks,
+            wordLimit,
+            difficulty: generator.difficulty,
+            language: generator.language,
+            instructions: generator.instructions,
+            referenceText: generator.referenceText,
+            referenceName: generator.referenceName,
+          }),
+        }
+      );
+
+      const result = (await response.json()) as {
+        questions?: unknown;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Mains question generation failed."
+        );
+      }
+
+      if (!Array.isArray(result.questions)) {
+        throw new Error(
+          "AI returned an invalid question format."
+        );
+      }
+
+      const generated: MainsQuestion[] =
+        result.questions.map(
+          (value, index) => {
+            const item =
+              value as Record<string, unknown>;
+
+            return {
+              id: undefined,
+              question_text:
+                String(
+                  item.question_text || ""
+                ).trim(),
+              marks:
+                Number(item.marks) || marks,
+              word_limit:
+                Number(item.word_limit) ||
+                wordLimit,
+              model_answer: "",
+              answer_framework: "",
+              key_points: Array.isArray(
+                item.key_points
+              )
+                ? item.key_points.map((point) =>
+                    String(point)
+                  )
+                : [],
+              status: "draft",
+            };
+          }
+        );
+
+      const validQuestions =
+        generated.filter(
+          (question) =>
+            question.question_text.length > 0
+        );
+
+      if (!validQuestions.length) {
+        throw new Error(
+          "AI did not return any valid Mains questions."
+        );
+      }
+
+      setMainsQuestions(validQuestions);
+      setSelectedMainsQuestion(0);
+
+      setProgress(
+        `${validQuestions.length} Mains questions generated successfully.`
+      );
+
+      setSuccess(
+        "Mains questions generated. You can now generate a model answer for each question."
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Mains question generation failed."
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function updateMainsQuestion(
+    index: number,
+    patch: Partial<MainsQuestion>
+  ) {
+    setMainsQuestions((current) =>
+      current.map((question, questionIndex) =>
+        questionIndex === index
+          ? {
+              ...question,
+              ...patch,
+            }
+          : question
+      )
+    );
+  }
+
+  function removeMainsQuestion(index: number) {
+    setMainsQuestions((current) =>
+      current.filter(
+        (_, questionIndex) =>
+          questionIndex !== index
+      )
+    );
+
+    setSelectedMainsQuestion((current) => {
+      if (current === null) {
+        return null;
+      }
+
+      if (current === index) {
+        return null;
+      }
+
+      if (current > index) {
+        return current - 1;
+      }
+
+      return current;
+    });
+  }
+
+  function selectMainsQuestion(index: number) {
+    if (
+      index < 0 ||
+      index >= mainsQuestions.length
+    ) {
+      return;
+    }
+
+    setSelectedMainsQuestion(index);
+  }
+
+  function mainsQuestionSummary(
+    question: MainsQuestion
+  ) {
+    const text =
+      question.question_text.trim();
+
+    if (text.length <= 90) {
+      return text;
+    }
+
+    return `${text.slice(0, 90)}…`;
+  }
+    async function generateModelAnswer(index: number) {
+    const question = mainsQuestions[index];
+
+    if (!question) {
+      return;
+    }
+
+    if (!question.question_text.trim()) {
+      setError("Question text cannot be empty.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setProgress("");
+
+    setGeneratingAnswer(index);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      const {
+        stage,
+        paper,
+        subject,
+        topic,
+      } = getSelectedGeneratorContext();
+
+      setProgress(
+        "AI is preparing the model answer..."
+      );
+
+      const response = await fetch(
+        "/api/ai/mains-model-answer",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            question: question.question_text,
+            marks: question.marks,
+            wordLimit: question.word_limit,
+            stage: stage?.name || "",
+            paper: paper
+              ? `Paper ${paper.paper_no} · ${paper.name}`
+              : "",
+            subject: subject?.name || "",
+            topic: topic?.name || "",
+            language: generator.language,
+            difficulty: generator.difficulty,
+            instructions: generator.instructions,
+            referenceText: generator.referenceText,
+            referenceName: generator.referenceName,
+          }),
+        }
+      );
+
+      const result = (await response.json()) as {
+        model_answer?: string;
+        answer_framework?: string;
+        key_points?: unknown;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(
+          result.error ||
+            "Model answer generation failed."
+        );
+      }
+
+      const modelAnswer =
+        String(result.model_answer || "").trim();
+
+      if (!modelAnswer) {
+        throw new Error(
+          "AI did not return a model answer."
+        );
+      }
+
+      const answerFramework =
+        String(
+          result.answer_framework || ""
+        ).trim();
+
+      const keyPoints = Array.isArray(
+        result.key_points
+      )
+        ? result.key_points.map((point) =>
+            String(point)
+          )
+        : [];
+
+      updateMainsQuestion(index, {
+        model_answer: modelAnswer,
+        answer_framework: answerFramework,
+        key_points: keyPoints,
+      });
+
+      setProgress(
+        "Model answer generated successfully."
+      );
+
+      setSuccess(
+        "Model answer generated. You can edit it before saving."
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Model answer generation failed."
+      );
+    } finally {
+      setGeneratingAnswer(null);
+    }
+  }
+
+  async function saveMainsQuestion(
+    index: number
+  ) {
+    const question = mainsQuestions[index];
+
+    if (!question) {
+      return;
+    }
+
+    if (!question.question_text.trim()) {
+      setError("Question text cannot be empty.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setSaving(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      const syllabusItemId = Number(
+        generator.topic_id
+      );
+
+      const payload = {
+        user_id: session.user.id,
+        stage_id: Number(generator.stage_id),
+        paper_id: Number(generator.paper_id),
+        syllabus_item_id:
+          Number.isFinite(syllabusItemId) &&
+          syllabusItemId > 0
+            ? syllabusItemId
+            : null,
+        question_text:
+          question.question_text.trim(),
+        marks: Number(question.marks),
+        word_limit: Number(question.word_limit),
+        model_answer:
+          question.model_answer.trim() || null,
+        answer_framework:
+          question.answer_framework.trim() || null,
+        key_points: question.key_points,
+        status: question.status,
+      };
+
+      if (question.id) {
+        const { error: updateError } =
+          await supabase
+            .from("mpsc_mains_questions")
+            .update(payload)
+            .eq("id", question.id);
+
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+
+        setSuccess(
+          "Mains question updated successfully."
+        );
+      } else {
+        const { data, error: insertError } =
+          await supabase
+            .from("mpsc_mains_questions")
+            .insert(payload)
+            .select("id")
+            .single();
+
+        if (insertError) {
+          throw new Error(insertError.message);
+        }
+
+        updateMainsQuestion(index, {
+          id: data.id,
+        });
+
+        setSuccess(
+          "Mains question saved successfully."
+        );
+      }
+
+      setProgress("");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not save Mains question."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveAllMainsQuestions() {
+    if (!mainsQuestions.length) {
+      setError("There are no Mains questions to save.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setSaving(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      const syllabusItemId = Number(
+        generator.topic_id
+      );
+
+      const rows = mainsQuestions.map(
+        (question) => ({
+          ...(question.id
+            ? { id: question.id }
+            : {}),
+          user_id: session.user.id,
+          stage_id: Number(generator.stage_id),
+          paper_id: Number(generator.paper_id),
+          syllabus_item_id:
+            Number.isFinite(syllabusItemId) &&
+            syllabusItemId > 0
+              ? syllabusItemId
+              : null,
+          question_text:
+            question.question_text.trim(),
+          marks: Number(question.marks),
+          word_limit: Number(
+            question.word_limit
+          ),
+          model_answer:
+            question.model_answer.trim() || null,
+          answer_framework:
+            question.answer_framework.trim() ||
+            null,
+          key_points: question.key_points,
+          status: question.status,
+          updated_at: new Date().toISOString(),
+        })
+      );
+
+      const { data, error: upsertError } =
+        await supabase
+          .from("mpsc_mains_questions")
+          .upsert(rows, {
+            onConflict: "id",
+          })
+          .select(
+            "id, question_text, marks, word_limit, model_answer, answer_framework, key_points, status"
+          );
+
+      if (upsertError) {
+        throw new Error(upsertError.message);
+      }
+
+      if (data) {
+        setMainsQuestions((current) =>
+          current.map((question, index) => {
+            const saved = data[index];
+
+            return saved
+              ? {
+                  ...question,
+                  id: saved.id,
+                  question_text:
+                    saved.question_text,
+                  marks: Number(saved.marks),
+                  word_limit:
+                    Number(saved.word_limit),
+                  model_answer:
+                    saved.model_answer || "",
+                  answer_framework:
+                    saved.answer_framework ||
+                    "",
+                  key_points:
+                    Array.isArray(
+                      saved.key_points
+                    )
+                      ? saved.key_points.map(
+                          (point) =>
+                            String(point)
+                        )
+                      : [],
+                  status:
+                    saved.status as
+                      | "draft"
+                      | "published"
+                      | "rejected",
+                }
+              : question;
+          })
+        );
+      }
+
+      setSuccess(
+        `${rows.length} Mains question${
+          rows.length === 1 ? "" : "s"
+        } saved successfully.`
+      );
+      setProgress("");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not save Mains questions."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function publishMainsQuestion(
+    index: number
+  ) {
+    const question = mainsQuestions[index];
+
+    if (!question?.id) {
+      setError(
+        "Please save the question before publishing it."
+      );
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setBusyId(question.id);
+
+    try {
+      const { error: updateError } =
+        await supabase
+          .from("mpsc_mains_questions")
+          .update({
+            status: "published",
+            updated_at:
+              new Date().toISOString(),
+          })
+          .eq("id", question.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      updateMainsQuestion(index, {
+        status: "published",
+      });
+
+      setSuccess(
+        "Mains question published successfully."
+      );
+    } catch (publishError) {
+      setError(
+        publishError instanceof Error
+          ? publishError.message
+          : "Could not publish question."
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function unpublishMainsQuestion(
+    index: number
+  ) {
+    const question = mainsQuestions[index];
+
+    if (!question?.id) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setBusyId(question.id);
+
+    try {
+      const { error: updateError } =
+        await supabase
+          .from("mpsc_mains_questions")
+          .update({
+            status: "draft",
+            updated_at:
+              new Date().toISOString(),
+          })
+          .eq("id", question.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      updateMainsQuestion(index, {
+        status: "draft",
+      });
+
+      setSuccess(
+        "Mains question moved back to draft."
+      );
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : "Could not update question."
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteMainsQuestion(
+    index: number
+  ) {
+    const question = mainsQuestions[index];
+
+    if (!question) {
+      return;
+    }
+
+    if (!window.confirm(
+      "Delete this Mains question permanently?"
+    )) {
+      return;
+    }
+
+    if (!question.id) {
+      removeMainsQuestion(index);
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setBusyId(question.id);
+
+    try {
+      const { error: deleteError } =
+        await supabase
+          .from("mpsc_mains_questions")
+          .delete()
+          .eq("id", question.id);
+
+      if (deleteError) {
+        throw new Error(deleteError.message);
+      }
+
+      removeMainsQuestion(index);
+
+      setSuccess(
+        "Mains question deleted successfully."
+      );
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Could not delete question."
+      );
+    } finally {
+      setBusyId(null);
+    }
+        }
+    async function saveTest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setError("");
+    setSuccess("");
+    setSaving(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error(
+          "Your session has expired. Please log in again."
+        );
+      }
+
+      if (!form.title.trim()) {
+        throw new Error("Test title is required.");
+      }
+
+      if (!form.paper_id) {
+        throw new Error("Please select a paper.");
+      }
+
+      const payload = {
+        title: form.title.trim(),
+        paper_id: Number(form.paper_id),
+        syllabus_item_id: form.syllabus_item_id
+          ? Number(form.syllabus_item_id)
+          : null,
+        duration_minutes:
+          Number(form.duration_minutes) || 60,
+        total_marks:
+          Number(form.total_marks) || 0,
+        negative_marking:
+          Number(form.negative_marking) || 0,
+        is_published: form.is_published,
+      };
+
+      if (editing) {
+        const { error: updateError } =
+          await supabase
+            .from("mpsc_tests")
+            .update(payload)
+            .eq("id", editing.id);
+
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+
+        setSuccess("Test updated successfully.");
+      } else {
+        const { data, error: insertError } =
+          await supabase
+            .from("mpsc_tests")
+            .insert(payload)
+            .select("*")
+            .single();
+
+        if (insertError) {
+          throw new Error(insertError.message);
+        }
+
+        setEditing(data as TestRecord);
+        setSuccess("Test created successfully.");
+      }
+
+      await load();
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not save test."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function loadQuestions(testId: number) {
+    setError("");
+
+    const { data, error: questionsError } =
+      await supabase
+        .from("mpsc_questions")
+        .select("*")
+        .eq("test_id", testId)
+        .order("question_order");
+
+    if (questionsError) {
+      setError(questionsError.message);
+      return;
+    }
+
+    setQuestions((data ?? []) as Question[]);
+  }
+
+  async function saveQuestion(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    if (!questionForm) {
+      return;
+    }
+
+    if (!editing) {
+      setError(
+        "Please save the test before adding questions."
+      );
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setSaving(true);
+
+    try {
+      const payload = {
+        test_id: editing.id,
+        question_text:
+          questionForm.question_text.trim(),
+        option_a: questionForm.option_a.trim(),
+        option_b: questionForm.option_b.trim(),
+        option_c: questionForm.option_c.trim(),
+        option_d: questionForm.option_d.trim(),
+        correct_answer:
+          questionForm.correct_answer
+            .trim()
+            .toUpperCase()
+            .charAt(0),
+        marks: Number(questionForm.marks) || 1,
+        explanation:
+          questionForm.explanation.trim(),
+        question_order:
+          Number(questionForm.question_order) || 1,
+      };
+
+      if (!payload.question_text) {
+        throw new Error(
+          "Question text is required."
+        );
+      }
+
+      if (
+        !["A", "B", "C", "D"].includes(
+          payload.correct_answer
+        )
+      ) {
+        throw new Error(
+          "Correct answer must be A, B, C or D."
+        );
+      }
+
+      if (questionForm.id) {
+        const { error: updateError } =
+          await supabase
+            .from("mpsc_questions")
+            .update(payload)
+            .eq("id", questionForm.id);
+
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+
+        setSuccess(
+          "Question updated successfully."
+        );
+      } else {
+        const { error: insertError } =
+          await supabase
+            .from("mpsc_questions")
+            .insert(payload);
+
+        if (insertError) {
+          throw new Error(insertError.message);
+        }
+
+        setSuccess(
+          "Question added successfully."
+        );
+      }
+
+      setQuestionForm(null);
+      await loadQuestions(editing.id);
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not save question."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteQuestion(
+    questionId: number
+  ) {
+    if (
+      !window.confirm(
+        "Delete this question permanently?"
+      )
+    ) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+
+    const { error: deleteError } =
+      await supabase
+        .from("mpsc_questions")
+        .delete()
+        .eq("id", questionId);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+
+    setQuestions((current) =>
+      current.filter(
+        (question) => question.id !== questionId
+      )
+    );
+
+    setSuccess(
+      "Question deleted successfully."
+    );
+  }
+
+  async function togglePublish(
+    test: TestRecord
+  ) {
+    setError("");
+    setSuccess("");
+    setBusyId(test.id);
+
+    try {
+      const nextPublished =
+        !Boolean(test.is_published);
+
+      const { error: updateError } =
+        await supabase
+          .from("mpsc_tests")
+          .update({
+            is_published: nextPublished,
+          })
+          .eq("id", test.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      setTests((current) =>
+        current.map((item) =>
+          item.id === test.id
+            ? {
+                ...item,
+                is_published: nextPublished,
+              }
+            : item
+        )
+      );
+
+      setSuccess(
+        nextPublished
+          ? "Test published successfully."
+          : "Test unpublished successfully."
+      );
+    } catch (publishError) {
+      setError(
+        publishError instanceof Error
+          ? publishError.message
+          : "Could not update publication status."
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function deleteTest(
+    test: TestRecord
+  ) {
+    if (
+      !window.confirm(
+        `Delete "${test.title}" permanently? This will also remove its questions.`
+      )
+    ) {
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setBusyId(test.id);
+
+    try {
+      const { error: deleteQuestionsError } =
+        await supabase
+          .from("mpsc_questions")
+          .delete()
+          .eq("test_id", test.id);
+
+      if (deleteQuestionsError) {
+        throw new Error(
+          deleteQuestionsError.message
+        );
+      }
+
+      const { error: deleteTestError } =
+        await supabase
+          .from("mpsc_tests")
+          .delete()
+          .eq("id", test.id);
+
+      if (deleteTestError) {
+        throw new Error(
+          deleteTestError.message
+        );
+      }
+
+      setTests((current) =>
+        current.filter(
+          (item) => item.id !== test.id
+        )
+      );
+
+      if (editing?.id === test.id) {
+        startNew();
+      }
+
+      setSuccess(
+        "Test deleted successfully."
+      );
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Could not delete test."
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function editTest(test: TestRecord) {
+    setEditing(test);
+
+    setForm({
+      title: test.title || "",
+      stage_id: test.stage_id
+        ? String(test.stage_id)
+        : "",
+      paper_id: test.paper_id
+        ? String(test.paper_id)
+        : "",
+      subject_id: "",
+      syllabus_item_id:
+        test.syllabus_item_id
+          ? String(test.syllabus_item_id)
+          : "",
+      duration_minutes: String(
+        test.duration_minutes ?? 60
+      ),
+      total_marks: String(
+        test.total_marks ?? 0
+      ),
+      negative_marking: String(
+        test.negative_marking ?? 0
+      ),
+      is_published:
+        Boolean(test.is_published),
+    });
+
+    setQuestionForm(null);
+    setMainsQuestions([]);
+    setSelectedMainsQuestion(null);
+
+    await loadQuestions(test.id);
+  }
+
+  function updateQuestionForm(
+    patch: Partial<QuestionForm>
+  ) {
+    setQuestionForm((current) =>
+      current
+        ? {
+            ...current,
+            ...patch,
+          }
+        : current
+    );
+  }
+
+  function addBlankQuestion() {
+    setQuestionForm(
+      blankQuestion(questions.length + 1)
+    );
+  }
+
+  function editMainsQuestionText(
+    index: number,
+    value: string
+  ) {
+    updateMainsQuestion(index, {
+      question_text: value,
+    });
+  }
+
+  function editMainsAnswer(
+    index: number,
+    value: string
+  ) {
+    updateMainsQuestion(index, {
+      model_answer: value,
+    });
+  }
+
+  function editMainsFramework(
+    index: number,
+    value: string
+  ) {
+    updateMainsQuestion(index, {
+      answer_framework: value,
+    });
 }
+    return (
+    <main className="page">
+      <section className="admin-tests-card">
+        <div className="tests-header">
+          <div>
+            <p className="eyebrow">ADMIN</p>
+            <h1>Tests & Mains Questions</h1>
+            <p>
+              Create AI-generated Prelims MCQs or
+              descriptive Main Examination questions.
+            </p>
+          </div>
+
+          <div className="actions">
+            <button
+              type="button"
+              className="secondary"
+              onClick={startNew}
+            >
+              New
+            </button>
+
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => router.push("/admin")}
+            >
+              Back to Admin
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="form-error">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="form-success">
+            {success}
+          </div>
+        )}
+
+        {progress && (
+          <div className="form-success">
+            {progress}
+          </div>
+        )}
+
+        {/* AI GENERATOR */}
+
+        <section className="card ai-generator">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">
+                AI GENERATOR
+              </p>
+
+              <h2>
+                MPSC / UPSC Question Generator
+              </h2>
+
+              <p>
+                Select the examination stage,
+                paper and syllabus topic.
+              </p>
+            </div>
+          </div>
+
+          <form
+            className="form"
+            onSubmit={generateDraft}
+          >
+            <div className="form-grid">
+              <label>
+                Examination Stage
+                <select
+                  value={generator.stage_id}
+                  onChange={(event) =>
+                    handleGeneratorStageChange(
+                      event.target.value
+                    )
+                  }
+                  required
+                >
+                  <option value="">
+                    Select Stage
+                  </option>
+
+                  {stages.map((stage) => (
+                    <option
+                      key={stage.id}
+                      value={stage.id}
+                    >
+                      {stage.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                Paper
+                <select
+                  value={generator.paper_id}
+                  onChange={(event) =>
+                    handleGeneratorPaperChange(
+                      event.target.value
+                    )
+                  }
+                  disabled={!generator.stage_id}
+                  required
+                >
+                  <option value="">
+                    Select Paper
+                  </option>
+
+                  {generatorPapers.map(
+                    (paper) => (
+                      <option
+                        key={paper.id}
+                        value={paper.id}
+                      >
+                        Paper {paper.paper_no} ·{" "}
+                        {paper.name}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+
+              <label>
+                Subject
+                <select
+                  value={generator.subject_id}
+                  onChange={(event) =>
+                    handleGeneratorSubjectChange(
+                      event.target.value
+                    )
+                  }
+                  disabled={!generator.paper_id}
+                  required
+                >
+                  <option value="">
+                    Select Subject
+                  </option>
+
+                  {generatorSubjects.map(
+                    (subject) => (
+                      <option
+                        key={subject.id}
+                        value={subject.id}
+                      >
+                        {subject.name}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+
+              <label>
+                Topic
+                <select
+                  value={generator.topic_id}
+                  onChange={(event) =>
+                    handleGeneratorTopicChange(
+                      event.target.value
+                    )
+                  }
+                  disabled={!generator.subject_id}
+                  required
+                >
+                  <option value="">
+                    Select Topic
+                  </option>
+
+                  {generatorTopics.map(
+                    (topic) => (
+                      <option
+                        key={topic.id}
+                        value={topic.id}
+                      >
+                        {topic.name}
+                      </option>
+                    )
+                  )}
+                </select>
+              </label>
+
+              <label>
+                Number of Questions
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={generator.count}
+                  onChange={(event) =>
+                    updateGenerator({
+                      count:
+                        event.target.value,
+                    })
+                  }
+                />
+              </label>
+
+              <label>
+                Difficulty
+                <select
+                  value={generator.difficulty}
+                  onChange={(event) =>
+                    updateGenerator({
+                      difficulty:
+                        event.target.value,
+                    })
+                  }
+                >
+                  <option value="Easy">
+                    Easy
+                  </option>
+                  <option value="Moderate">
+                    Moderate
+                  </option>
+                  <option value="Difficult">
+                    Difficult
+                  </option>
+                  <option value="Mixed">
+                    Mixed
+                  </option>
+                </select>
+              </label>
+
+              <label>
+                Language
+                <select
+                  value={generator.language}
+                  onChange={(event) =>
+                    updateGenerator({
+                      language:
+                        event.target.value,
+                    })
+                  }
+                >
+                  <option value="English">
+                    English
+                  </option>
+                  <option value="Marathi">
+                    Marathi
+                  </option>
+                </select>
+              </label>
+
+              <label>
+                Marks
+                <input
+                  type="number"
+                  min="1"
+                  value={generator.marks}
+                  onChange={(event) =>
+                    updateGenerator({
+                      marks:
+                        event.target.value,
+                    })
+                  }
+                />
+              </label>
+
+              {isMainExamination && (
+                <label>
+                  Word Limit
+                  <input
+                    type="number"
+                    min="50"
+                    max="1000"
+                    value={generator.wordLimit}
+                    onChange={(event) =>
+                      updateGenerator({
+                        wordLimit:
+                          event.target.value,
+                      })
+                    }
+                  />
+                </label>
+              )}
+
+              {!isMainExamination && (
+                <label>
+                  Negative Marking
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={
+                      generator.negative_marking
+                    }
+                    onChange={(event) =>
+                      updateGenerator({
+                        negative_marking:
+                          event.target.value,
+                      })
+                    }
+                  />
+                </label>
+              )}
+
+              {!isMainExamination && (
+                <label>
+                  Duration (minutes)
+                  <input
+                    type="number"
+                    min="1"
+                    value={generator.duration}
+                    onChange={(event) =>
+                      updateGenerator({
+                        duration:
+                          event.target.value,
+                      })
+                    }
+                  />
+                </label>
+              )}
+
+              <label>
+                Generator Title
+                <input
+                  type="text"
+                  value={generator.title}
+                  onChange={(event) =>
+                    updateGenerator({
+                      title:
+                        event.target.value,
+                    })
+                  }
+                  placeholder={
+                    isMainExamination
+                      ? "Optional Mains set title"
+                      : "Optional test title"
+                  }
+                />
+              </label>
+            </div>
+
+            <label>
+              Instructions
+              <textarea
+                value={generator.instructions}
+                onChange={(event) =>
+                  updateGenerator({
+                    instructions:
+                      event.target.value,
+                  })
+                }
+                rows={3}
+                placeholder={
+                  isMainExamination
+                    ? "Example: Focus on analytical dimensions, constitutional provisions and Maharashtra-specific examples."
+                    : "Optional instructions for the AI."
+                }
+              />
+            </label>
+
+            <label>
+              Reference Name
+              <input
+                type="text"
+                value={generator.referenceName}
+                onChange={(event) =>
+                  updateGenerator({
+                    referenceName:
+                      event.target.value,
+                  })
+                }
+                placeholder="Optional source/reference name"
+              />
+            </label>
+
+            <label>
+              Reference Text
+              <textarea
+                value={generator.referenceText}
+                onChange={(event) =>
+                  updateGenerator({
+                    referenceText:
+                      event.target.value,
+                  })
+                }
+                rows={5}
+                placeholder="Optional reference material for AI generation."
+              />
+            </label>
+
+            {isMainExamination ? (
+              <div className="actions">
+                <button
+                  type="submit"
+                  className="primary"
+                  disabled={generating}
+                >
+                  {generating
+                    ? "Generating Mains Questions..."
+                    : "Generate Mains Questions"}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={resetGenerator}
+                  disabled={generating}
+                >
+                  Reset
+                </button>
+              </div>
+            ) : (
+              <div className="actions">
+                <button
+                  type="submit"
+                  className="primary"
+                  disabled={generating}
+                >
+                  {generating
+                    ? "Generating MCQs..."
+                    : "Generate AI MCQs"}
+                </button>
+
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={resetGenerator}
+                  disabled={generating}
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+          </form>
+        </section>
+
+        {/* MAINS QUESTIONS */}
+
+        {isMainExamination &&
+          mainsQuestions.length > 0 && (
+            <section className="card">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">
+                    MAIN EXAMINATION
+                  </p>
+
+                  <h2>
+                    Generated Mains Questions
+                  </h2>
+
+                  <p>
+                    Review the questions, generate
+                    model answers and edit them
+                    before publishing.
+                  </p>
+                </div>
+
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="primary"
+                    onClick={
+                      saveAllMainsQuestions
+                    }
+                    disabled={saving}
+                  >
+                    {saving
+                      ? "Saving..."
+                      : "Save All Questions"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-grid">
+                {mainsQuestions.map(
+                  (question, index) => (
+                    <article
+                      className="question-editor"
+                      key={
+                        question.id ??
+                        `mains-${index}`
+                      }
+                    >
+                      <div className="section-heading">
+                        <div>
+                          <strong>
+                            Question {index + 1}
+                          </strong>
+
+                          <p>
+                            {question.marks} Marks ·{" "}
+                            {question.word_limit} Words
+                          </p>
+                        </div>
+
+                        <div className="actions">
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() =>
+                              selectMainsQuestion(
+                                index
+                              )
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="reject"
+                            onClick={() =>
+                              deleteMainsQuestion(
+                                index
+                              )
+                            }
+                            disabled={
+                              busyId ===
+                              question.id
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      <p>
+                        {mainsQuestionSummary(
+                          question
+                        )}
+                      </p>
+
+                      {selectedMainsQuestion ===
+                        index && (
+                        <>
+                          <label>
+                            Question
+                            <textarea
+                              value={
+                                question.question_text
+                              }
+                              onChange={(event) =>
+                                editMainsQuestionText(
+                                  index,
+                                  event.target.value
+                                )
+                              }
+                              rows={5}
+                            />
+                          </label>
+
+                          <div className="form-grid">
+                            <label>
+                              Marks
+                              <input
+                                type="number"
+                                min="1"
+                                value={
+                                  question.marks
+                                }
+                                onChange={(event) =>
+                                  updateMainsQuestion(
+                                    index,
+                                    {
+                                      marks:
+                                        Number(
+                                          event
+                                            .target
+                                            .value
+                                        ) || 1,
+                                    }
+                                  )
+                                }
+                              />
+                            </label>
+
+                            <label>
+                              Word Limit
+                              <input
+                                type="number"
+                                min="50"
+                                value={
+                                  question.word_limit
+                                }
+                                onChange={(event) =>
+                                  updateMainsQuestion(
+                                    index,
+                                    {
+                                      word_limit:
+                                        Number(
+                                          event
+                                            .target
+                                            .value
+                                        ) || 50,
+                                    }
+                                  )
+                                }
+                              />
+                            </label>
+                          </div>
+
+                          <div className="actions">
+                            <button
+                              type="button"
+                              className="primary"
+                              onClick={() =>
+                                generateModelAnswer(
+                                  index
+                                )
+                              }
+                              disabled={
+                                generatingAnswer ===
+                                index
+                              }
+                            >
+                              {generatingAnswer ===
+                              index
+                                ? "Generating Answer..."
+                                : "Generate Model Answer"}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="secondary"
+                              onClick={() =>
+                                saveMainsQuestion(
+                                  index
+                                )
+                              }
+                              disabled={saving}
+                            >
+                              Save Question
+                            </button>
+                          </div>
+
+                          {question.model_answer && (
+                            <label>
+                              Model Answer
+                              <textarea
+                                value={
+                                  question.model_answer
+                                }
+                                onChange={(event) =>
+                                  editMainsAnswer(
+                                    index,
+                                    event.target.value
+                                  )
+                                }
+                                rows={16}
+                              />
+                            </label>
+                          )}
+
+                          {question.answer_framework && (
+                            <label>
+                              Answer Framework
+                              <textarea
+                                value={
+                                  question.answer_framework
+                                }
+                                onChange={(event) =>
+                                  editMainsFramework(
+                                    index,
+                                    event.target.value
+                                  )
+                                }
+                                rows={8}
+                              />
+                            </label>
+                          )}
+
+                          {question.key_points.length >
+                            0 && (
+                            <div>
+                              <strong>
+                                Key Points
+                              </strong>
+
+                              <ul>
+                                {question.key_points.map(
+                                  (
+                                    point,
+                                    pointIndex
+                                  ) => (
+                                    <li
+                                      key={
+                                        pointIndex
+                                      }
+                                    >
+                                      {point}
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          )}
+
+                          <div className="actions">
+                            {question.id &&
+                              question.status !==
+                                "published" && (
+                                <button
+                                  type="button"
+                                  className="primary"
+                                  onClick={() =>
+                                    publishMainsQuestion(
+                                      index
+                                    )
+                                  }
+                                  disabled={
+                                    busyId ===
+                                    question.id
+                                  }
+                                >
+                                  Publish
+                                </button>
+                              )}
+
+                            {question.id &&
+                              question.status ===
+                                "published" && (
+                                <button
+                                  type="button"
+                                  className="secondary"
+                                  onClick={() =>
+                                    unpublishMainsQuestion(
+                                      index
+                                    )
+                                  }
+                                  disabled={
+                                    busyId ===
+                                    question.id
+                                  }
+                                >
+                                  Unpublish
+                                </button>
+                              )}
+
+                            <span>
+                              Status:{" "}
+                              {question.status}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </article>
+                  )
+                )}
+              </div>
+            </section>
+          )}
+        {/* MCQ QUESTIONS */}
+
+        {!isMainExamination &&
+          questions.length > 0 && (
+            <section className="card">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">
+                    AI MCQ QUESTIONS
+                  </p>
+
+                  <h2>
+                    Generated Questions
+                  </h2>
+                </div>
+
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={
+                      regenerateComplete
+                    }
+                    disabled={generating}
+                  >
+                    Regenerate All
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-grid">
+                {questions.map(
+                  (question, index) => (
+                    <article
+                      className="question-editor"
+                      key={question.id}
+                    >
+                      <div className="section-heading">
+                        <strong>
+                          Question {index + 1}
+                        </strong>
+
+                        <div className="actions">
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() =>
+                              editQuestion(
+                                question
+                              )
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() =>
+                              regenerateQuestion(
+                                index
+                              )
+                            }
+                            disabled={generating}
+                          >
+                            Regenerate
+                          </button>
+
+                          <button
+                            type="button"
+                            className="reject"
+                            onClick={() =>
+                              deleteQuestion(
+                                question.id
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      <p>
+                        {question.question_text}
+                      </p>
+
+                      <ol type="A">
+                        {optionKeys.map(
+                          (key) => (
+                            <li key={key}>
+                              {
+                                question[
+                                  `option_${key.toLowerCase()}` as keyof Question
+                                ]
+                              }
+                            </li>
+                          )
+                        )}
+                      </ol>
+
+                      <p>
+                        <strong>
+                          Correct:
+                        </strong>{" "}
+                        {question.correct_answer}
+                      </p>
+                    </article>
+                  )
+                )}
+              </div>
+            </section>
+          )}
+        {/* MANUAL TEST EDITOR */}
+
+        {!isMainExamination && (
+          <section className="card">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">
+                  TEST EDITOR
+                </p>
+
+                <h2>
+                  {editing
+                    ? "Edit Test"
+                    : "Create Manual Test"}
+                </h2>
+              </div>
+
+              {editing && (
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={startNew}
+                >
+                  Cancel Edit
+                </button>
+              )}
+            </div>
+
+            <form
+              className="form"
+              onSubmit={saveTest}
+            >
+              <div className="form-grid">
+                <label>
+                  Test Title
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        title:
+                          event.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </label>
+                    <label>
+                  Examination Stage
+                  <select
+                    value={form.stage_id}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        stage_id:
+                          event.target.value,
+                        paper_id: "",
+                        subject_id: "",
+                        syllabus_item_id: "",
+                      }))
+                    }
+                    required
+                  >
+                    <option value="">
+                      Select Stage
+                    </option>
+
+                    {stages.map((stage) => (
+                      <option
+                        key={stage.id}
+                        value={stage.id}
+                      >
+                        {stage.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Paper
+                  <select
+                    value={form.paper_id}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        paper_id:
+                          event.target.value,
+                        syllabus_item_id: "",
+                      }))
+                    }
+                    disabled={!form.stage_id}
+                    required
+                  >
+                    <option value="">
+                      Select Paper
+                    </option>
+
+                    {papers
+                      .filter(
+                        (paper) =>
+                          paper.stage_id ===
+                          Number(
+                            form.stage_id
+                          )
+                      )
+                      .map((paper) => (
+                        <option
+                          key={paper.id}
+                          value={paper.id}
+                        >
+                          Paper{" "}
+                          {paper.paper_no} ·{" "}
+                          {paper.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+                   <label>
+                  Topic
+                  <select
+                    value={
+                      form.syllabus_item_id
+                    }
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        syllabus_item_id:
+                          event.target.value,
+                      }))
+                    }
+                    disabled={!form.paper_id}
+                  >
+                    <option value="">
+                      Select Topic
+                    </option>
+
+                    {items
+                      .filter(
+                        (item) =>
+                          item.paper_id ===
+                            Number(
+                              form.paper_id
+                            ) &&
+                          item.item_type !==
+                            "subject"
+                      )
+                      .map((item) => (
+                        <option
+                          key={item.id}
+                          value={item.id}
+                        >
+                          {item.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+
+                <label>
+                  Duration (minutes)
+                  <input
+                    type="number"
+                    min="1"
+                    value={
+                      form.duration_minutes
+                    }
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        duration_minutes:
+                          event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Total Marks
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.total_marks}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        total_marks:
+                          event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  Negative Marking
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={
+                      form.negative_marking
+                    }
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        negative_marking:
+                          event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+
+              <label>
+                Published
+                <input
+                  type="checkbox"
+                  checked={form.is_published}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      is_published:
+                        event.target.checked,
+                    }))
+                  }
+                />
+              </label>
+
+              <div className="actions">
+                <button
+                  type="submit"
+                  className="primary"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editing
+                      ? "Update Test"
+                      : "Create Test"}
+                </button>
+
+                {editing && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={addBlankQuestion}
+                  >
+                    Add Question
+                  </button>
+                )}
+              </div>
+            </form>
+            {/* QUESTION FORM */}
+
+            {questionForm && editing && (
+              <form
+                className="question-editor"
+                onSubmit={saveQuestion}
+              >
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">
+                      QUESTION
+                    </p>
+
+                    <h3>
+                      {questionForm.id
+                        ? "Edit Question"
+                        : "Add Question"}
+                    </h3>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() =>
+                      setQuestionForm(null)
+                    }
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <label>
+                  Question
+                  <textarea
+                    value={
+                      questionForm.question_text
+                    }
+                    onChange={(event) =>
+                      updateQuestionForm({
+                        question_text:
+                          event.target.value,
+                      })
+                    }
+                    rows={5}
+                    required
+                  />
+                </label>
+
+                <div className="form-grid">
+                  <label>
+                    Option A
+                    <input
+                      type="text"
+                      value={
+                        questionForm.option_a
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          option_a:
+                            event.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </label>
+                    <label>
+                    Option B
+                    <input
+                      type="text"
+                      value={
+                        questionForm.option_b
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          option_b:
+                            event.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Option C
+                    <input
+                      type="text"
+                      value={
+                        questionForm.option_c
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          option_c:
+                            event.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Option D
+                    <input
+                      type="text"
+                      value={
+                        questionForm.option_d
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          option_d:
+                            event.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Correct Answer
+                    <select
+                      value={
+                        questionForm.correct_answer
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          correct_answer:
+                            event.target.value,
+                        })
+                      }
+                    >
+                      <option value="A">
+                        A
+                      </option>
+                      <option value="B">
+                        B
+                      </option>
+                      <option value="C">
+                        C
+                      </option>
+                      <option value="D">
+                        D
+                      </option>
+                    </select>
+                  </label>
+                   <label>
+                    Marks
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={
+                        questionForm.marks
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          marks:
+                            event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Question Order
+                    <input
+                      type="number"
+                      min="1"
+                      value={
+                        questionForm.question_order
+                      }
+                      onChange={(event) =>
+                        updateQuestionForm({
+                          question_order:
+                            event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+
+                <label>
+                  Explanation
+                  <textarea
+                    value={
+                      questionForm.explanation
+                    }
+                    onChange={(event) =>
+                      updateQuestionForm({
+                        explanation:
+                          event.target.value,
+                      })
+                    }
+                    rows={5}
+                  />
+                </label>
+
+                <div className="actions">
+                  <button
+                    type="submit"
+                    className="primary"
+                    disabled={saving}
+                  >
+                    {saving
+                      ? "Saving..."
+                      : questionForm.id
+                        ? "Update Question"
+                        : "Save Question"}
+                  </button>
+                </div>
+              </form>
+            )}
+              {/* EXISTING QUESTIONS */}
+
+            {editing && questions.length > 0 && (
+              <div className="card">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">
+                      SAVED QUESTIONS
+                    </p>
+
+                    <h3>
+                      Questions in this test
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="form-grid">
+                  {questions.map(
+                    (question, index) => (
+                      <article
+                        className="question-editor"
+                        key={question.id}
+                      >
+                        <strong>
+                          Question {index + 1}
+                        </strong>
+
+                        <p>
+                          {question.question_text}
+                        </p>
+
+                        <div className="actions">
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() =>
+                              editQuestion(
+                                question
+                              )
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            className="reject"
+                            onClick={() =>
+                              deleteQuestion(
+                                question.id
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </article>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+        {/* EXISTING TESTS */}
+
+        <section className="card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">
+                TEST LIBRARY
+              </p>
+
+              <h2>
+                Existing Tests
+              </h2>
+
+              <p>
+                Manage previously created
+                Prelims tests.
+              </p>
+            </div>
+          </div>
+
+          {loading ? (
+            <p>Loading tests...</p>
+          ) : tests.length === 0 ? (
+            <p>
+              No tests have been created yet.
+            </p>
+          ) : (
+            <div className="form-grid">
+              {tests.map((test) => (
+                <article
+                  className="question-editor"
+                  key={test.id}
+                >
+                  <div className="section-heading">
+                    <div>
+                      <h3>{test.title}</h3>
+
+                      <p>
+                        {formatDuration(
+                          test.duration_minutes
+                        )}{" "}
+                        ·{" "}
+                        {test.total_marks} marks
+                        {Number(
+                          test.negative_marking
+                        ) > 0
+                          ? ` · Negative ${formatPenalty(
+                              test.negative_marking
+                            )}`
+                          : ""}
+                      </p>
+                    </div>
+
+                    <strong>
+                      {test.is_published
+                        ? "Published"
+                        : "Draft"}
+                    </strong>
+                  </div>
+
+                  <div className="actions">
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() =>
+                        editTest(test)
+                      }
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() =>
+                        togglePublish(test)
+                      }
+                      disabled={
+                        busyId === test.id
+                      }
+                    >
+                      {test.is_published
+                        ? "Unpublish"
+                        : "Publish"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="reject"
+                      onClick={() =>
+                        deleteTest(test)
+                      }
+                      disabled={
+                        busyId === test.id
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </section>
+    </main>
+  );
+}
+      
