@@ -181,7 +181,7 @@ Return ONLY the requested JSON structure.
     }
 
     const response = await fetch(
-     https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       {
         method: "POST",
         headers: {
