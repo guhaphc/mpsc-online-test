@@ -110,6 +110,16 @@ export default function StudentPage() {
               Upload descriptive answer sheets
             </span>
           </button>
+          <button
+  type="button"
+  className="dashboard-item"
+  onClick={() => router.push("/mains")}
+>
+  <strong>✍️ Mains Answer Writing</strong>
+  <span>
+    Practice UPSC/MPSC descriptive answers
+  </span>
+</button>
 
           <button
             type="button"
