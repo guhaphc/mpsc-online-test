@@ -228,6 +228,23 @@ export default function AdminPage() {
           </button>
         </div>
 
+        <div className="admin-tools">
+          <div>
+            <strong>Premium management</strong>
+            <span>
+              Activate, disable, and manage Premium Question Bank access.
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => router.push("/admin/premium")}
+          >
+            Manage Premium
+          </button>
+        </div>
+
         {error && (
           <p className="form-error">
             {error}

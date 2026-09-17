@@ -65,10 +65,7 @@ export default function StudentPage() {
   return (
     <main className="page">
       <section className="card">
-
-        <div className="brand">
-          MPSC / UPSC
-        </div>
+        <div className="brand">MPSC / UPSC</div>
 
         <h1>Student Dashboard</h1>
 
@@ -77,16 +74,22 @@ export default function StudentPage() {
         </p>
 
         <div className="dashboard-grid">
-
           <button
             type="button"
             className="dashboard-item"
             onClick={() => router.push("/subjects")}
           >
             <strong>📚 Subjects</strong>
-            <span>
-              Study MPSC/UPSC subjects
-            </span>
+            <span>Study MPSC/UPSC subjects</span>
+          </button>
+
+          <button
+            type="button"
+            className="dashboard-item"
+            onClick={() => router.push("/premium")}
+          >
+            <strong>👑 Premium Question Bank</strong>
+            <span>Access premium questions and printable study material</span>
           </button>
 
           <button
@@ -95,9 +98,7 @@ export default function StudentPage() {
             onClick={() => router.push("/tests")}
           >
             <strong>📝 Tests</strong>
-            <span>
-              Practice objective and descriptive tests
-            </span>
+            <span>Practice objective and descriptive tests</span>
           </button>
 
           <button
@@ -106,20 +107,17 @@ export default function StudentPage() {
             onClick={() => router.push("/answer-papers")}
           >
             <strong>📄 Answer Papers</strong>
-            <span>
-              Upload descriptive answer sheets
-            </span>
+            <span>Upload descriptive answer sheets</span>
           </button>
+
           <button
-  type="button"
-  className="dashboard-item"
-  onClick={() => router.push("/mains")}
->
-  <strong>✍️ Mains Answer Writing</strong>
-  <span>
-    Practice UPSC/MPSC descriptive answers
-  </span>
-</button>
+            type="button"
+            className="dashboard-item"
+            onClick={() => router.push("/mains")}
+          >
+            <strong>✍️ Mains Answer Writing</strong>
+            <span>Practice UPSC/MPSC descriptive answers</span>
+          </button>
 
           <button
             type="button"
@@ -127,21 +125,13 @@ export default function StudentPage() {
             onClick={() => router.push("/ai-evaluation")}
           >
             <strong>🤖 AI Evaluation</strong>
-            <span>
-              Get marks and detailed feedback
-            </span>
+            <span>Get marks and detailed feedback</span>
           </button>
-
         </div>
 
-        <button
-          type="button"
-          className="primary"
-          onClick={logout}
-        >
+        <button type="button" className="primary" onClick={logout}>
           Logout
         </button>
-
       </section>
     </main>
   );
