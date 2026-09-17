@@ -15,6 +15,10 @@ type Test = {
   id: number; title: string; paper_id: number | null; syllabus_item_id: number | null;
   duration_minutes: number; total_marks: number; negative_marking: number; is_published: boolean; questions: Question[];
 };
+type MainQuestion = {
+  id: number; stage_id: number; paper_id: number; syllabus_item_id: number | null;
+  question_text: string; marks: number; word_limit: number; model_answer: string | null; status: string;
+};
 
 export default function PremiumQuestionBankPage() {
   const router = useRouter();
@@ -30,6 +34,9 @@ export default function PremiumQuestionBankPage() {
   const [itemId, setItemId] = useState("");
   const [testId, setTestId] = useState("");
   const [includeAnswers, setIncludeAnswers] = useState(true);
+  const [contentType, setContentType] = useState<"prelims" | "mains">("prelims");
+  const [mainsQuestions, setMainsQuestions] = useState<MainQuestion[]>([]);
+  const [mainsQuestionId, setMainsQuestionId] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -57,8 +64,9 @@ export default function PremiumQuestionBankPage() {
           supabase.from("mpsc_papers").select("id,stage_id,paper_no,name,sort_order").order("sort_order"),
           supabase.from("mpsc_syllabus_items").select("id,paper_id,parent_id,item_type,name,sort_order").order("sort_order"),
           supabase.from("mpsc_tests").select("id,title,paper_id,syllabus_item_id,duration_minutes,total_marks,negative_marking,is_published").eq("is_published", true).order("created_at", { ascending: false }),
+          supabase.from("mpsc_mains_questions").select("id,stage_id,paper_id,syllabus_item_id,question_text,marks,word_limit,model_answer,status").eq("status", "published").order("id", { ascending: false }),
         ]);
-        const firstError = sr.error || pr.error || ir.error || tr.error;
+        const firstError = sr.error || pr.error || ir.error || tr.error || mq.error;
         if (firstError) throw firstError;
 
         const published = (tr.data ?? []) as Omit<Test, "questions">[];
@@ -74,6 +82,7 @@ export default function PremiumQuestionBankPage() {
         setPapers((pr.data ?? []) as Paper[]);
         setItems((ir.data ?? []) as Item[]);
         setTests(published.map((t, i) => ({ ...t, questions: (questionResults[i].data ?? []) as Question[] })));
+        setMainsQuestions((mq.data ?? []) as MainQuestion[]);
         setPremium(true);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Unable to load premium question bank.");
@@ -91,7 +100,19 @@ export default function PremiumQuestionBankPage() {
     return (!stageId || paper?.stage_id === Number(stageId)) && (!paperId || t.paper_id === Number(paperId)) && (!itemId || t.syllabus_item_id === Number(itemId));
   }), [tests, papers, stageId, paperId, itemId]);
   const printableTests = useMemo(() => testId ? filteredTests.filter((t) => String(t.id) === testId) : filteredTests, [filteredTests, testId]);
-  const questionCount = printableTests.reduce((sum, t) => sum + t.questions.length, 0);
+  const selectedMainsQuestions = useMemo(() => mainsQuestions.filter((q) => {
+    if (stageId && q.stage_id !== Number(stageId)) return false;
+    if (paperId && q.paper_id !== Number(paperId)) return false;
+    if (itemId && q.syllabus_item_id !== Number(itemId)) return false;
+    return true;
+  }), [mainsQuestions, stageId, paperId, itemId]);
+  const printableMainsQuestions = useMemo(
+    () => mainsQuestionId ? selectedMainsQuestions.filter((q) => String(q.id) === mainsQuestionId) : selectedMainsQuestions,
+    [selectedMainsQuestions, mainsQuestionId]
+  );
+  const questionCount = contentType === "prelims"
+    ? printableTests.reduce((sum, t) => sum + t.questions.length, 0)
+    : printableMainsQuestions.length;
 
   const stageName = (id: number | null) => stages.find((s) => s.id === id)?.name ?? "MPSC / UPSC";
   const paperLabel = (id: number | null) => {
@@ -100,8 +121,8 @@ export default function PremiumQuestionBankPage() {
   };
   const itemName = (id: number | null) => items.find((x) => x.id === id)?.name ?? "";
 
-  const resetFromStage = (value: string) => { setStageId(value); setPaperId(""); setItemId(""); setTestId(""); };
-  const resetFromPaper = (value: string) => { setPaperId(value); setItemId(""); setTestId(""); };
+  const resetFromStage = (value: string) => { setStageId(value); setPaperId(""); setItemId(""); setTestId(""); setMainsQuestionId(""); };
+  const resetFromPaper = (value: string) => { setPaperId(value); setItemId(""); setTestId(""); setMainsQuestionId(""); };
 
   if (loading) return <main className="premium-page"><section className="premium-card"><p>Checking premium access…</p></section></main>;
   if (error) return <main className="premium-page"><section className="premium-card"><h1>Premium Question Bank</h1><p className="premium-error">{error}</p><button onClick={() => window.location.reload()}>Retry</button></section></main>;
@@ -130,22 +151,27 @@ export default function PremiumQuestionBankPage() {
         </header>
 
         <div className="premium-grid no-print">
-          <label>Examination stage<select value={stageId} onChange={(e) => resetFromStage(e.target.value)}><option value="">All stages</option>{stages.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
+          <label>Question bank<select value={contentType} onChange={(e) => { const value = e.target.value as "prelims" | "mains"; setContentType(value); setStageId(""); setPaperId(""); setItemId(""); setTestId(""); setMainsQuestionId(""); }}><option value="prelims">Preliminary — MCQs</option><option value="mains">Main Examination — Descriptive</option></select></label>
+          <label>Examination stage<select value={stageId} onChange={(e) => resetFromStage(e.target.value)}><option value="">All stages</option>{(contentType === "mains" ? stages.filter((s) => s.name.toLowerCase().includes("main")) : stages.filter((s) => s.name.toLowerCase().includes("prelim"))).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
           <label>Paper<select value={paperId} onChange={(e) => resetFromPaper(e.target.value)}><option value="">All papers</option>{visiblePapers.map((p) => <option key={p.id} value={p.id}>Paper {p.paper_no ?? ""} · {p.name}</option>)}</select></label>
           <label>Subject / topic<select value={itemId} onChange={(e) => {setItemId(e.target.value);setTestId("")}}><option value="">All subjects and topics</option>{visibleItems.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
-          <label>Question paper<select value={testId} onChange={(e) => setTestId(e.target.value)}><option value="">All matching tests</option>{filteredTests.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}</select></label>
+          {contentType === "prelims" ? (
+            <label>Question paper<select value={testId} onChange={(e) => setTestId(e.target.value)}><option value="">All matching tests</option>{filteredTests.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}</select></label>
+          ) : (
+            <label>Published Mains question<select value={mainsQuestionId} onChange={(e) => setMainsQuestionId(e.target.value)}><option value="">All matching questions</option>{selectedMainsQuestions.map((q) => <option key={q.id} value={q.id}>{q.question_text.slice(0, 90)}{q.question_text.length > 90 ? "…" : ""}</option>)}</select></label>
+          )}
         </div>
 
         <div className="premium-actions no-print">
-          <label><input type="checkbox" checked={includeAnswers} onChange={(e) => setIncludeAnswers(e.target.checked)} /> Include correct answers and explanations</label>
+          <label><input type="checkbox" checked={includeAnswers} onChange={(e) => setIncludeAnswers(e.target.checked)} /> {contentType === "prelims" ? "Include correct answers and explanations" : "Include AI model answers"}</label>
           <button className="premium-button" disabled={!questionCount} onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
         </div>
-        <div className="premium-summary no-print"><strong>{questionCount} questions</strong><span>{printableTests.length} published test{printableTests.length === 1 ? "" : "s"} selected</span></div>
+        <div className="premium-summary no-print"><strong>{questionCount} {contentType === "prelims" ? "questions" : "Mains questions"}</strong><span>{contentType === "prelims" ? printableTests.length + " published test" + (printableTests.length === 1 ? "" : "s") + " selected" : printableMainsQuestions.length + " published question" + (printableMainsQuestions.length === 1 ? "" : "s") + " selected"}</span></div>
 
-        {questionCount === 0 ? <div className="premium-lock no-print"><strong>No questions available</strong><br/><small>Choose another filter or publish a test that contains questions.</small></div> : (
+        {questionCount === 0 ? <div className="premium-lock no-print"><strong>No published material available</strong><br/><small>Choose another filter or publish material that contains questions.</small></div> : (
           <div className="print-document">
-            <div className="print-title"><div className="premium-badge">MPSC / UPSC</div><h1>Question Bank</h1><p>{includeAnswers ? "Questions, correct answers and explanations" : "Practice questions"}</p></div>
-            {printableTests.map((test) => (
+            <div className="print-title"><div className="premium-badge">MPSC / UPSC</div><h1>{contentType === "prelims" ? "Preliminary Question Bank" : "Main Examination Question Bank"}</h1><p>{contentType === "prelims" ? (includeAnswers ? "Questions, correct answers and explanations" : "Practice questions") : (includeAnswers ? "Published descriptive questions with AI model answers" : "Published descriptive questions")}</p></div>
+            {contentType === "prelims" ? printableTests.map((test) => (
               <section className="print-test" key={test.id}>
                 <h2>{test.title}</h2>
                 <p className="print-meta">{stageName(papers.find((p) => p.id === test.paper_id)?.stage_id ?? null)} · {paperLabel(test.paper_id)}{itemName(test.syllabus_item_id) ? ` · ${itemName(test.syllabus_item_id)}` : ""}</p>
@@ -157,10 +183,17 @@ export default function PremiumQuestionBankPage() {
                   </article>
                 ))}
               </section>
-            ))}
+            )) : (
+              printableMainsQuestions.map((q, index) => (
+                <article className="print-question mains-print-question" key={q.id}>
+                  <div className="question-heading"><strong>Q{index + 1}.</strong><span>{q.question_text}</span><small>{q.marks} marks · {q.word_limit} words</small></div>
+                  <p className="print-meta">{stageName(q.stage_id)} · {paperLabel(q.paper_id)}{itemName(q.syllabus_item_id) ? ` · ${itemName(q.syllabus_item_id)}` : ""}</p>
+                  {includeAnswers && <div className="answer-box"><strong>AI Model Answer / Reference Answer</strong><p>{q.model_answer || "No model answer has been published for this question."}</p></div>}
+                </article>
+              ))
+            )}
           </div>
-        )}
-      </section>
+        )}      </section>
     </main>
   );
 }
