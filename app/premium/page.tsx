@@ -59,7 +59,7 @@ export default function PremiumQuestionBankPage() {
         const allowed = active || profile?.role === "admin";
         if (!allowed) { if (!cancelled) { setPremium(false); setLoading(false); } return; }
 
-        const [sr, pr, ir, tr] = await Promise.all([
+        const [sr, pr, ir, tr, mq] = await Promise.all([
           supabase.from("mpsc_exam_stages").select("id,name,sort_order").order("sort_order"),
           supabase.from("mpsc_papers").select("id,stage_id,paper_no,name,sort_order").order("sort_order"),
           supabase.from("mpsc_syllabus_items").select("id,paper_id,parent_id,item_type,name,sort_order").order("sort_order"),
