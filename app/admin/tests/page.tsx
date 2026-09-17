@@ -305,9 +305,29 @@ export default function AdminTestsPage() {
     setStages((stagesResponse.data ?? []) as Stage[]);
     setPapers((papersResponse.data ?? []) as Paper[]);
     setItems((itemsResponse.data ?? []) as SyllabusItem[]);
-    setMainsLibraryQuestions(
-      (mainsQuestionsResponse.data ?? []) as MainsLibraryQuestion[]
-    );
+    const normalizedMainsLibraryQuestions: MainsLibraryQuestion[] =
+      (mainsQuestionsResponse.data ?? []).map((row) => ({
+        id: Number(row.id),
+        question_text: String(row.question_text ?? ""),
+        marks: Number(row.marks ?? 0),
+        word_limit: Number(row.word_limit ?? 0),
+        model_answer: String(row.model_answer ?? ""),
+        answer_framework: String(row.answer_framework ?? ""),
+        key_points: Array.isArray(row.key_points)
+          ? row.key_points.map((point) => String(point ?? "")).filter(Boolean)
+          : [],
+        status:
+          row.status === "published" || row.status === "rejected"
+            ? row.status
+            : "draft",
+        stage_id: row.stage_id == null ? null : Number(row.stage_id),
+        paper_id: row.paper_id == null ? null : Number(row.paper_id),
+        syllabus_item_id:
+          row.syllabus_item_id == null ? null : Number(row.syllabus_item_id),
+        created_at: String(row.created_at ?? ""),
+      }));
+
+    setMainsLibraryQuestions(normalizedMainsLibraryQuestions);
 
     setLoading(false);
   }
