@@ -92,6 +92,9 @@ type MainsLibraryQuestion = {
   question_text: string;
   marks: number;
   word_limit: number;
+  model_answer: string;
+  answer_framework: string;
+  key_points: string[];
   status: "draft" | "published" | "rejected";
   stage_id: number | null;
   paper_id: number | null;
@@ -273,7 +276,7 @@ export default function AdminTestsPage() {
       supabase
         .from("mpsc_mains_questions")
         .select(
-          "id, question_text, marks, word_limit, status, stage_id, paper_id, syllabus_item_id, created_at"
+          "id, question_text, marks, word_limit, model_answer, answer_framework, key_points, status, stage_id, paper_id, syllabus_item_id, created_at"
         )
         .order("created_at", { ascending: false }),
     ]);
@@ -1380,6 +1383,163 @@ export default function AdminTestsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function generateLibraryModelAnswer(
+    question: MainsLibraryQuestion
+  ) {
+    setError("");
+    setSuccess("");
+    setBusyId(question.id);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Your session has expired. Please log in again.");
+      }
+
+      const stage = stages.find((item) => item.id === question.stage_id);
+      const paper = papers.find((item) => item.id === question.paper_id);
+      const syllabusItem = items.find(
+        (item) => item.id === question.syllabus_item_id
+      );
+      const subject =
+        syllabusItem?.item_type === "subject"
+          ? syllabusItem
+          : items.find((item) => item.id === syllabusItem?.parent_id);
+      const topic =
+        syllabusItem && syllabusItem.item_type !== "subject"
+          ? syllabusItem
+          : subject;
+
+      setProgress(
+        `AI is preparing the model answer for question #${question.id}...`
+      );
+
+      const response = await fetch("/api/ai/mains-model-answer", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          question: question.question_text,
+          marks: question.marks,
+          wordLimit: question.word_limit,
+          stage: stage?.name || "Main Examination",
+          paper: paper
+            ? `Paper ${paper.paper_no} · ${paper.name}`
+            : "",
+          subject: subject?.name || "",
+          topic: topic?.name || "",
+          language: generator.language || "English",
+          difficulty: generator.difficulty || "Mixed",
+          instructions: generator.instructions,
+          referenceText: generator.referenceText,
+          referenceName: generator.referenceName,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        model_answer?: string;
+        answer_framework?: string;
+        key_points?: unknown;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Model answer generation failed."
+        );
+      }
+
+      const modelAnswer = String(result.model_answer || "").trim();
+      if (!modelAnswer) {
+        throw new Error("AI did not return a model answer.");
+      }
+
+      const answerFramework = String(
+        result.answer_framework || ""
+      ).trim();
+      const keyPoints = Array.isArray(result.key_points)
+        ? result.key_points.map((point) => String(point).trim()).filter(Boolean)
+        : [];
+
+      setMainsLibraryQuestions((current) =>
+        current.map((item) =>
+          item.id === question.id
+            ? {
+                ...item,
+                model_answer: modelAnswer,
+                answer_framework: answerFramework,
+                key_points: keyPoints,
+              }
+            : item
+        )
+      );
+
+      setProgress(
+        "Model answer generated. Review it below, then save it."
+      );
+      setSuccess(
+        "Model answer generated successfully. It has not been saved yet."
+      );
+    } catch (generationError) {
+      setError(
+        generationError instanceof Error
+          ? generationError.message
+          : "Model answer generation failed."
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function saveLibraryModelAnswer(
+    question: MainsLibraryQuestion
+  ) {
+    if (!question.model_answer.trim()) {
+      setError("Generate or enter a model answer before saving.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setBusyId(question.id);
+
+    try {
+      const { error: updateError } = await supabase
+        .from("mpsc_mains_questions")
+        .update({
+          model_answer: question.model_answer.trim(),
+          answer_framework: question.answer_framework.trim() || null,
+          key_points: question.key_points,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", question.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      setSuccess(
+        question.status === "published"
+          ? "Model answer saved and is now available in the Premium Question Bank."
+          : "Model answer saved successfully."
+      );
+      setProgress("");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "Could not save model answer."
+      );
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -3616,6 +3776,53 @@ export default function AdminTestsPage() {
                   </div>
 
                   <p>{question.question_text}</p>
+
+                  <label>
+                    Model Answer
+                    <textarea
+                      value={question.model_answer}
+                      onChange={(event) =>
+                        setMainsLibraryQuestions((current) =>
+                          current.map((item) =>
+                            item.id === question.id
+                              ? {
+                                  ...item,
+                                  model_answer: event.target.value,
+                                }
+                              : item
+                          )
+                        )
+                      }
+                      rows={10}
+                      placeholder="Generate an AI model answer or enter/edit one manually..."
+                    />
+                  </label>
+
+                  <div className="actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={() => generateLibraryModelAnswer(question)}
+                      disabled={busyId === question.id}
+                    >
+                      {busyId === question.id
+                        ? "Generating..."
+                        : question.model_answer
+                          ? "Regenerate Model Answer"
+                          : "Generate Model Answer"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => saveLibraryModelAnswer(question)}
+                      disabled={
+                        busyId === question.id || !question.model_answer.trim()
+                      }
+                    >
+                      Save Model Answer
+                    </button>
+                  </div>
 
                   <div className="actions">
                     {question.status !== "published" ? (
