@@ -230,6 +230,13 @@ export default function MainsAnswerPage() {
       setError("Each handwritten file must be 8 MB or smaller.");
     }
     const usable = allowed.filter((file) => file.size <= 8 * 1024 * 1024);
+    if (usable.length > 0) {
+      setOcrText("");
+      setOcrConfidence(null);
+      setEvaluation(null);
+      setSuccess("");
+      setError("");
+    }
     setHandwrittenFiles((current) => {
       const combined = [...current, ...usable];
       const totalBytes = combined.reduce((sum, file) => sum + file.size, 0);
@@ -1000,6 +1007,14 @@ export default function MainsAnswerPage() {
           border-color: #efcaca;
           background: #fff8f8;
         }
+        .mains-submission-status-note {
+          display: block;
+          margin-top: 5px;
+          font-size: 12px;
+          line-height: 1.45;
+          font-weight: 600;
+          color: #4d7659;
+        }
         .mains-order-list { display: grid; gap: 7px; }
         .mains-order-row {
           display: grid;
@@ -1279,7 +1294,7 @@ export default function MainsAnswerPage() {
                                   <img src={handwrittenPreviews[index]} alt={`Handwritten page ${index + 1}`} />
                                 )}
                                 <div className="mains-upload-preview-footer">
-                                  <span>Page ${index + 1}</span>
+                                  <span>Page {index + 1}</span>
                                   <button type="button" onClick={() => openPagePreview(index)} disabled={uploadingHandwritten}>
                                     Preview
                                   </button>
@@ -1300,7 +1315,7 @@ export default function MainsAnswerPage() {
                           <div className="mains-order-list">
                             {handwrittenFiles.map((file, index) => (
                               <div className="mains-order-row" key={`order-${file.name}-${index}`}>
-                                <span className="mains-order-number">${index + 1}</span>
+                                <span className="mains-order-number">{index + 1}</span>
                                 <span className="mains-order-name">{file.type === "application/pdf" ? "PDF file" : file.name}</span>
                                 <button type="button" className="secondary mains-order-button" onClick={() => moveHandwrittenFile(index, -1)} disabled={uploadingHandwritten || index === 0}>↑</button>
                                 <button type="button" className="secondary mains-order-button" onClick={() => moveHandwrittenFile(index, 1)} disabled={uploadingHandwritten || index === handwrittenFiles.length - 1}>↓</button>
@@ -1318,7 +1333,12 @@ export default function MainsAnswerPage() {
                       </>
                     )}
 
-                    <p className="mains-upload-help">Maximum 10 files, 8 MB each, 40 MB total. Supported: JPG, PNG, WebP, PDF.</p>
+                    <p className="mains-upload-help">
+                      Maximum 10 files, 8 MB each, 40 MB total. Supported: JPG, PNG, WebP, PDF.
+                      {submissions[selected.id]?.answer_type === "handwritten" && (
+                        <> · New pages will replace the current handwritten answer after confirmation.</>
+                      )}
+                    </p>
 
                     <button
                       className="primary mains-handwritten-submit"
@@ -1332,7 +1352,10 @@ export default function MainsAnswerPage() {
 
                   {submissions[selected.id] && (
                     <div className="mains-submission-status">
-                      ✓ {submissions[selected.id].answer_type === "handwritten" ? "Handwritten answer submitted" : "Answer submitted"} · {submissions[selected.id].word_count} words
+                      ✓ {submissions[selected.id].answer_type === "handwritten" ? "Latest handwritten answer submitted" : "Answer submitted"} · {submissions[selected.id].word_count} words
+                      {submissions[selected.id].answer_type === "handwritten" && (
+                        <span className="mains-submission-status-note">New uploads replace this answer only after “Confirm Order & Evaluate”.</span>
+                      )}
                     </div>
                   )}
 
