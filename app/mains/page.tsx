@@ -1060,24 +1060,11 @@ export default function MainsAnswerPage() {
           .mains-actions { grid-template-columns: 1fr; }
           .mains-upload-buttons { grid-template-columns: 1fr; }
           .mains-upload-preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .mains-upload-preview-footer {
-            grid-template-columns: 1fr 1fr;
-          }
-          .mains-upload-preview-footer span {
-            grid-column: 1 / -1;
-          }
-          .mains-upload-preview-footer button {
-            width: 100%;
-            padding: 7px 5px;
-            font-size: 11px;
-          }
-          .mains-order-row {
-            grid-template-columns: 30px minmax(0, 1fr) auto auto;
-          }
-          .mains-order-row .mains-remove-order-button {
-            grid-column: 2 / -1;
-            width: 100%;
-          }
+          .mains-upload-preview-footer { grid-template-columns: 1fr 1fr; }
+          .mains-upload-preview-footer span { grid-column: 1 / -1; }
+          .mains-upload-preview-footer button { width: 100%; padding: 7px 5px; font-size: 11px; }
+          .mains-order-row { grid-template-columns: 30px minmax(0, 1fr) auto auto; }
+          .mains-order-row .mains-remove-order-button { grid-column: 2 / -1; width: 100%; }
           .mains-criteria-grid { grid-template-columns: 1fr; }
           .mains-evaluation-score { align-items: flex-start; flex-direction: column; }
         }
@@ -1432,3 +1419,90 @@ export default function MainsAnswerPage() {
                           <h3>🧭 Answer Framework</h3>
                           <p className="mains-evaluation-text">{evaluation.answer_framework}</p>
                         </div>
+                      )}
+
+                      {evaluation.improved_answer && (
+                        <div className="mains-evaluation-section">
+                          <h3>✨ Improved Answer</h3>
+                          <p className="mains-evaluation-text">{evaluation.improved_answer}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+              </div>
+            </details>
+          </div>
+        )}
+      </div>
+        {previewIndex !== null && handwrittenFiles[previewIndex] && (
+          <div className="mains-page-preview-backdrop" role="dialog" aria-modal="true" aria-label="Preview handwritten page">
+            <div className="mains-page-preview-modal">
+              <div className="mains-page-preview-header">
+                <strong>Page {previewIndex + 1} Preview</strong>
+                <button type="button" className="secondary" onClick={closePagePreview} disabled={preparingPage}>Close</button>
+              </div>
+
+              <div className="mains-page-preview-viewport">
+                {handwrittenFiles[previewIndex].type === "application/pdf" ? (
+                  <iframe
+                    title={`PDF preview page ${previewIndex + 1}`}
+                    src={URL.createObjectURL(handwrittenFiles[previewIndex])}
+                    className="mains-pdf-frame"
+                  />
+                ) : (
+                  <img
+                    src={handwrittenPreviews[previewIndex]}
+                    alt={`Large preview of handwritten page ${previewIndex + 1}`}
+                    style={{
+                      width: `${previewZoom * 100}%`,
+                      maxWidth: "none",
+                      objectFit: "contain",
+                      clipPath: `inset(${cropMargins.top}% ${cropMargins.right}% ${cropMargins.bottom}% ${cropMargins.left}%)`,
+                    }}
+                  />
+                )}
+              </div>
+
+              {handwrittenFiles[previewIndex].type !== "application/pdf" && (
+                <div className="mains-page-preview-controls">
+                  <div className="mains-preview-zoom-row">
+                    <button type="button" className="secondary" onClick={() => setPreviewZoom((z) => Math.max(0.75, Number((z - 0.25).toFixed(2))))}>−</button>
+                    <strong>{Math.round(previewZoom * 100)}%</strong>
+                    <button type="button" className="secondary" onClick={() => setPreviewZoom((z) => Math.min(2.5, Number((z + 0.25).toFixed(2))))}>+</button>
+                    <button type="button" className="secondary" onClick={() => { setPreviewZoom(1); setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 }); }}>Reset</button>
+                  </div>
+
+                  <div className="mains-crop-grid">
+                    {(["top", "right", "bottom", "left"] as const).map((side) => (
+                      <label key={side}>
+                        {side[0].toUpperCase() + side.slice(1)} {cropMargins[side]}%
+                        <input
+                          type="range"
+                          min="0"
+                          max="30"
+                          value={cropMargins[side]}
+                          onChange={(e) => setCropMargins((old) => ({ ...old, [side]: Number(e.target.value) }))}
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  <button type="button" className="primary" onClick={applyImageCrop} disabled={preparingPage}>
+                    {preparingPage ? "Preparing..." : "Done"}
+                  </button>
+                </div>
+              )}
+
+              {handwrittenFiles[previewIndex].type === "application/pdf" && (
+                <p className="mains-upload-help">Use the PDF viewer's own zoom controls to inspect the document. PDF page order is preserved.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+      </main>
+    </>
+  );
+}
