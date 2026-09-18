@@ -26,6 +26,8 @@ type MainQuestion = {
   status: string;
 };
 
+type CropMargins = { top: number; right: number; bottom: number; left: number };
+
 type Submission = {
   id: number;
   mains_question_id: number;
@@ -65,6 +67,10 @@ export default function MainsAnswerPage() {
   const [ocrConfidence, setOcrConfidence] = useState<number | null>(null);
   const [evaluation, setEvaluation] = useState<any>(null);
   const [evaluating, setEvaluating] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [cropMargins, setCropMargins] = useState<CropMargins>({ top: 0, right: 0, bottom: 0, left: 0 });
+  const [preparingPage, setPreparingPage] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -242,6 +248,76 @@ export default function MainsAnswerPage() {
 
   function removeHandwrittenFile(index: number) {
     setHandwrittenFiles((current) => current.filter((_, i) => i !== index));
+  }
+
+  function openPagePreview(index: number) {
+    setPreviewIndex(index);
+    setPreviewZoom(1);
+    setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 });
+  }
+
+  function closePagePreview() {
+    setPreviewIndex(null);
+    setPreparingPage(false);
+  }
+
+  async function applyImageCrop() {
+    if (previewIndex === null) return;
+    const file = handwrittenFiles[previewIndex];
+    if (!file || file.type === "application/pdf") {
+      closePagePreview();
+      return;
+    }
+
+    setPreparingPage(true);
+    try {
+      const sourceUrl = URL.createObjectURL(file);
+      const image = new Image();
+      image.src = sourceUrl;
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("Could not preview this image."));
+      });
+
+      const left = Math.min(49, Math.max(0, cropMargins.left));
+      const right = Math.min(49, Math.max(0, cropMargins.right));
+      const top = Math.min(49, Math.max(0, cropMargins.top));
+      const bottom = Math.min(49, Math.max(0, cropMargins.bottom));
+      const sourceWidth = image.naturalWidth;
+      const sourceHeight = image.naturalHeight;
+      const cropX = Math.round(sourceWidth * left / 100);
+      const cropY = Math.round(sourceHeight * top / 100);
+      const cropWidth = Math.max(1, Math.round(sourceWidth * (100 - left - right) / 100));
+      const cropHeight = Math.max(1, Math.round(sourceHeight * (100 - top - bottom) / 100));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Could not prepare the cropped image.");
+      context.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, file.type || "image/jpeg", 0.92));
+      URL.revokeObjectURL(sourceUrl);
+      if (!blob) throw new Error("Could not create the cropped image.");
+
+      const croppedFile = new File([blob], file.name, { type: file.type || "image/jpeg", lastModified: Date.now() });
+      setHandwrittenFiles((current) => current.map((item, i) => i === previewIndex ? croppedFile : item));
+      closePagePreview();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not crop this image.");
+      setPreparingPage(false);
+    }
+  }
+
+  function moveHandwrittenFile(index: number, direction: -1 | 1) {
+    setHandwrittenFiles((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
 
   async function submitHandwrittenAnswer() {
@@ -887,6 +963,71 @@ export default function MainsAnswerPage() {
           border-top: 0;
           box-shadow: 0 8px 24px rgba(24, 39, 75, .06);
         }
+        .mains-page-prep, .mains-page-order {
+          margin-top: 16px;
+          padding: 14px;
+          border: 1px solid #dce2eb;
+          border-radius: 14px;
+          background: #fafbfd;
+        }
+        .mains-page-prep-heading {
+          display: flex;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+        .mains-page-prep-heading strong { font-size: 15px; }
+        .mains-page-prep-heading p { margin: 3px 0 0; color: #687386; font-size: 12px; line-height: 1.4; }
+        .mains-upload-preview-footer {
+          display: grid;
+          grid-template-columns: 1fr auto auto;
+          gap: 5px;
+          align-items: center;
+        }
+        .mains-upload-preview-footer button { border: 1px solid #d5dce6; border-radius: 7px; padding: 6px 8px; background: #fff; font-size: 12px; font-weight: 700; }
+        .mains-order-list { display: grid; gap: 7px; }
+        .mains-order-row {
+          display: grid;
+          grid-template-columns: 32px minmax(0, 1fr) auto auto auto;
+          gap: 7px;
+          align-items: center;
+          padding: 8px;
+          border: 1px solid #dce2eb;
+          border-radius: 9px;
+          background: #fff;
+        }
+        .mains-order-number {
+          display: grid; place-items: center; width: 28px; height: 28px;
+          border-radius: 8px; background: #edf4fa; color: #173f67; font-weight: 800; font-size: 12px;
+        }
+        .mains-order-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+        .mains-order-button { min-height: 34px; padding: 6px 9px; }
+        .mains-order-confirm {
+          display: grid; gap: 3px; margin-top: 12px; padding: 10px 12px;
+          border-radius: 9px; background: #edf7ef; color: #287a45; font-size: 13px;
+        }
+        .mains-order-confirm span { color: #687386; font-size: 11px; }
+        .mains-page-preview-backdrop {
+          position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
+          padding: 12px; background: rgba(10, 18, 30, .78);
+        }
+        .mains-page-preview-modal {
+          width: min(100%, 900px); max-height: 96vh; overflow: auto; background: #fff;
+          border-radius: 14px; padding: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.28);
+        }
+        .mains-page-preview-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .mains-page-preview-viewport {
+          width: 100%; max-height: 58vh; min-height: 300px; overflow: auto; display: flex; align-items: flex-start; justify-content: center;
+          padding: 10px; border: 1px solid #dce2eb; border-radius: 10px; background: #eef1f5;
+        }
+        .mains-page-preview-viewport img { display: block; height: auto; transform-origin: top center; }
+        .mains-pdf-frame { width: 100%; height: 58vh; border: 0; background: #fff; }
+        .mains-page-preview-controls { display: grid; gap: 10px; margin-top: 10px; }
+        .mains-preview-zoom-row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .mains-preview-zoom-row strong { min-width: 55px; text-align: center; }
+        .mains-crop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .mains-crop-grid label { display: grid; gap: 3px; color: #596273; font-size: 11px; font-weight: 700; }
+        .mains-crop-grid input { width: 100%; }
         @media (max-width: 800px) {
           .mains-collapsible > summary {
             padding: 15px 14px;
@@ -1101,21 +1242,59 @@ export default function MainsAnswerPage() {
                     </div>
 
                     {handwrittenFiles.length > 0 && (
-                      <div className="mains-upload-preview-grid">
-                        {handwrittenFiles.map((file, index) => (
-                          <div className="mains-upload-preview" key={`${file.name}-${index}`}>
-                            {file.type === "application/pdf" ? (
-                              <div className="mains-pdf-preview">📄<span>PDF</span></div>
-                            ) : (
-                              <img src={handwrittenPreviews[index]} alt={`Handwritten page ${index + 1}`} />
-                            )}
-                            <div className="mains-upload-preview-footer">
-                              <span>Page {index + 1}</span>
-                              <button type="button" onClick={() => removeHandwrittenFile(index)} disabled={uploadingHandwritten}>Remove</button>
+                      <>
+                        <div className="mains-page-prep">
+                          <div className="mains-page-prep-heading">
+                            <div>
+                              <strong>1. Check each page</strong>
+                              <p>Tap Preview to inspect, zoom and optionally crop image pages.</p>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                          <div className="mains-upload-preview-grid">
+                            {handwrittenFiles.map((file, index) => (
+                              <div className="mains-upload-preview" key={`${file.name}-${index}`}>
+                                {file.type === "application/pdf" ? (
+                                  <div className="mains-pdf-preview">📄<span>PDF</span></div>
+                                ) : (
+                                  <img src={handwrittenPreviews[index]} alt={`Handwritten page ${index + 1}`} />
+                                )}
+                                <div className="mains-upload-preview-footer">
+                                  <span>Page ${index + 1}</span>
+                                  <button type="button" onClick={() => openPagePreview(index)} disabled={uploadingHandwritten}>
+                                    Preview
+                                  </button>
+                                  <button type="button" onClick={() => removeHandwrittenFile(index)} disabled={uploadingHandwritten}>Remove</button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mains-page-order">
+                          <div className="mains-page-prep-heading">
+                            <div>
+                              <strong>2. Arrange page order</strong>
+                              <p>Put the pages in the exact order of your answer.</p>
+                            </div>
+                          </div>
+                          <div className="mains-order-list">
+                            {handwrittenFiles.map((file, index) => (
+                              <div className="mains-order-row" key={`order-${file.name}-${index}`}>
+                                <span className="mains-order-number">${index + 1}</span>
+                                <span className="mains-order-name">{file.type === "application/pdf" ? "PDF file" : file.name}</span>
+                                <button type="button" className="secondary mains-order-button" onClick={() => moveHandwrittenFile(index, -1)} disabled={uploadingHandwritten || index === 0}>↑</button>
+                                <button type="button" className="secondary mains-order-button" onClick={() => moveHandwrittenFile(index, 1)} disabled={uploadingHandwritten || index === handwrittenFiles.length - 1}>↓</button>
+                                <button type="button" className="secondary mains-order-button" onClick={() => openPagePreview(index)} disabled={uploadingHandwritten}>View</button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mains-order-confirm">
+                          <strong>Final order:</strong> {handwrittenFiles.map((_, index) => index + 1).join(" → ")}
+                          <span>OCR will use this order.</span>
+                        </div>
+                      </>
                     )}
 
                     <p className="mains-upload-help">Maximum 10 files, 8 MB each, 40 MB total. Supported: JPG, PNG, WebP, PDF.</p>
@@ -1126,7 +1305,7 @@ export default function MainsAnswerPage() {
                       disabled={uploadingHandwritten || ocrProcessing || handwrittenFiles.length === 0}
                       onClick={submitHandwrittenAnswer}
                     >
-                      {uploadingHandwritten ? "Uploading..." : ocrProcessing ? "Reading Handwriting..." : "Submit Handwritten Answer"}
+                      {uploadingHandwritten ? "Uploading..." : ocrProcessing ? "Reading Handwriting..." : "Confirm Order & Evaluate"}
                     </button>
                   </div>
 
@@ -1236,6 +1415,72 @@ export default function MainsAnswerPage() {
           </div>
         )}
       </div>
+        {previewIndex !== null && handwrittenFiles[previewIndex] && (
+          <div className="mains-page-preview-backdrop" role="dialog" aria-modal="true" aria-label="Preview handwritten page">
+            <div className="mains-page-preview-modal">
+              <div className="mains-page-preview-header">
+                <strong>Page {previewIndex + 1} Preview</strong>
+                <button type="button" className="secondary" onClick={closePagePreview} disabled={preparingPage}>Close</button>
+              </div>
+
+              <div className="mains-page-preview-viewport">
+                {handwrittenFiles[previewIndex].type === "application/pdf" ? (
+                  <iframe
+                    title={`PDF preview page ${previewIndex + 1}`}
+                    src={URL.createObjectURL(handwrittenFiles[previewIndex])}
+                    className="mains-pdf-frame"
+                  />
+                ) : (
+                  <img
+                    src={handwrittenPreviews[previewIndex]}
+                    alt={`Large preview of handwritten page ${previewIndex + 1}`}
+                    style={{
+                      width: `${previewZoom * 100}%`,
+                      maxWidth: "none",
+                      objectFit: "contain",
+                      clipPath: `inset(${cropMargins.top}% ${cropMargins.right}% ${cropMargins.bottom}% ${cropMargins.left}%)`,
+                    }}
+                  />
+                )}
+              </div>
+
+              {handwrittenFiles[previewIndex].type !== "application/pdf" && (
+                <div className="mains-page-preview-controls">
+                  <div className="mains-preview-zoom-row">
+                    <button type="button" className="secondary" onClick={() => setPreviewZoom((z) => Math.max(0.75, Number((z - 0.25).toFixed(2))))}>−</button>
+                    <strong>{Math.round(previewZoom * 100)}%</strong>
+                    <button type="button" className="secondary" onClick={() => setPreviewZoom((z) => Math.min(2.5, Number((z + 0.25).toFixed(2))))}>+</button>
+                    <button type="button" className="secondary" onClick={() => { setPreviewZoom(1); setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 }); }}>Reset</button>
+                  </div>
+
+                  <div className="mains-crop-grid">
+                    {(["top", "right", "bottom", "left"] as const).map((side) => (
+                      <label key={side}>
+                        {side[0].toUpperCase() + side.slice(1)} {cropMargins[side]}%
+                        <input
+                          type="range"
+                          min="0"
+                          max="30"
+                          value={cropMargins[side]}
+                          onChange={(e) => setCropMargins((old) => ({ ...old, [side]: Number(e.target.value) }))}
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  <button type="button" className="primary" onClick={applyImageCrop} disabled={preparingPage}>
+                    {preparingPage ? "Preparing..." : "Done"}
+                  </button>
+                </div>
+              )}
+
+              {handwrittenFiles[previewIndex].type === "application/pdf" && (
+                <p className="mains-upload-help">Use the PDF viewer's own zoom controls to inspect the document. PDF page order is preserved.</p>
+              )}
+            </div>
+          </div>
+        )}
+
       </main>
     </>
   );
