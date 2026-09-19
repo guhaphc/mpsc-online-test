@@ -84,19 +84,22 @@ export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>();
  const [loading,setLoading]=useState(true); const [active,setActive]=useState("history"); const [query,setQuery]=useState(""); const [done,setDone]=useState<string[]>([]);
  const title=subjects[params?.subject||""]||"Study Material";
- const filtered=useMemo(()=>sections.filter(s=>(s.title+" "+s.subtitle+" "+s.body.join(" ")).toLowerCase().includes(query.toLowerCase())),[query]);
+ const normalizedQuery=query.trim().toLowerCase();
+ const filtered=useMemo(()=>sections.filter(s=>!normalizedQuery||(s.title+" "+s.subtitle+" "+s.body.join(" ")+" "+(s.facts||[]).join(" ")).toLowerCase().includes(normalizedQuery)),[normalizedQuery]);
+ useEffect(()=>{if(normalizedQuery&&filtered.length&&!filtered.some(s=>s.id===active))setActive(filtered[0].id);},[normalizedQuery,filtered,active]);
  const progress=Math.round(done.length/sections.length*100);
  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}const {data:profile}=await supabase.from("mpsc_profiles").select("role,access_status").eq("id",user.id).single();if(profile?.role==="admin"&&profile?.access_status==="approved"){router.replace("/admin");return;}if(profile?.access_status!=="approved"){router.replace("/pending");return;}setLoading(false);})();},[router]);
  if(loading)return <main className="page"><section className="card"><p>Checking your access...</p></section></main>;
  const current=sections.find(s=>s.id===active)||sections[0];
  return <main className="page"><section className="card study-shell">
   <div className="study-hero"><div><div className="brand">MPSC / UPSC • STUDY MATERIAL</div><h1>{title}</h1><p>प्राचीन इतिहास — PDF आधारित इंटरॅक्टिव्ह नोट्स</p></div><button className="secondary" onClick={()=>router.push("/study-material")}>All Subjects</button></div>
-  <div className="study-tools"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="🔎 नोट्समध्ये शोधा..." /><div className="progress-card"><strong>{progress}%</strong><span>Completed</span><i><b style={{width:progress+"%"}}/></i></div></div>
+  <div className="study-tools"><div className="search-box"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="नोट्समध्ये शोधा — उदा. भीमबेटका, मायक्रोलिथ्स, पुरापाषाण..." aria-label="Search notes" />{query&&<button type="button" onClick={()=>setQuery("")} aria-label="Clear search">×</button>}</div><div className="progress-card"><strong>{progress}%</strong><span>Completed</span><i><b style={{width:progress+"%"}}/></i></div></div>
   <div className="study-layout">
    <aside><div className="toc-title">TOPICS</div>{filtered.map(s=><button className={active===s.id?"toc active":"toc"} key={s.id} onClick={()=>setActive(s.id)}><span>{done.includes(s.id)?"✓":"○"}</span>{s.title}</button>)}</aside>
    <article>
     <div className="note-head"><span>LECTURE 01 • SOURCE PDF</span><h2>{current.title}</h2><p>{current.subtitle}</p></div>
     <div className="source-chip">📘 Source: Ancient History 01 — Daily Class Notes (Marathi), 8 pages</div>
+    {normalizedQuery&&<div className="search-result"><strong>{filtered.length}</strong> topic{filtered.length===1?"":"s"} found for “{query}”</div>}
     {current.body.map((p,i)=><p className="note-para" key={i}>{p}</p>)}
     {current.facts&&<div className="fact-grid">{current.facts.map((f,i)=><div className="fact" key={i}><strong>KEY POINT</strong><span>{f}</span></div>)}</div>}
     <div className="note-actions"><button onClick={()=>setDone(x=>x.includes(current.id)?x:x.concat(current.id))}>{done.includes(current.id)?"✓ Topic Completed":"Mark Topic Complete"}</button><button className="secondary" onClick={()=>{const n=sections.findIndex(s=>s.id===current.id);setActive(sections[Math.min(n+1,sections.length-1)].id)}}>Next Topic →</button></div>
@@ -115,9 +118,9 @@ export default function StudyMaterialSubjectPage(){
 .study-hero p{margin:0;color:#d8e8f2;font-size:14px}
 .study-hero .secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;backdrop-filter:blur(8px);border-radius:12px;padding:11px 16px}
 .study-tools{display:flex;gap:14px;align-items:center;padding:20px 30px;background:#fff;border-bottom:1px solid #e8ebf0}
-.study-tools input{flex:1;border:1px solid #d9e0e8;border-radius:13px;padding:14px 16px;font:500 14px 'Noto Sans Devanagari',sans-serif;background:#fbfcfe;color:#172033;outline:none;transition:.2s}
+.search-box{position:relative;flex:1;display:flex;align-items:center}.search-box>span{position:absolute;left:15px;font-size:23px;color:#64748b;line-height:1;pointer-events:none}.search-box input{width:100%;padding-right:42px!important}.search-box button{position:absolute;right:8px;border:0;background:transparent;color:#64748b;font-size:22px;cursor:pointer;padding:5px 8px}.study-tools input{flex:1;border:1px solid #d9e0e8;border-radius:13px;padding:14px 16px;font:500 14px 'Noto Sans Devanagari',sans-serif;background:#fbfcfe;color:#172033;outline:none;transition:.2s}
 .study-tools input:focus{border-color:#0f766e;box-shadow:0 0 0 4px rgba(15,118,110,.09);background:#fff}
-.progress-card{width:190px;border:1px solid #e5e9ef;border-radius:13px;padding:9px 12px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;background:#fff}
+.search-box input{padding-left:44px!important}.search-result{margin:12px 0 4px;padding:10px 13px;border-radius:10px;background:#f0f7f6;border:1px solid #d5ebe7;color:#355c58;font-size:12px}.progress-card{width:190px;border:1px solid #e5e9ef;border-radius:13px;padding:9px 12px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;background:#fff}
 .progress-card strong{font:800 19px 'Plus Jakarta Sans',sans-serif;color:#0f766e}.progress-card span{font-size:10px;color:#64748b;align-self:end}
 .progress-card i{grid-column:1/-1;height:5px;background:#edf1f4;border-radius:10px;overflow:hidden;margin-top:5px}.progress-card b{display:block;height:100%;background:linear-gradient(90deg,#0f766e,#2c9c8d);border-radius:10px}
 .study-layout{display:grid;grid-template-columns:285px 1fr;gap:0;min-height:700px}
@@ -137,7 +140,7 @@ export default function StudyMaterialSubjectPage(){
 .fact strong{display:block;font:800 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:1px;color:#a36f18;margin-bottom:7px}.fact span{font-size:13px;line-height:1.7;color:#3b4656}
 .note-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px;padding-top:20px;border-top:1px solid #e8ebef}.note-actions button{border:0;border-radius:11px;padding:11px 16px;cursor:pointer;background:#0f766e;color:#fff;font-weight:700;box-shadow:0 4px 12px rgba(15,118,110,.15)}.note-actions button:hover{background:#0b625c}.note-actions .secondary{background:#fff;color:#334155;border:1px solid #d9e0e8;box-shadow:none}
 .source-note{margin:0;padding:15px 30px;background:#f5f7f9;border-top:1px solid #e7eaf0;color:#788493;font-size:11px;line-height:1.7}
-@media(max-width:800px){.study-hero{padding:25px 20px 23px}.study-hero h1{font-size:29px}.study-tools{display:block;padding:14px 16px}.progress-card{width:auto;margin-top:10px}.study-layout{grid-template-columns:1fr;min-height:0}.study-layout aside{position:relative;top:auto;max-height:none;border-right:0;border-bottom:1px solid #e7eaf0;padding:11px 12px;display:flex;overflow-x:auto;gap:5px}.toc-title{display:none}.toc{min-width:190px;width:auto;margin:0}.study-layout article{padding:20px 17px 28px}.note-head{padding:20px}.note-para{font-size:15px;line-height:1.9;margin:15px 2px}.fact-grid{grid-template-columns:1fr}.source-note{padding:13px 16px}.study-hero .secondary{padding:9px 12px;font-size:12px}}
+@media(max-width:800px){.search-box{margin-bottom:10px}.study-hero{padding:25px 20px 23px}.study-hero h1{font-size:29px}.study-tools{display:block;padding:14px 16px}.progress-card{width:auto;margin-top:10px}.study-layout{grid-template-columns:1fr;min-height:0}.study-layout aside{position:relative;top:auto;max-height:none;border-right:0;border-bottom:1px solid #e7eaf0;padding:11px 12px;display:flex;overflow-x:auto;gap:5px}.toc-title{display:none}.toc{min-width:190px;width:auto;margin:0}.study-layout article{padding:20px 17px 28px}.note-head{padding:20px}.note-para{font-size:15px;line-height:1.9;margin:15px 2px}.fact-grid{grid-template-columns:1fr}.source-note{padding:13px 16px}.study-hero .secondary{padding:9px 12px;font-size:12px}}
 `}</style>
  </main>;
 }
