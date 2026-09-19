@@ -97,7 +97,7 @@ export default function StudyMaterialSubjectPage(){
   if(next==="Marathi"||translated)return;
   setTranslationLoading(true);setTranslationError("");
   try{
-   const response=await fetch("/api/ai/study-material-translate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({targetLanguage:"English",sections})});
+   const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error("Your session has expired. Please sign in again.");const response=await fetch("/api/ai/study-material-translate",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({targetLanguage:"English",sections})});
    const data=await response.json();if(!response.ok)throw new Error(data.error||"Translation failed.");
    setTranslated(Array.isArray(data.sections)?data.sections:[]);
   }catch(e){setTranslationError(e instanceof Error?e.message:"Translation failed.");setLanguage("Marathi");}
