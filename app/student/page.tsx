@@ -64,8 +64,8 @@ export default function StudentPage() {
             <strong>📝 Tests</strong><span>Practice objective and descriptive tests</span>
           </button>
 
-          <button type="button" className="dashboard-item" onClick={() => router.push("/answer-papers")}>
-            <strong>📄 Answer Papers</strong><span>Upload descriptive answer sheets</span>
+          <button type="button" className="dashboard-item" onClick={() => router.push("/study-material")}>
+            <strong>📚 Study Material</strong><span>UPSC/MPSC subject-wise study material</span>
           </button>
 
           <button type="button" className="dashboard-item" onClick={() => router.push("/mains")}>
