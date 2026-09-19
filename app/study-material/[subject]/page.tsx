@@ -8,6 +8,8 @@ import { governanceSections } from "@/lib/governance-complete";
 import { politySections } from "@/lib/polity-complete";
 import { fundamentalRightsSections } from "@/lib/fundamental-rights-complete";
 
+const STUDY_MATERIAL_BUILD = "2026-09-19-FR-MASTER-02";
+
 const subjects:Record<string,string>={
  "polity":"Indian Polity","governance":"Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
  "modern-history":"Modern Indian History","world-history":"World History","indian-culture":"Indian Culture",
