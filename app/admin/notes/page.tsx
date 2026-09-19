@@ -9,10 +9,10 @@ type Paper = { id:number; stage_id:number; paper_no:number; name:string; sort_or
 type Item = { id:number; paper_id:number; parent_id:number|null; item_type:string; name:string; sort_order:number };
 type Note = { id:number; syllabus_item_id:number|null; topic_id:number|null; title:string; content:string|null; language:string; status:string; version:number; created_at:string; updated_at:string; published_at:string|null };
 type Source = { id:number; note_id:number; source_type:string; title:string; url:string|null; file_url:string|null; storage_path:string|null; description:string|null; source_order:number };
-type NoteForm = { stage:string; paper:string; subject:string; topic:string; title:string; language:string; content:string };
+type NoteForm = { stage:string; paper:string; subject:string; topic:string; title:string; language:string; content:string; customTopic:string; instructions:string; sourceMode:string; format:string };
 type SourceForm = { type:string; title:string; url:string; file:string; description:string; upload:File|null };
 
-const emptyNote = ():NoteForm => ({ stage:"", paper:"", subject:"", topic:"", title:"", language:"English", content:"" });
+const emptyNote = ():NoteForm => ({ stage:"", paper:"", subject:"", topic:"", title:"", language:"English", content:"", customTopic:"", instructions:"", sourceMode:"ai_reference", format:"auto" });
 const emptySource = ():SourceForm => ({ type:"web", title:"", url:"", file:"", description:"", upload:null });
 
 export default function AdminNotesPage(){
@@ -46,7 +46,7 @@ export default function AdminNotesPage(){
   async function editNote(note:Note){
     setError("");setSuccess("");setEditing(note);
     const item=items.find(x=>x.id===note.syllabus_item_id);const parent=item?.parent_id?items.find(x=>x.id===item.parent_id):null;const paper=papers.find(x=>x.id===item?.paper_id);const stage=stages.find(x=>x.id===paper?.stage_id);
-    setForm({stage:String(stage?.id||""),paper:String(paper?.id||""),subject:String(parent?.id||""),topic:String(item?.id||""),title:note.title,language:note.language,content:note.content||""});
+    setForm({stage:String(stage?.id||""),paper:String(paper?.id||""),subject:String(parent?.id||""),topic:String(item?.id||""),title:note.title,language:note.language,content:note.content||"",customTopic:"",instructions:"",sourceMode:"ai_reference",format:"auto"});
     const {data,error:sourceError}=await supabase.from("ai_note_sources").select("*").eq("note_id",note.id).order("source_order");
     if(sourceError)setError(sourceError.message);else setSources((data||[]) as Source[]);
     window.scrollTo({top:0,behavior:"smooth"});
@@ -95,12 +95,12 @@ export default function AdminNotesPage(){
     setGenerating(true);setError("");setSuccess("");
     try{
       const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error("Your session has expired. Please sign in again.");
-      const stage=stages.find(x=>x.id===Number(form.stage))?.name||"";const paper=papers.find(x=>x.id===Number(form.paper))?.name||"";const subject=items.find(x=>x.id===Number(form.subject))?.name||"";const topic=items.find(x=>x.id===Number(form.topic))?.name||"";
-      const response=await fetch("/api/ai/study-notes",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({stage,paper,subject,topic,title:form.title,language:form.language,sources})});
+      const stage=stages.find(x=>x.id===Number(form.stage))?.name||"";const paper=papers.find(x=>x.id===Number(form.paper))?.name||"";const subject=items.find(x=>x.id===Number(form.subject))?.name||"";const topic=form.customTopic.trim()||items.find(x=>x.id===Number(form.topic))?.name||"";
+      const response=await fetch("/api/ai/study-notes",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({stage,paper,subject,topic,title:form.title,language:form.language,sources,additionalInstructions:form.instructions,sourceMode:form.sourceMode,format:form.format,syllabusTopic:items.find(x=>x.id===Number(form.topic))?.name||null})});
       const data=await response.json();if(!response.ok)throw new Error(data.error||"AI note generation failed.");const content=String(data.content||"").trim();if(!content)throw new Error("AI returned empty notes.");
       const {data:saved,error:e}=await supabase.from("ai_note_documents").update({content,version:(editing.version||1)+1,updated_at:new Date().toISOString()}).eq("id",editing.id).select().single();if(e||!saved)throw new Error(e?.message||"Could not save generated notes.");
       await supabase.from("ai_note_generations").insert({note_id:editing.id,model:String(data.model||"gemini-3.1-flash-lite"),prompt_version:"study-notes-v1",source_ids:sources.map(s=>s.id),generated_content:content});
-      setEditing(saved as Note);setNotes(v=>v.map(n=>n.id===editing.id?saved as Note:n));setForm(v=>({...v,content}));setSuccess("AI notes generated. Review and edit before publishing.");
+      setEditing(saved as Note);setNotes(v=>v.map(n=>n.id===editing.id?saved as Note:n));setForm(v=>({...v,content}));setSuccess("Draft generated successfully. Review and edit before publishing.");
     }catch(e){setError(e instanceof Error?e.message:"AI note generation failed.")}finally{setGenerating(false);}
   }
 
@@ -126,8 +126,8 @@ export default function AdminNotesPage(){
       <label>Examination Stage<select value={form.stage} onChange={e=>{setField("stage",e.target.value);setField("paper","");setField("subject","");setField("topic","")}}><option value="">Select stage</option>{stages.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       <label>Paper<select value={form.paper} disabled={!form.stage} onChange={e=>{setField("paper",e.target.value);setField("subject","");setField("topic","")}}><option value="">Select paper</option>{selectedPapers.map(p=><option key={p.id} value={p.id}>Paper {p.paper_no} — {p.name}</option>)}</select></label>
       <label>Subject<select value={form.subject} disabled={!form.paper} onChange={e=>{setField("subject",e.target.value);setField("topic","")}}><option value="">Select subject</option>{selectedSubjects.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
-      <label>Topic<select value={form.topic} disabled={!form.subject} onChange={e=>setField("topic",e.target.value)}><option value="">Select topic</option>{selectedTopics.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
-      <label>Note Title<input value={form.title} onChange={e=>setField("title",e.target.value)} placeholder="e.g. Indian National Movement"/></label>
+      <label>Syllabus Topic<select value={form.topic} disabled={!form.subject} onChange={e=>setField("topic",e.target.value)}><option value="">Select topic</option>{selectedTopics.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
+      <label>Specific Generation Topic <span className="field-optional">(optional — customize wording without changing the syllabus link)</span><textarea value={form.customTopic} onChange={e=>setField("customTopic",e.target.value)} rows={3} placeholder="Example: Emotional Intelligence — meaning, components, administrative applications and MPSC answer-writing points."/></label><div className="form-grid"><label>Note Format<select value={form.format} onChange={e=>setField("format",e.target.value)}><option value="auto">Subject-specific MPSC format</option><option value="standard">Standard MPSC study note</option><option value="prelims">Prelims-focused</option><option value="mains">Mains-focused</option><option value="answer-writing">Mains answer-writing</option></select></label><label>Generation Source<select value={form.sourceMode} onChange={e=>setField("sourceMode",e.target.value)}><option value="ai_reference">AI + reference material</option><option value="ai_only">AI knowledge only</option><option value="reference_only">Reference material only</option></select></label></div><label>Additional AI Instructions <span className="field-optional">(optional)</span><textarea value={form.instructions} onChange={e=>setField("instructions",e.target.value)} rows={3} placeholder="Focus on specific points, examples, committees, Maharashtra relevance, Prelims and Mains."/></label><label>Note Title<input value={form.title} onChange={e=>setField("title",e.target.value)} placeholder="e.g. Indian National Movement"/></label>
       <label>Language<select value={form.language} onChange={e=>setField("language",e.target.value)}><option>English</option><option>Marathi</option><option>Bilingual</option></select></label>
       <label>Note Content<textarea value={form.content} onChange={e=>setField("content",e.target.value)} rows={14} placeholder="AI-generated or manually edited content appears here."/></label>
       <button className="primary" disabled={saving}>{saving?"Saving...":editing?"Save Note":"Create Draft Note"}</button>
