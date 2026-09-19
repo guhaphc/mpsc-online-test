@@ -91,8 +91,7 @@ export default function StudyMaterialSubjectPage(){
  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}const {data:profile}=await supabase.from("mpsc_profiles").select("role,access_status").eq("id",user.id).single();if(profile?.role==="admin"&&profile?.access_status==="approved"){router.replace("/admin");return;}if(profile?.access_status!=="approved"){router.replace("/pending");return;}setLoading(false);})();},[router]);
  if(loading)return <main className="page"><section className="card"><p>Checking your access...</p></section></main>;
  const current=sections.find(s=>s.id===active)||sections[0];
- const escapeRegex=(value:string)=>value.replace(/[.*+?^\\$\\{\\}()|[\\]\\\\]/g,"\\const current=sections.find(s=>s.id===active)||sections[0];
- return <main");
+ const escapeRegex=(value:string)=>value.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
  const highlight=(text:string)=>{
   if(!normalizedQuery)return text;
   const parts=text.split(new RegExp(`(${escapeRegex(normalizedQuery)})`,"gi"));
