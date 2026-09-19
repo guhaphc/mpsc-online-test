@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { ancientHistorySections } from "@/lib/ancient-history-complete";
 import { governanceSections } from "@/lib/governance-complete";
 import { politySections } from "@/lib/polity-complete";
+import { polityFoundationDetailedSections } from "@/lib/polity-foundation-detailed";
 import { fundamentalRightsSections } from "@/lib/fundamental-rights-complete";
 
 const subjects:Record<string,string>={
@@ -24,7 +25,7 @@ type Section={id:string;chapter?:string;title:string;subtitle:string;body:string
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>(); const subjectKey=params?.subject||"";
  const sections:Section[]=subjectKey==="polity"
-  ? [...politySections.filter(s=>s.id>="p1-01"&&s.id<="p1-09"),...fundamentalRightsSections,...politySections.filter(s=>s.id>"p1-10")]
+  ? [...polityFoundationDetailedSections,...fundamentalRightsSections,...politySections.filter(s=>s.id>"p1-10")]
   : subjectKey==="governance"?governanceSections
   : subjectKey==="ancient-history"?ancientHistorySections:[];
  const [loading,setLoading]=useState(true),[active,setActive]=useState(sections[0]?.id||"");
