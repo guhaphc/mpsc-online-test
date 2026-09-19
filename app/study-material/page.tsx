@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 const subjects = [
-  { icon:"🏛️", name:"Indian Polity & Governance", key:"polity" },
+  { icon:"🏛️", name:"Indian Polity", key:"polity" },
+  { icon:"🏛️", name:"Governance", key:"governance" },
   { icon:"📜", name:"Ancient History", key:"ancient-history" },
   { icon:"🏰", name:"Medieval History", key:"medieval-history" },
   { icon:"🇮🇳", name:"Modern Indian History", key:"modern-history" },
