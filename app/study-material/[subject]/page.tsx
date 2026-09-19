@@ -107,10 +107,7 @@ export default function StudyMaterialSubjectPage(){
   </div>
 
   {aiOpen&&<div className="ai-overlay" onClick={()=>!aiLoading&&setAiOpen(false)}><div className="ai-modal" onClick={e=>e.stopPropagation()}><div className="ai-head"><div><span>AI विश्लेषण</span><h2>{aiPoint}</h2></div><button onClick={()=>setAiOpen(false)}>×</button></div><div className="ai-body">{aiLoading?<div className="ai-loading"><div className="spinner"/>विश्लेषण तयार केले जात आहे…</div>:aiError?<div className="ai-error"><strong>विश्लेषण तयार झाले नाही</strong><p>{aiError}</p><button onClick={()=>openAi(aiPoint)}>पुन्हा प्रयत्न करा</button></div>:<div className="ai-response">{aiAnalysis.split(/(Exam Focus:)/i).map((part,i)=>/exam focus:/i.test(part)?<h3>परीक्षेचा केंद्रबिंदू</h3>:<p key={i}>{part.trim()}</p>)}</div>}</div></div></div>}
- </main>;
-}
-
-<style jsx>{`
+ <style jsx>{`
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box}
 .reader-page{min-height:100vh;background:#f7f7f4;color:#303d50;font-family:'Noto Sans Devanagari',sans-serif}
@@ -126,3 +123,5 @@ export default function StudyMaterialSubjectPage(){
 .ai-overlay{position:fixed;inset:0;z-index:1000;background:rgba(10,25,38,.55);display:flex;align-items:center;justify-content:center;padding:18px}.ai-modal{width:min(620px,100%);max-height:82vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.ai-head{display:flex;justify-content:space-between;gap:12px;padding:19px 20px;background:#173f5f;color:#fff}.ai-head span{font-size:9px;color:#c9f7ed}.ai-head h2{margin:6px 0 0;font-size:19px;line-height:1.4}.ai-head button{width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:21px}.ai-body{padding:20px}.ai-response p{font-size:14px;line-height:1.8;color:#344455;white-space:pre-line;margin:0 0 13px}.ai-response h3{font-size:13px;color:#0f766e;margin:18px 0 8px}.ai-loading{min-height:160px;display:flex;align-items:center;justify-content:center;gap:10px;color:#53616c}.spinner{width:24px;height:24px;border:3px solid #dceeea;border-top-color:#0f766e;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.ai-error{padding:15px;background:#fff6f6;border:1px solid #f0d1d1;color:#7f1d1d;border-radius:9px}.ai-error p{font-size:12px}.ai-error button{border:0;background:#0f766e;color:#fff;padding:8px 12px;border-radius:7px}
 @media(max-width:700px){.header-inner{min-height:56px;padding:8px 11px}.header-title strong{font-size:14px}.header-actions>button{width:31px;height:31px}.language button{padding:6px;font-size:9px}.reader{padding:15px 12px 40px}.chapter-row{display:block}.chapter-button{width:100%}.progress{display:block;margin-top:5px}.chapter-menu{width:100%}.topics-row{margin-bottom:18px}.topics-row i{width:55px}.topic-menu{margin:-9px 0 18px}.notes{padding:28px 18px 35px}.note-title h1{font-size:24px}.paragraph{font-size:15px;line-height:1.95;margin-bottom:18px}.subtopic h2{font-size:19px}.exam-point{grid-template-columns:15px 1fr}.exam-point button{grid-column:2;text-align:left}.bottom-nav{margin-top:32px}.ai-overlay{align-items:flex-end;padding:0}.ai-modal{width:100%;max-height:88vh;border-radius:16px 16px 0 0}}
 `}</style>
+ </main>;
+}
