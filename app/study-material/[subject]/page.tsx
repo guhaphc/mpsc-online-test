@@ -150,7 +150,7 @@ export default function StudyMaterialSubjectPage(){
 .study-layout article{background:#fff;padding:30px 36px 38px;min-width:0}
 .note-head{padding:25px 27px;border-radius:18px;background:linear-gradient(145deg,#f8fbfc,#eef8f6);border:1px solid #dcece9;box-shadow:0 8px 24px rgba(25,55,70,.05)}
 .note-head span{font:800 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:1.5px;color:#0f766e}
-.note-head h2{font-size:clamp(23px,4vw,33px);line-height:1.25;margin:8px 0 5px;color:#172033;letter-spacing:-.4px}.note-head p{margin:0;color:#657386;font-size:calc(13px * var(--note-scale))}
+.note-head h2{font-family:"Noto Sans Devanagari",sans-serif;font-weight:800;font-size:clamp(23px,4vw,33px);line-height:1.25;margin:8px 0 5px;color:#172033;letter-spacing:-.4px}.note-head p{font-family:"Noto Sans Devanagari",sans-serif;font-weight:700;margin:0;color:#657386;font-size:13px}
 .source-chip{display:inline-flex;margin:17px 0 7px;padding:7px 11px;border-radius:9px;background:#f7f3ea;color:#765f32;font-size:11px;border:1px solid #eee3ca}
 .note-para mark,.fact mark{background:#ffe58a;color:#172033;padding:1px 3px;border-radius:4px;box-shadow:0 0 0 1px rgba(180,130,0,.12)}.note-para{font-size:calc(16px * var(--note-scale));line-height:2;color:#303d50;margin:18px 5px;max-width:850px;letter-spacing:.05px}
 .note-para:first-of-type{margin-top:12px}
