@@ -23,9 +23,7 @@ async function requireAdmin(request:NextRequest){
 }
 
 const schema={type:"OBJECT",properties:{
-  title:{type:"STRING"},
-  summary:{type:"STRING"},
-  content:{type:"STRING"},
+  title:{type:"STRING"},summary:{type:"STRING"},content:{type:"STRING"},
   sections:{type:"ARRAY",items:{type:"OBJECT",properties:{section_type:{type:"STRING"},title:{type:"STRING"},content:{type:"STRING"}},required:["section_type","title","content"]}}
 },required:["title","summary","content","sections"]};
 
@@ -53,6 +51,7 @@ export async function POST(request:NextRequest){
     if(!stage||!paper||!subject||!topic||!title) return NextResponse.json({error:"Complete syllabus path and title are required."},{status:400});
     if(sources.length>10) return NextResponse.json({error:"Maximum 10 reference sources per generation."},{status:400});
 
+    const bilingual=language==="Bilingual"||language==="Both";
     const parts:any[]=[{text:`You are an expert MPSC/UPSC civil-services study-note editor.
 
 Create accurate, syllabus-linked, exam-oriented study notes.
@@ -75,12 +74,12 @@ RULES:
 8. Do not reproduce long copyrighted passages.
 9. Return structured JSON with a short summary, full note content in Markdown/plain text, and sections.
 10. Section types should be simple values such as overview, concept, timeline, facts, comparison, example, mains, prelims, revision, caution, source_note.
-11. ${language==="Both"?"Provide the main content in both English and Marathi where practical.":"Write the notes in the requested language."}
+11. ${bilingual?"Provide the main content in both English and Marathi where practical. Keep important English technical terms in parentheses when helpful.":"Write the notes in the requested language."}
 
 Return an administrator-reviewable draft, not an automatically published note.`}];
 
     for(const s of sources){
-      if(!s?.storage_path) {
+      if(!s?.storage_path){
         parts.push({text:`REFERENCE METADATA:
 Title: ${String(s?.title||"")}
 Type: ${String(s?.source_type||"")}
@@ -92,7 +91,7 @@ URL: ${String(s?.url||"")}`});
       const {data:file,error}=await sb.storage.from("ai-note-sources").download(path);
       if(error||!file) throw new Error(`Could not read reference "${String(s.title||path)}": ${error?.message||"file unavailable"}`);
       if(file.size>8*1024*1024) throw new Error(`Reference "${String(s.title||path)}" exceeds the 8 MB limit.`);
-      const mime=file.type|| (s.source_type==="pdf"?"application/pdf":"image/jpeg");
+      const mime=file.type||(s.source_type==="pdf"?"application/pdf":"image/jpeg");
       const buf=Buffer.from(await file.arrayBuffer());
       parts.push({text:`REFERENCE FILE: ${String(s.title||path)}. Use it as source material. Extract and synthesize relevant information only.`});
       parts.push({inlineData:{mimeType:mime,data:buf.toString("base64")}});
