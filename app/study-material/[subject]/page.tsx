@@ -24,7 +24,7 @@ type Section={id:string;chapter?:string;title:string;subtitle:string;body:string
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>(); const subjectKey=params?.subject||"";
  const sections:Section[]=subjectKey==="polity"
-  ? [...fundamentalRightsSections,...politySections.filter(s=>!s.id.startsWith("p1-10"))]
+  ? [...politySections.filter(s=>s.id>="p1-01"&&s.id<="p1-09"),...fundamentalRightsSections,...politySections.filter(s=>s.id>"p1-10")]
   : subjectKey==="governance"?governanceSections
   : subjectKey==="ancient-history"?ancientHistorySections:[];
  const [loading,setLoading]=useState(true),[active,setActive]=useState(sections[0]?.id||"");
