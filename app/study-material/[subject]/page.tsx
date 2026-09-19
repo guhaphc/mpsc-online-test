@@ -7,7 +7,7 @@ import { ancientHistorySections } from "@/lib/ancient-history-complete";
 import { governanceSections } from "@/lib/governance-complete";
 
 const subjects:Record<string,string>={
- "polity":"Indian Polity & Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
+ "polity":"Indian Polity","governance":"Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
  "modern-history":"Modern Indian History","world-history":"World History","indian-culture":"Indian Culture",
  "physical-geography":"Physical Geography","indian-geography":"Indian Geography","indian-society":"Indian Society",
  "agriculture":"Agriculture","economy":"Indian Economy","industry-infrastructure":"Industry & Infrastructure",
@@ -19,11 +19,10 @@ const subjects:Record<string,string>={
 
 type Section={id:string;chapter?:string;title:string;subtitle:string;body:string[];facts?:string[]};
 
-const subjectKey = params?.subject || "";
- const sections:Section[] = subjectKey === "governance" ? governanceSections : subjectKey === "ancient-history" ? ancientHistorySections : [];
-
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>();
+ const subjectKey = params?.subject || "";
+ const sections:Section[] = subjectKey === "governance" ? governanceSections : subjectKey === "ancient-history" ? ancientHistorySections : [];
  const [loading,setLoading]=useState(true); const [active,setActive]=useState(sections[0]?.id||""); const [focusMode,setFocusMode]=useState(false); const [chaptersOpen,setChaptersOpen]=useState(false); const [query,setQuery]=useState(""); const [nightMode,setNightMode]=useState(false); const [searchOpen,setSearchOpen]=useState(false); const [done,setDone]=useState<string[]>([]); const [language,setLanguage]=useState<"Marathi"|"English">("Marathi"); const [translatedById,setTranslatedById]=useState<Record<string,Section>>({}); const [translationLoading,setTranslationLoading]=useState(false); const [translationError,setTranslationError]=useState(""); const [aiOpen,setAiOpen]=useState(false); const [aiLoading,setAiLoading]=useState(false); const [aiError,setAiError]=useState(""); const [aiAnalysis,setAiAnalysis]=useState(""); const [aiPoint,setAiPoint]=useState("");
  const title=subjects[params?.subject||""]||"Study Material";
  const normalizedQuery=query.trim().toLowerCase();
