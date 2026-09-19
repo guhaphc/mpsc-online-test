@@ -41,7 +41,7 @@ body:[
 "Fundamental Rights → enforceable, but not absolute"
 ]},
 {
-id:"fr-03",chapter:"Fundamental Rights"Articles 12–13",title:"Article 12 : ‘State’ ची व्याख्या",subtitle:"Fundamental Rights कोणाविरुद्ध enforce होतात?",
+id:"fr-03",chapter:"Fundamental Rights",title:"Article 12 : ‘State’ ची व्याख्या",subtitle:"Fundamental Rights कोणाविरुद्ध enforce होतात?",
 body:[
 "Article 12 Part III च्या संदर्भात ‘State’ या संज्ञेची व्याख्या करतो. यात Government and Parliament of India, Government and Legislature of each State, local authorities आणि territory of India किंवा Government of India च्या control अंतर्गत असलेल्या इतर authorities यांचा समावेश होतो.",
 "Article 12 चा व्यावहारिक परिणाम असा आहे की Fundamental Rights चे अनेक संरक्षणात्मक बंधन राज्याच्या legislative आणि executive action वर लागू होते. एखादी संस्था constitutional या statutory स्वरूपाची आहे की नाही यापेक्षा ती government instrumentality किंवा agency म्हणून कार्य करते का हा प्रश्न न्यायालयीन परीक्षणात महत्त्वाचा ठरतो.",
@@ -56,7 +56,7 @@ body:[
 "Instrumentality/agency test → factual institutional assessment"
 ]},
 {
-id:"fr-04",chapter:"Fundamental Rights"Articles 12–13",title:"Article 13 : Fundamental Rights विरुद्ध कायद्यांचे परीक्षण",subtitle:"Judicial review, severability, eclipse आणि constitutional supremacy",
+id:"fr-04",chapter:"Fundamental Rights",title:"Article 13 : Fundamental Rights विरुद्ध कायद्यांचे परीक्षण",subtitle:"Judicial review, severability, eclipse आणि constitutional supremacy",
 body:[
 "Article 13 च्या मूलभूत कल्पनेनुसार Fundamental Rights शी विसंगत असलेला कायदा त्या विसंगतीच्या मर्यादेपर्यंत वैध राहू शकत नाही. त्यामुळे Article 13 judicial review साठी घटनात्मक आधार प्रदान करणाऱ्या महत्त्वाच्या तरतुदींपैकी एक आहे.",
 "Pre-Constitution laws आणि Post-Constitution laws यांच्याशी Article 13 चा संबंध वेगळ्या प्रकारे अभ्यासला जातो. संविधान लागू होण्यापूर्वीचे कायदे Fundamental Rights शी विसंगत असतील तर त्यांची अंमलबजावणी त्या विसंगतीच्या क्षेत्रात थांबू शकते; संविधानानंतरचे कायदे Fundamental Rights चे उल्लंघन करत असल्यास न्यायालय त्यांना unconstitutional ठरवू शकते.",
@@ -73,7 +73,7 @@ body:[
 "Ninth Schedule → judicial review पूर्णपणे बंद नाही"
 ]},
 {
-id:"fr-05",chapter:"Fundamental Rights"Right to Equality",title:"Article 14 : कायद्यापुढे समानता",subtitle:"Equality before law + equal protection of laws",
+id:"fr-05",chapter:"Fundamental Rights",title:"Article 14 : कायद्यापुढे समानता",subtitle:"Equality before law + equal protection of laws",
 body:[
 "Article 14 प्रत्येक व्यक्तीला equality before law आणि equal protection of laws ची हमी देतो. पहिली संकल्पना formal equality आणि rule of law शी जोडली जाते; दुसरी समान परिस्थितीत समान वागणूक आणि भिन्न परिस्थितीत योग्य classification करण्याची परवानगी देते.",
 "Equality चा अर्थ सर्व व्यक्तींना प्रत्येक परिस्थितीत तंतोतंत समान वागणूक असा नाही. Reasonable classification मान्य आहे, परंतु classification मनमानी किंवा निराधार नसावी. पारंपरिक कसोटीनुसार classification मध्ये intelligible differentia असणे आणि त्या differentia चा कायद्याच्या उद्दिष्टाशी rational nexus असणे आवश्यक आहे.",
@@ -88,7 +88,7 @@ body:[
 "Article 14 → arbitrariness विरुद्ध constitutional control"
 ]},
 {
-id:"fr-06",chapter:"Fundamental Rights"Right to Equality",title:"Articles 15 आणि 16 : भेदभावविरोधी संरक्षण आणि समान संधी",subtitle:"Formal equality, affirmative action आणि reservation framework",
+id:"fr-06",chapter:"Fundamental Rights",title:"Articles 15 आणि 16 : भेदभावविरोधी संरक्षण आणि समान संधी",subtitle:"Formal equality, affirmative action आणि reservation framework",
 body:[
 "Article 15 राज्याला religion, race, caste, sex किंवा place of birth या आधारांवर नागरिकांविरुद्ध भेदभाव करण्यास प्रतिबंध करतो. त्याच वेळी संविधान काही वर्गांसाठी special provisions करण्यास परवानगी देते. त्यामुळे Article 15 equality आणि affirmative action यांना एकत्र समजावतो.",
 "Article 15(3) women आणि children साठी special provisions, Article 15(4) socially and educationally backward classes तसेच SC/ST साठी special provisions आणि Article 15(5) educational institutions संदर्भातील special provisions यांच्याशी संबंधित आहे. Article 15(6) economically weaker sections संदर्भातील विशेष तरतुदींना घटनात्मक आधार देतो.",
@@ -106,7 +106,7 @@ body:[
 "Indra Sawhney → reservation jurisprudence"
 ]},
 {
-id:"fr-07",chapter:"Fundamental Rights"Right to Equality",title:"Articles 17 आणि 18 : सामाजिक समानतेची घटनात्मक हमी",subtitle:"Untouchability आणि titles चे abolition",
+id:"fr-07",chapter:"Fundamental Rights",title:"Articles 17 आणि 18 : सामाजिक समानतेची घटनात्मक हमी",subtitle:"Untouchability आणि titles चे abolition",
 body:[
 "Article 17 अस्पृश्यतेचे उच्चाटन करतो आणि तिच्या कोणत्याही स्वरूपातील अंमलबजावणीला कायदेशीरदृष्ट्या प्रतिबंधित करतो. हा अधिकार private individuals विरुद्धही परिणामकारक होणाऱ्या Fundamental Rights पैकी महत्त्वाचा उदाहरण आहे.",
 "Article 17 ची अंमलबजावणी करण्यासाठी Protection of Civil Rights Act, 1955 सारख्या कायद्यांचा उपयोग होतो. Scheduled Castes and Scheduled Tribes (Prevention of Atrocities) Act, 1989 हा व्यापक सामाजिक संरक्षणाच्या संदर्भात स्वतंत्र महत्त्वाचा कायदा आहे.",
@@ -119,7 +119,7 @@ body:[
 "Military and academic distinctions → constitutional exception"
 ]},
 {
-id:"fr-08",chapter:"Fundamental Rights"Right to Freedom",title:"Article 19 : सहा स्वातंत्र्यांचा घटनात्मक आराखडा",subtitle:"Speech • Assembly • Association • Movement • Residence • Profession",
+id:"fr-08",chapter:"Fundamental Rights",title:"Article 19 : सहा स्वातंत्र्यांचा घटनात्मक आराखडा",subtitle:"Speech • Assembly • Association • Movement • Residence • Profession",
 body:[
 "Article 19(1) भारतीय नागरिकांना सहा प्रमुख स्वातंत्र्ये देतो: speech and expression, peaceful assembly without arms, association or unions or cooperative societies, free movement throughout India, residence and settlement, आणि profession/occupation/trade/business.",
 "ही सहा स्वातंत्र्ये citizens-specific आहेत. प्रत्येक स्वातंत्र्याचे reasonable restrictions स्वतंत्र constitutional grounds वर आधारित आहेत. त्यामुळे Article 19 चा अभ्यास ‘right + restriction + purpose + constitutional clause’ या चौकटीत करणे सर्वात प्रभावी ठरते.",
@@ -141,7 +141,7 @@ body:[
 "19(1)(g) → profession, occupation, trade, business"
 ]},
 {
-id:"fr-09",chapter:"Fundamental Rights"Article 19",title:"Article 19(1)(a) : Freedom of Speech and Expression",subtitle:"लोकशाहीतील expression, press, information आणि contemporary digital issues",
+id:"fr-09",chapter:"Fundamental Rights",title:"Article 19(1)(a) : Freedom of Speech and Expression",subtitle:"लोकशाहीतील expression, press, information आणि contemporary digital issues",
 body:[
 "Freedom of speech and expression लोकशाहीतील विचारांची देवाणघेवाण, dissent, public debate आणि informed citizenship साठी मूलभूत आहे. भारतीय संविधानात press freedom स्वतंत्र Article म्हणून नमूद नसले तरी ते Article 19(1)(a) च्या संरक्षणातून विकसित झाले आहे.",
 "Right to Information चा constitutional development Article 19(1)(a) शी जोडला गेला. Government activities आणि public affairs बाबत माहिती मिळण्याची क्षमता democratic accountability आणि informed participation शी संबंधित आहे.",
@@ -159,7 +159,7 @@ body:[
 "Current judicial development → speech + dignity + democratic participation"
 ]},
 {
-id:"fr-10",chapter:"Fundamental Rights"Articles 20–22",title:"Article 20 : दोषसिद्धीविरुद्ध संरक्षण",subtitle:"Ex-post-facto law • Double jeopardy • Self-incrimination",
+id:"fr-10",chapter:"Fundamental Rights",title:"Article 20 : दोषसिद्धीविरुद्ध संरक्षण",subtitle:"Ex-post-facto law • Double jeopardy • Self-incrimination",
 body:[
 "Article 20 criminal conviction संदर्भात व्यक्तीला तीन विशेष संरक्षणे देतो. ही safeguards criminal justice system मध्ये fairness आणि State power वर constitutional limitations निर्माण करतात.",
 "Article 20(1) ex-post-facto criminal law विरुद्ध संरक्षण देते. एखाद्या कृत्याच्या वेळी तो कृत्य गुन्हा नसेल तर नंतरच्या कायद्याने त्याला मागील कालावधीपासून गुन्हा ठरवून शिक्षा देता येत नाही; तसेच नंतरच्या कठोर दंडाचा retrospective application करता येत नाही.",
@@ -173,7 +173,7 @@ body:[
 "Article 20 → criminal conviction safeguards"
 ]},
 {
-id:"fr-11",chapter:"Fundamental Rights"Articles 20–22",title:"Article 21 : जीवन आणि वैयक्तिक स्वातंत्र्य",subtitle:"भारतीय Fundamental Rights jurisprudence मधील सर्वाधिक विकसित अधिकार",
+id:"fr-11",chapter:"Fundamental Rights",title:"Article 21 : जीवन आणि वैयक्तिक स्वातंत्र्य",subtitle:"भारतीय Fundamental Rights jurisprudence मधील सर्वाधिक विकसित अधिकार",
 body:[
 "Article 21 म्हणतो की कायद्याने स्थापित केलेल्या प्रक्रियेशिवाय कोणत्याही व्यक्तीला त्याच्या life किंवा personal liberty पासून वंचित करता येणार नाही. ‘Person’ हा शब्द वापरल्यामुळे हा अधिकार नागरिकांपुरता मर्यादित नाही.",
 "प्रारंभी Article 21 च्या interpretation मध्ये procedure established by law वर भर होता. Maneka Gandhi v. Union of India (1978) नंतर Article 21 ची व्याख्या Article 14 आणि Article 19 सोबत वाचली जाऊ लागली आणि procedure fair, just and reasonable असावी या constitutional approach ला महत्त्व मिळाले.",
@@ -192,7 +192,7 @@ body:[
 "2026 → dignity in death/privacy/autonomy संदर्भातील contemporary Supreme Court development"
 ]},
 {
-id:"fr-12",chapter:"Fundamental Rights"Articles 20–22",title:"Article 21A : शिक्षणाचा अधिकार",subtitle:"6 ते 14 वर्षे वयोगटासाठी constitutional guarantee",
+id:"fr-12",chapter:"Fundamental Rights",title:"Article 21A : शिक्षणाचा अधिकार",subtitle:"6 ते 14 वर्षे वयोगटासाठी constitutional guarantee",
 body:[
 "Article 21A राज्याला सहा ते चौदा वर्षे वयोगटातील सर्व मुलांना कायद्याने ठरविलेल्या पद्धतीने free and compulsory education उपलब्ध करून देण्याची घटनात्मक जबाबदारी देतो.",
 "86th Constitutional Amendment Act, 2002 ने Article 21A समाविष्ट केला. याच घटनात्मक बदलामुळे education च्या अधिकाराला Fundamental Rights च्या चौकटीत स्वतंत्र स्थान मिळाले.",
@@ -206,7 +206,7 @@ body:[
 "Free + compulsory education → constitutional obligation"
 ]},
 {
-id:"fr-13",chapter:"Fundamental Rights"Articles 20–22",title:"Article 22 : अटक आणि प्रतिबंधात्मक नजरकैदेत संरक्षण",subtitle:"Arrest safeguards + preventive detention",
+id:"fr-13",chapter:"Fundamental Rights",title:"Article 22 : अटक आणि प्रतिबंधात्मक नजरकैदेत संरक्षण",subtitle:"Arrest safeguards + preventive detention",
 body:[
 "Article 22 अटक झालेल्या व्यक्तीला काही procedural safeguards देतो. Arrested person ला arrest चे grounds शक्य तितक्या लवकर कळवणे आणि legal practitioner शी consultation/defence ची संधी देणे या प्रमुख protections आहेत.",
 "सामान्य अटकेत Article 22(2) नुसार अटक झालेल्या व्यक्तीला nearest magistrate समोर 24 तासांच्या आत सादर करण्याचे constitutional requirement आहे, प्रवासासाठी लागणारा आवश्यक वेळ वगळून.",
@@ -221,7 +221,7 @@ body:[
 "Advisory Board → constitutional safeguard framework"
 ]},
 {
-id:"fr-14",chapter:"Fundamental Rights"Articles 23–24",title:"शोषणाविरुद्ध अधिकार",subtitle:"Human trafficking, forced labour आणि child labour",
+id:"fr-14",chapter:"Fundamental Rights",title:"शोषणाविरुद्ध अधिकार",subtitle:"Human trafficking, forced labour आणि child labour",
 body:[
 "Article 23 human trafficking, begar आणि other similar forms of forced labour वर प्रतिबंध घालतो. Public purpose साठी compulsory service ची तरतूद करता येते, परंतु religion, race, caste किंवा class यांवर भेदभाव करता येत नाही.",
 "Article 23 चे वैशिष्ट्य म्हणजे त्याचा प्रभाव private individuals विरुद्धही लागू होऊ शकतो. Forced labour हा केवळ physical compulsion नसून आर्थिक किंवा सामाजिक परिस्थितीतून निर्माण होणाऱ्या coercive conditions च्या न्यायालयीन interpretation शीही संबंधित आहे.",
@@ -235,7 +235,7 @@ body:[
 "Articles 23–24 → protection against exploitation"
 ]},
 {
-id:"fr-15",chapter:"Fundamental Rights"Articles 25–28",title:"धर्मस्वातंत्र्य : Articles 25–28",subtitle:"Freedom of conscience, religion, denomination आणि secular constitutional order",
+id:"fr-15",chapter:"Fundamental Rights",title:"धर्मस्वातंत्र्य : Articles 25–28",subtitle:"Freedom of conscience, religion, denomination आणि secular constitutional order",
 body:[
 "Article 25 सर्व व्यक्तींना freedom of conscience आणि freely profess, practise and propagate religion चा अधिकार देतो. हा अधिकार public order, morality, health आणि Part III मधील इतर provisions यांच्या अधीन आहे.",
 "Article 25 मधील ‘propagate’ म्हणजे धार्मिक विचारांचा प्रसार करण्याचे स्वातंत्र्य; त्याचा अर्थ दुसऱ्या व्यक्तीला जबरदस्तीने धर्मांतर करण्याचा absolute constitutional right असा होत नाही. Religious freedom आणि coercive conversion यातील फरक constitutional analysis मध्ये महत्त्वाचा आहे.",
@@ -252,7 +252,7 @@ body:[
 "S.R. Bommai → secularism and basic structure"
 ]},
 {
-id:"fr-16",chapter:"Fundamental Rights"Articles 29–30",title:"सांस्कृतिक आणि शैक्षणिक अधिकार",subtitle:"Language, script, culture आणि minority educational institutions",
+id:"fr-16",chapter:"Fundamental Rights",title:"सांस्कृतिक आणि शैक्षणिक अधिकार",subtitle:"Language, script, culture आणि minority educational institutions",
 body:[
 "Article 29(1) विशिष्ट language, script किंवा culture असलेल्या नागरिकांच्या section ला त्याचे संरक्षण करण्याचा अधिकार देतो. Article 29(2) State-maintained किंवा State-aided educational institutions मध्ये admission बाबत religion, race, caste, language यांवर आधारित denial विरुद्ध संरक्षण देते.",
 "Article 30 religious and linguistic minorities ना त्यांच्या पसंतीच्या educational institutions establish and administer करण्याचा अधिकार देतो.",
@@ -267,7 +267,7 @@ body:[
 "Minority institution → establish + administer"
 ]},
 {
-id:"fr-17",chapter:"Fundamental Rights"Article 32",title:"Article 32 : घटनात्मक उपायांचा अधिकार",subtitle:"Supreme Court, writs आणि Fundamental Rights enforcement",
+id:"fr-17",chapter:"Fundamental Rights",title:"Article 32 : घटनात्मक उपायांचा अधिकार",subtitle:"Supreme Court, writs आणि Fundamental Rights enforcement",
 body:[
 "Article 32 व्यक्तीला Fundamental Rights च्या enforcement साठी थेट Supreme Court कडे जाण्याचा अधिकार देतो. त्यामुळे Article 32 स्वतः एक Fundamental Right आहे.",
 "Supreme Court Article 32 अंतर्गत writs जारी करू शकते. Habeas Corpus illegal detention विरुद्ध, Mandamus public duty पार पाडण्यासाठी, Prohibition lower judicial/quasi-judicial body ला jurisdictional excess पासून रोखण्यासाठी, Certiorari चुकीचा किंवा jurisdictional error असलेला निर्णय quash करण्यासाठी आणि Quo Warranto public office धारण करण्याचा अधिकार तपासण्यासाठी वापरला जातो.",
@@ -284,7 +284,7 @@ body:[
 "Quo Warranto → legality of public office"
 ]},
 {
-id:"fr-18",chapter:"Fundamental Rights"Articles 33–35",title:"Articles 33–35 : विशेष परिस्थितीतील Fundamental Rights",subtitle:"Armed forces, martial law आणि Parliament ची legislative role",
+id:"fr-18",chapter:"Fundamental Rights",title:"Articles 33–35 : विशेष परिस्थितीतील Fundamental Rights",subtitle:"Armed forces, martial law आणि Parliament ची legislative role",
 body:[
 "Article 33 Parliament ला Armed Forces, forces charged with maintenance of public order, intelligence organisations आणि संबंधित telecommunication systems मध्ये कार्यरत व्यक्तींवर Fundamental Rights च्या application मध्ये आवश्यक मर्यादा घालण्याची किंवा rights modify करण्याची power देतो.",
 "Article 33 चा उद्देश discipline, operational secrecy आणि national security requirements यांचा विचार करून service conditions टिकवणे हा आहे. त्यामुळे प्रत्येक individual right चा application armed forces context मध्ये ordinary civilian context प्रमाणेच असेल असे नाही.",
@@ -297,7 +297,7 @@ body:[
 "Article 35 → specified matters Parliament's legislative competence"
 ]},
 {
-id:"fr-19",chapter:"Fundamental Rights"Exceptions and Doctrines",title:"Fundamental Rights वरील घटनात्मक अपवाद आणि संरक्षण",subtitle:"Articles 31A, 31B, 31C आणि Ninth Schedule",
+id:"fr-19",chapter:"Fundamental Rights",title:"Fundamental Rights वरील घटनात्मक अपवाद आणि संरक्षण",subtitle:"Articles 31A, 31B, 31C आणि Ninth Schedule",
 body:[
 "Part III च्या history मध्ये property reform आणि socio-economic legislation संदर्भात Fundamental Rights आणि legislative policy यांच्यात संघर्ष निर्माण झाला. Articles 31A, 31B आणि 31C यांची रचना या व्यापक constitutional history च्या संदर्भात समजावी.",
 "Article 31A विशिष्ट प्रकारच्या laws, विशेषतः acquisition of estates आणि काही land/reform-related measures यांना Articles 14 आणि 19 च्या आव्हानांपासून विशिष्ट संरक्षण देतो, subject to constitutional text.",
@@ -312,7 +312,7 @@ body:[
 "Minerva Mills (1980) → FR–DPSP balance"
 ]},
 {
-id:"fr-20",chapter:"Fundamental Rights"Landmark Cases",title:"मूलभूत अधिकार : प्रमुख सर्वोच्च न्यायालयीन प्रकरणे",subtitle:"Case → issue → principle → examination relevance",
+id:"fr-20",chapter:"Fundamental Rights",title:"मूलभूत अधिकार : प्रमुख सर्वोच्च न्यायालयीन प्रकरणे",subtitle:"Case → issue → principle → examination relevance",
 body:[
 "Champakam Dorairajan (1951) मध्ये Fundamental Rights आणि Directive Principles यांच्यातील प्रारंभीच्या constitutional relationship वर विचार झाला. या पार्श्वभूमीवर First Amendment आणि reservation-related constitutional changes समजून घेणे उपयुक्त आहे.",
 "Shankari Prasad (1951) आणि Sajjan Singh (1965) यांनी constitutional amendments आणि Fundamental Rights संदर्भात Parliament च्या power कडे व्यापक दृष्टीने पाहिले. पुढे Golaknath (1967) मध्ये वेगळा दृष्टिकोन स्वीकारण्यात आला.",
@@ -337,7 +337,7 @@ body:[
 "Common Cause 2018; Harish Rana 2026 → dignity in death"
 ]},
 {
-id:"fr-21",chapter:"Fundamental Rights"Analytical Framework",title:"Fundamental Rights आणि इतर घटनात्मक संकल्पना",subtitle:"Prelims आणि Mains साठी high-value comparisons",
+id:"fr-21",chapter:"Fundamental Rights",title:"Fundamental Rights आणि इतर घटनात्मक संकल्पना",subtitle:"Prelims आणि Mains साठी high-value comparisons",
 body:[
 "Fundamental Rights आणि DPSP मध्ये मुख्य फरक enforceability चा आहे. Fundamental Rights न्यायालयीन remedies द्वारे enforce होतात; DPSP न्यायालयीनदृष्ट्या non-justiciable असले तरी governance साठी fundamental आहेत. आधुनिक constitutional interpretation मध्ये दोन्हींच्या harmony वर भर आहे.",
 "Fundamental Rights आणि Fundamental Duties यांमध्ये rights-holder आणि constitutional responsibility यांचा फरक आहे. Rights व्यक्तीला constitutional protection देतात; Duties नागरिकांच्या civic responsibilities दर्शवतात.",
@@ -354,7 +354,7 @@ body:[
 "FR vs Constitutional Right → Right to Property example"
 ]},
 {
-id:"fr-22",chapter:"Fundamental Rights"Current Developments",title:"समकालीन घटनात्मक प्रवाह",subtitle:"2025–2026 मध्ये Fundamental Rights च्या व्यावहारिक वापराचे उदाहरण",
+id:"fr-22",chapter:"Fundamental Rights",title:"समकालीन घटनात्मक प्रवाह",subtitle:"2025–2026 मध्ये Fundamental Rights च्या व्यावहारिक वापराचे उदाहरण",
 body:[
 "Fundamental Rights चा current affairs अभ्यास करताना प्रत्येक नवीन judgment ला ‘नवीन Fundamental Right निर्माण झाला’ असे मानणे योग्य नाही. अनेक contemporary judgments आधीपासून अस्तित्वात असलेल्या rights च्या scope, remedy किंवा application चे स्पष्टीकरण करतात.",
 "2025 मध्ये Supreme Court ने speech and expression च्या संरक्षणाबाबत constitutional courts ची भूमिका स्पष्ट केली. Expression ला Article 19(1)(a) अंतर्गत संरक्षण देताना courts ने speech अनावश्यकपणे stifle करू नये, असा constitutional emphasis judgment मध्ये दिसतो.",
@@ -368,7 +368,7 @@ body:[
 "Current affairs → static Article + doctrine + new application"
 ]},
 {
-id:"fr-23",chapter:"Fundamental Rights"Mains Masterclass",title:"Mains Answer Framework : Fundamental Rights",subtitle:"GS-II मध्ये 10/15/20 marks उत्तर कसे बांधावे",
+id:"fr-23",chapter:"Fundamental Rights",title:"Mains Answer Framework : Fundamental Rights",subtitle:"GS-II मध्ये 10/15/20 marks उत्तर कसे बांधावे",
 body:[
 "Fundamental Rights वरील Mains उत्तराची सुरुवात थेट Article आणि constitutional principle ने करावी. उदाहरणार्थ, Article 21 च्या प्रश्नात ‘life’ म्हणजे केवळ animal existence नसून constitutional dignity शी संबंधित व्यापक concept आहे असे framing देता येते.",
 "दुसऱ्या टप्प्यात constitutional provision द्यावा: संबंधित Article, clause, restriction किंवा institutional remedy. तिसऱ्या टप्प्यात landmark judgment देऊन constitutional interpretation कसा विकसित झाला हे दाखवावे.",
@@ -383,7 +383,7 @@ body:[
 "Conclusion → constitutional values"
 ]},
 {
-id:"fr-24",chapter:"Fundamental Rights"Prelims Master Revision",title:"Prelims Master Revision",subtitle:"Articles, rights, restrictions, cases आणि traps",
+id:"fr-24",chapter:"Fundamental Rights",title:"Prelims Master Revision",subtitle:"Articles, rights, restrictions, cases आणि traps",
 body:[
 "Article 12 → State; Article 13 → laws inconsistent with Fundamental Rights; Articles 14–18 → Right to Equality; Articles 19–22 → Right to Freedom; Articles 23–24 → Right against Exploitation; Articles 25–28 → Freedom of Religion; Articles 29–30 → Cultural and Educational Rights; Article 32 → Constitutional Remedies; Articles 33–35 → special provisions and Parliament's role.",
 "Citizens-only rights include Articles 15, 16, 19, 29 and 30. Articles 14, 20, 21 आणि 22 मध्ये ‘person’ आधारित protection चा महत्त्वाचा संदर्भ आहे. प्रत्येक Article च्या exact beneficiary ला प्रश्नात तपासा.",
