@@ -91,17 +91,39 @@ export default function AdminNotesPage(){
   }
 
   async function generateNotes(){
-    if(!editing){setError("Save the note first.");return;}if(!sources.length){setError("Add at least one source before generating.");return;}
     setGenerating(true);setError("");setSuccess("");
     try{
-      const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error("Your session has expired. Please sign in again.");
-      const stage=stages.find(x=>x.id===Number(form.stage))?.name||"";const paper=papers.find(x=>x.id===Number(form.paper))?.name||"";const subject=items.find(x=>x.id===Number(form.subject))?.name||"";const topic=form.customTopic.trim()||items.find(x=>x.id===Number(form.topic))?.name||"";
-      const response=await fetch("/api/ai/study-notes",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({stage,paper,subject,topic,title:form.title,language:form.language,sources,additionalInstructions:form.instructions,sourceMode:form.sourceMode,format:form.format,syllabusTopic:items.find(x=>x.id===Number(form.topic))?.name||null})});
-      const data=await response.json();if(!response.ok)throw new Error(data.error||"AI note generation failed.");const content=String(data.content||"").trim();if(!content)throw new Error("AI returned empty notes.");
-      const {data:saved,error:e}=await supabase.from("ai_note_documents").update({content,version:(editing.version||1)+1,updated_at:new Date().toISOString()}).eq("id",editing.id).select().single();if(e||!saved)throw new Error(e?.message||"Could not save generated notes.");
-      await supabase.from("ai_note_generations").insert({note_id:editing.id,model:String(data.model||"gemini-3.1-flash-lite"),prompt_version:"study-notes-v1",source_ids:sources.map(s=>s.id),generated_content:content});
-      setEditing(saved as Note);setNotes(v=>v.map(n=>n.id===editing.id?saved as Note:n));setForm(v=>({...v,content}));setSuccess("Draft generated successfully. Review and edit before publishing.");
-    }catch(e){setError(e instanceof Error?e.message:"AI note generation failed.")}finally{setGenerating(false);}
+      if(!form.stage||!form.paper||!form.subject||!form.topic||!form.title.trim())throw new Error("Select the complete syllabus path and enter a note title.");
+      if(form.sourceMode==="reference_only"&&!sources.length)throw new Error("Reference-only generation requires at least one source. AI knowledge only does not require sources.");
+
+      const {data:{session}}=await supabase.auth.getSession();
+      if(!session?.access_token)throw new Error("Your session has expired. Please sign in again.");
+
+      let noteToGenerate=editing;
+      if(!noteToGenerate){
+        const {data:{user}}=await supabase.auth.getUser();
+        if(!user)throw new Error("Your session has expired. Please sign in again.");
+        const payload={syllabus_item_id:Number(form.topic),topic_id:null,title:form.title.trim(),language:form.language,content:form.content,status:"draft",version:1,created_by:user.id,updated_at:new Date().toISOString()};
+        const {data:newNote,error:createError}=await supabase.from("ai_note_documents").insert(payload).select().single();
+        if(createError||!newNote)throw new Error(createError?.message||"Could not create the draft note.");
+        noteToGenerate=newNote as Note;
+        setEditing(noteToGenerate);setNotes(v=>[noteToGenerate!,...v]);
+      }
+
+      const stage=stages.find(x=>x.id===Number(form.stage))?.name||"";
+      const paper=papers.find(x=>x.id===Number(form.paper))?.name||"";
+      const subject=items.find(x=>x.id===Number(form.subject))?.name||"";
+      const topic=form.customTopic.trim()||items.find(x=>x.id===Number(form.topic))?.name||"";
+      const response=await fetch("/api/ai/study-notes",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({stage,paper,subject,topic,title:form.title,language:form.language,sources,additionalInstructions:form.instructions,sourceMode:form.sourceMode,format:form.format,syllabusTopic:items.find(x=>x.id===Number(form.topic))?.name||null})});
+      const data=await response.json();if(!response.ok)throw new Error(data.error||"AI note generation failed.");
+      const content=String(data.content||"").trim();if(!content)throw new Error("AI returned empty notes.");
+      const currentVersion=noteToGenerate?.version||1;
+      const {data:saved,error:e}=await supabase.from("ai_note_documents").update({content,title:String(data.title||form.title).trim()||form.title,version:currentVersion+1,status:"draft",published_at:null,updated_at:new Date().toISOString()}).eq("id",noteToGenerate!.id).select().single();
+      if(e||!saved)throw new Error(e?.message||"Could not save generated notes.");
+      const {error:generationError}=await supabase.from("ai_note_generations").insert({note_id:noteToGenerate!.id,model:String(data.model||"gemini-3.1-flash-lite"),prompt_version:"study-notes-v2",source_ids:sources.map(s=>s.id),generated_content:content});
+      if(generationError)console.warn("Could not save generation history:",generationError.message);
+      setEditing(saved as Note);setNotes(v=>v.map(n=>n.id===noteToGenerate!.id?saved as Note:n));setForm(v=>({...v,content:String(saved.content||content),title:String(saved.title||v.title)}));setSuccess("Draft generated successfully without requiring sources. Review and edit before publishing.");
+    }catch(e){setError(e instanceof Error?e.message:"AI note generation failed.");}finally{setGenerating(false);}
   }
 
   async function togglePublish(note:Note){
@@ -131,7 +153,7 @@ export default function AdminNotesPage(){
       <label>Language<select value={form.language} onChange={e=>setField("language",e.target.value)}><option>English</option><option>Marathi</option><option>Bilingual</option></select></label>
       <label>Note Content<textarea value={form.content} onChange={e=>setField("content",e.target.value)} rows={14} placeholder="AI-generated or manually edited content appears here."/></label>
       <button className="primary" disabled={saving}>{saving?"Saving...":editing?"Save Note":"Create Draft Note"}</button>
-      {editing&&<button type="button" className="ai-generate-button" disabled={generating||saving||sources.length===0} onClick={generateNotes}>{generating?"✨ Generating notes...":"✨ Generate AI Notes"}</button>}
+      {editing&&<button type="button" className="ai-generate-button" disabled={generating||saving} onClick={generateNotes}>{generating?"✨ Generating notes...":"✨ Generate AI Notes"}</button>}
     </form>
     {editing&&<section className="notes-source-box">
       <div className="section-heading"><div><h2>Sources</h2><p>Upload a PDF/image from Android or add a reference URL.</p></div></div>
