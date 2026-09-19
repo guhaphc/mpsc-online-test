@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ancientHistorySections } from "@/lib/ancient-history-complete";
+import { governanceSections } from "@/lib/governance-complete";
 
 const subjects:Record<string,string>={
  "polity":"Indian Polity & Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
@@ -18,7 +19,8 @@ const subjects:Record<string,string>={
 
 type Section={id:string;chapter?:string;title:string;subtitle:string;body:string[];facts?:string[]};
 
-const sections:Section[] = ancientHistorySections;
+const subjectKey = params?.subject || "";
+ const sections:Section[] = subjectKey === "governance" ? governanceSections : subjectKey === "ancient-history" ? ancientHistorySections : [];
 
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>();
@@ -31,6 +33,7 @@ export default function StudyMaterialSubjectPage(){
  const progress=Math.round(done.length/sections.length*100);
  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}const {data:profile}=await supabase.from("mpsc_profiles").select("role,access_status").eq("id",user.id).single();if(profile?.role==="admin"&&profile?.access_status==="approved"){router.replace("/admin");return;}if(profile?.access_status!=="approved"){router.replace("/pending");return;}setLoading(false);})();},[router]);
  if(loading)return <main className="page"><section className="card"><p>Checking your access...</p></section></main>;
+ if(!sections.length)return <main className="page"><section className="card"><div className="admin-head"><div><div className="brand">MPSC / UPSC • STUDY MATERIAL</div><h1>{title}</h1><p className="muted">This subject has not yet been populated from its source PDF.</p></div><button className="secondary" onClick={()=>router.push("/study-material")}>All Subjects</button></div></section></main>;
  const current=displaySections.find(s=>s.id===active)||displaySections[0];
  async function translateSection(section:Section){
   if(translatedById[section.id])return;
@@ -56,20 +59,20 @@ export default function StudyMaterialSubjectPage(){
   return parts.map((part,i)=>part.toLowerCase()===normalizedQuery?<mark key={i}>{part}</mark>:part);
  };
  return <main className={"page "+(nightMode?"night-page":"")}><section className={"card study-shell "+(nightMode?"night-mode":"")} >
-  <div className="study-hero"><div><div className="brand">MPSC / UPSC • STUDY MATERIAL</div><h1>{title}</h1><p>प्राचीन इतिहास — ANCIENT INDIA.pdf आधारित इंटरॅक्टिव्ह नोट्स</p></div><button className="secondary" onClick={()=>router.push("/study-material")}>All Subjects</button></div>
+  <div className="study-hero"><div><div className="brand">MPSC / UPSC • STUDY MATERIAL</div><h1>{title}</h1><p>{subjectKey === "governance" ? "GOVERNANCE.pdf आधारित इंटरॅक्टिव्ह नोट्स" : subjectKey === "ancient-history" ? "ANCIENT INDIA.pdf आधारित इंटरॅक्टिव्ह नोट्स" : "Source-based interactive study material"}</p></div><button className="secondary" onClick={()=>router.push("/study-material")}>All Subjects</button></div>
   <div className="study-tools"><div className="compact-tools" aria-label="Reading controls"><button type="button" className={"icon-btn "+(searchOpen?"active":"")} onClick={()=>setSearchOpen(v=>!v)} aria-label="Search notes">⌕</button><button type="button" className={"icon-btn "+(nightMode?"active":"")} onClick={()=>setNightMode(v=>!v)} aria-label="Toggle night reading mode">{nightMode?"☀️":"🌙"}</button><button type="button" className={"icon-btn "+(focusMode?"active":"")} onClick={()=>setFocusMode(v=>!v)} aria-label="Focus reading mode">📖</button><div className="language-switch" role="group" aria-label="Notes language"><button type="button" className={language==="Marathi"?"selected":""} onClick={()=>changeLanguage("Marathi")}>MR</button><button type="button" className={language==="English"?"selected":""} onClick={()=>changeLanguage("English")} disabled={translationLoading}>EN</button></div></div>{(searchOpen||query)&&<div className="search-box"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="नोट्समध्ये शोधा..." aria-label="Search notes" />{query&&<button type="button" onClick={()=>setQuery("")} aria-label="Clear search">×</button>}</div>}<div className="progress-card"><strong>{progress}%</strong><span>Completed</span><i><b style={{width:progress+"%"}}/></i></div></div>
   <div className="mobile-chapter-bar"><button type="button" onClick={()=>setChaptersOpen(true)}>☰ Chapters</button><span>{current?.chapter||"Topics"}</span></div><div className={"study-layout "+(focusMode?"focus-layout":"")} >
    <aside className={chaptersOpen?"drawer-open":""}><button className="drawer-close" type="button" onClick={()=>setChaptersOpen(false)}>×</button><div className="toc-title">TOPICS</div>{filtered.map(s=><button className={active===s.id?"toc active":"toc"} key={s.id} onClick={async()=>{setActive(s.id);setChaptersOpen(false);if(language==="English")await translateSection(s)}}><span>{done.includes(s.id)?"✓":"○"}</span>{s.title}</button>)}</aside>
    <article>
     <div className="note-head"><span>LECTURE 01 • SOURCE PDF</span><h2>{current.title}</h2><p>{current.subtitle}</p></div>
-    <div className="source-chip">📘 Source: ANCIENT INDIA.pdf • Comprehensive Learning Series • Chapters 1–14</div>
+    <div className="source-chip">📘 Source: {subjectKey === "governance" ? "GOVERNANCE.pdf • Part 3 • Chapters 1–12" : "ANCIENT INDIA.pdf • Comprehensive Learning Series • Chapters 1–14"}</div>
     {translationLoading&&<div className="search-result">✨ Translating notes into English…</div>}{translationError&&<div className="search-result">{translationError}</div>}{normalizedQuery&&<div className="search-result"><strong>{filtered.length}</strong> topic{filtered.length===1?"":"s"} found for “{query}”</div>}
     {current.body.map((p,i)=><p className="note-para" key={i}>{highlight(p)}</p>)}
     {current.facts&&<div className="fact-grid">{current.facts.map((f,i)=><button type="button" className="fact fact-button" key={i} onClick={()=>openAi(f)}><strong>KEY POINT <em>✨ Explain</em></strong><span>{highlight(f)}</span></button>)}</div>}
     <div className="note-actions"><button onClick={()=>setDone(x=>x.includes(current.id)?x:x.concat(current.id))}>{done.includes(current.id)?"✓ Topic Completed":"Mark Topic Complete"}</button><button className="secondary" onClick={()=>{const n=sections.findIndex(s=>s.id===current.id);const next=sections[Math.min(n+1,sections.length-1)];setActive(next.id);if(language==="English")translateSection(next)}}>Next Topic →</button></div>
    </article>
   </div>
-  <div className="source-note">Source-based note: Ancient History content is constructed from the uploaded ANCIENT INDIA.pdf. Notes are rewritten summaries rather than verbatim reproduction; outside facts are not silently added.</div>
+  <div className="source-note">Source-based note: {subjectKey === "governance" ? "Governance content is constructed from the uploaded GOVERNANCE.pdf (Part 3)." : subjectKey === "ancient-history" ? "Ancient History content is constructed from the uploaded ANCIENT INDIA.pdf." : "This subject is not yet populated from an uploaded source."} Notes are rewritten summaries rather than verbatim reproduction; outside facts are not silently added.</div>
  </section>
  <style jsx>{`
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
