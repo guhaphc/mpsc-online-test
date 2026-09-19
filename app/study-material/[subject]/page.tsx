@@ -85,12 +85,13 @@ export default function StudyMaterialSubjectPage(){
  const [loading,setLoading]=useState(true); const [active,setActive]=useState("history"); const [query,setQuery]=useState(""); const [done,setDone]=useState<string[]>([]); const [language,setLanguage]=useState<"Marathi"|"English">("Marathi"); const [translated,setTranslated]=useState<Section[]|null>(null); const [translationLoading,setTranslationLoading]=useState(false); const [translationError,setTranslationError]=useState(""); const [aiOpen,setAiOpen]=useState(false); const [aiLoading,setAiLoading]=useState(false); const [aiError,setAiError]=useState(""); const [aiAnalysis,setAiAnalysis]=useState(""); const [aiPoint,setAiPoint]=useState("");
  const title=subjects[params?.subject||""]||"Study Material";
  const normalizedQuery=query.trim().toLowerCase();
+ const displaySections=language==="Marathi"?sections:(translated||sections);
  const filtered=useMemo(()=>displaySections.filter(s=>!normalizedQuery||(s.title+" "+s.subtitle+" "+s.body.join(" ")+" "+(s.facts||[]).join(" ")).toLowerCase().includes(normalizedQuery)),[normalizedQuery,displaySections]);
  useEffect(()=>{if(normalizedQuery&&filtered.length&&!filtered.some(s=>s.id===active))setActive(filtered[0].id);},[normalizedQuery,filtered,active]);
  const progress=Math.round(done.length/sections.length*100);
  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}const {data:profile}=await supabase.from("mpsc_profiles").select("role,access_status").eq("id",user.id).single();if(profile?.role==="admin"&&profile?.access_status==="approved"){router.replace("/admin");return;}if(profile?.access_status!=="approved"){router.replace("/pending");return;}setLoading(false);})();},[router]);
  if(loading)return <main className="page"><section className="card"><p>Checking your access...</p></section></main>;
- const displaySections=language==="Marathi"?sections:(translated||sections); const current=displaySections.find(s=>s.id===active)||displaySections[0];
+ const current=displaySections.find(s=>s.id===active)||displaySections[0];
  async function changeLanguage(next:"Marathi"|"English"){
   setLanguage(next);
   if(next==="Marathi"||translated)return;
