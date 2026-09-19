@@ -213,6 +213,23 @@ export default function AdminPage() {
 
         <div className="admin-tools">
           <div>
+            <strong>AI Study Notes</strong>
+            <span>
+              Create syllabus-linked notes, add references, generate AI drafts, review and publish.
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => router.push("/admin/notes")}
+          >
+            Manage AI Notes
+          </button>
+        </div>
+
+        <div className="admin-tools">
+          <div>
             <strong>Test management</strong>
             <span>
               Create, publish, and maintain practice tests.
