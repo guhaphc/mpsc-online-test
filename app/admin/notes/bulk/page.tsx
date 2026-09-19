@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 type Stage={id:number;name:string;sort_order:number};
 type Paper={id:number;stage_id:number;paper_no:number;name:string;sort_order:number};
 type Item={id:number;paper_id:number;parent_id:number|null;item_type:string;name:string;sort_order:number};
-type Note={id:number;syllabus_item_id:number|null;status:string;version:number};
+type Note={id:number;syllabus_item_id:number|null;status:string;version:number;content:string|null};
 type Result={id:number;name:string;status:"done"|"skipped"|"failed";message?:string};
 
 export default function BulkNotesPage(){
@@ -29,7 +29,7 @@ export default function BulkNotesPage(){
    supabase.from("mpsc_exam_stages").select("id,name,sort_order").order("sort_order"),
    supabase.from("mpsc_papers").select("id,stage_id,paper_no,name,sort_order").order("sort_order"),
    supabase.from("mpsc_syllabus_items").select("id,paper_id,parent_id,item_type,name,sort_order").order("sort_order"),
-   supabase.from("ai_note_documents").select("id,syllabus_item_id,status,version")
+   supabase.from("ai_note_documents").select("id,syllabus_item_id,status,version,content")
   ]);
   const e=a.error||b.error||c.error||d.error;
   if(e)setError(e.message);else{setStages(a.data||[]);setPapers(b.data||[]);setItems(c.data||[]);setNotes((d.data||[]) as Note[]);}
@@ -38,7 +38,7 @@ export default function BulkNotesPage(){
 
  const selectedPapers=useMemo(()=>papers.filter(p=>p.stage_id===Number(stage)),[papers,stage]);
  const selectedSubjects=useMemo(()=>items.filter(i=>i.paper_id===Number(paper)&&i.parent_id===null&&i.item_type==="subject"),[items,paper]);
- const noteIds=useMemo(()=>new Set(notes.map(n=>n.syllabus_item_id).filter((x):x is number=>x!==null)),[notes]);
+ const noteIds=useMemo(()=>new Set(notes.filter(n=>String(n.content||"").trim().length>0).map(n=>n.syllabus_item_id).filter((x):x is number=>x!==null)),[notes]);
 
  function descendants(rootIds:number[]){
   const out:number[]=[]; const queue=[...rootIds];
@@ -79,12 +79,16 @@ export default function BulkNotesPage(){
     if(existing){s++;setSkipped(s);continue;}
     const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error("Admin session expired.");
     const title=item.name;
-    const {data:created,error:createError}=await supabase.from("ai_note_documents").insert({syllabus_item_id:item.id,topic_id:null,title,language,content:"",status:"draft",version:0,created_by:user.id,updated_at:new Date().toISOString()}).select("id,syllabus_item_id,status,version").single();
-    if(createError||!created)throw new Error(createError?.message||"Could not create draft note.");
+    let created=notes.find(n=>n.syllabus_item_id===item.id&& !String(n.content||"").trim())||null;
+    if(!created){
+      const {data:newCreated,error:createError}=await supabase.from("ai_note_documents").insert({syllabus_item_id:item.id,topic_id:null,title,language,content:"",status:"draft",version:0,created_by:user.id,updated_at:new Date().toISOString()}).select("id,syllabus_item_id,status,version,content").single();
+      if(createError||!newCreated)throw new Error(createError?.message||"Could not create draft note.");
+      created=newCreated as Note;
+    }
     const response=await fetch("/api/ai/study-notes",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({stage:stageObj?.name||"",paper:paperObj?.name||"",subject:subjectName,topic:item.name,title,language,sources:[],additionalInstructions:"This is a bulk syllabus generation job. Stay tightly within this syllabus topic. Include exam-oriented points and avoid unsupported current facts.",sourceMode:"ai_only",format,syllabusTopic:item.name})});
     const data=await response.json();if(!response.ok)throw new Error(data.error||"AI generation failed.");
     const content=String(data.content||"").trim();if(!content)throw new Error("AI returned empty content.");
-    const {data:saved,error:saveError}=await supabase.from("ai_note_documents").update({content,title:String(data.title||title).trim()||title,version:1,status:"draft",published_at:null,updated_at:new Date().toISOString()}).eq("id",created.id).select("id,syllabus_item_id,status,version").single();
+    const {data:saved,error:saveError}=await supabase.from("ai_note_documents").update({content,title:String(data.title||title).trim()||title,version:1,status:"draft",published_at:null,updated_at:new Date().toISOString()}).eq("id",created.id).select("id,syllabus_item_id,status,version,content").single();
     if(saveError||!saved)throw new Error(saveError?.message||"Could not save generated note.");
     await supabase.from("ai_note_generations").insert({note_id:created.id,model:String(data.model||"gemini-3.1-flash-lite"),prompt_version:"study-notes-v2-bulk",source_ids:[],generated_content:content});
     d++;setDone(d);setResults(r=>[{id:item.id,name:item.name,status:"done"},...r]);
