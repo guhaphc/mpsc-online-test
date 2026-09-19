@@ -9,7 +9,7 @@ import { politySections } from "@/lib/polity-complete";
 import { fundamentalRightsSections } from "@/lib/fundamental-rights-complete";
 
 const subjects:Record<string,string>={
- "polity":"Indian Polity","governance":"Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
+ "polity":"Indian Polity","fundamental-rights":"Fundamental Rights","governance":"Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
  "modern-history":"Modern Indian History","world-history":"World History","indian-culture":"Indian Culture",
  "physical-geography":"Physical Geography","indian-geography":"Indian Geography","indian-society":"Indian Society",
  "agriculture":"Agriculture","economy":"Indian Economy","industry-infrastructure":"Industry & Infrastructure",
@@ -24,7 +24,8 @@ type Section={id:string;chapter?:string;title:string;subtitle:string;body:string
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>(); const subjectKey=params?.subject||"";
  const sections:Section[]=subjectKey==="polity"
-  ? [...fundamentalRightsSections,...politySections.filter(s=>!s.id.startsWith("p1-10"))]
+  ? politySections.filter(s=>!s.id.startsWith("p1-10"))
+  : subjectKey==="fundamental-rights"?fundamentalRightsSections
   : subjectKey==="governance"?governanceSections
   : subjectKey==="ancient-history"?ancientHistorySections:[];
  const [loading,setLoading]=useState(true),[active,setActive]=useState(sections[0]?.id||"");
