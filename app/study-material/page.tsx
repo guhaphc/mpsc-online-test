@@ -6,7 +6,6 @@ import { supabase } from "@/lib/supabase";
 
 const subjects = [
   { icon:"🏛️", name:"Indian Polity", key:"polity" },
-  { icon:"⚖️", name:"Fundamental Rights", key:"fundamental-rights" },
   { icon:"🏛️", name:"Governance", key:"governance" },
   { icon:"📜", name:"Ancient History", key:"ancient-history" },
   { icon:"🏰", name:"Medieval History", key:"medieval-history" },
