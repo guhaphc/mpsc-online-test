@@ -91,6 +91,13 @@ export default function StudyMaterialSubjectPage(){
  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}const {data:profile}=await supabase.from("mpsc_profiles").select("role,access_status").eq("id",user.id).single();if(profile?.role==="admin"&&profile?.access_status==="approved"){router.replace("/admin");return;}if(profile?.access_status!=="approved"){router.replace("/pending");return;}setLoading(false);})();},[router]);
  if(loading)return <main className="page"><section className="card"><p>Checking your access...</p></section></main>;
  const current=sections.find(s=>s.id===active)||sections[0];
+ const escapeRegex=(value:string)=>value.replace(/[.*+?^\\$\\{\\}()|[\\]\\\\]/g,"\\const current=sections.find(s=>s.id===active)||sections[0];
+ return <main");
+ const highlight=(text:string)=>{
+  if(!normalizedQuery)return text;
+  const parts=text.split(new RegExp(`(${escapeRegex(normalizedQuery)})`,"gi"));
+  return parts.map((part,i)=>part.toLowerCase()===normalizedQuery?<mark key={i}>{part}</mark>:part);
+ };
  return <main className="page"><section className="card study-shell">
   <div className="study-hero"><div><div className="brand">MPSC / UPSC • STUDY MATERIAL</div><h1>{title}</h1><p>प्राचीन इतिहास — PDF आधारित इंटरॅक्टिव्ह नोट्स</p></div><button className="secondary" onClick={()=>router.push("/study-material")}>All Subjects</button></div>
   <div className="study-tools"><div className="search-box"><span>⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="नोट्समध्ये शोधा — उदा. भीमबेटका, मायक्रोलिथ्स, पुरापाषाण..." aria-label="Search notes" />{query&&<button type="button" onClick={()=>setQuery("")} aria-label="Clear search">×</button>}</div><div className="progress-card"><strong>{progress}%</strong><span>Completed</span><i><b style={{width:progress+"%"}}/></i></div></div>
@@ -100,8 +107,8 @@ export default function StudyMaterialSubjectPage(){
     <div className="note-head"><span>LECTURE 01 • SOURCE PDF</span><h2>{current.title}</h2><p>{current.subtitle}</p></div>
     <div className="source-chip">📘 Source: Ancient History 01 — Daily Class Notes (Marathi), 8 pages</div>
     {normalizedQuery&&<div className="search-result"><strong>{filtered.length}</strong> topic{filtered.length===1?"":"s"} found for “{query}”</div>}
-    {current.body.map((p,i)=><p className="note-para" key={i}>{p}</p>)}
-    {current.facts&&<div className="fact-grid">{current.facts.map((f,i)=><div className="fact" key={i}><strong>KEY POINT</strong><span>{f}</span></div>)}</div>}
+    {current.body.map((p,i)=><p className="note-para" key={i}>{highlight(p)}</p>)}
+    {current.facts&&<div className="fact-grid">{current.facts.map((f,i)=><div className="fact" key={i}><strong>KEY POINT</strong><span>{highlight(f)}</span></div>)}</div>}
     <div className="note-actions"><button onClick={()=>setDone(x=>x.includes(current.id)?x:x.concat(current.id))}>{done.includes(current.id)?"✓ Topic Completed":"Mark Topic Complete"}</button><button className="secondary" onClick={()=>{const n=sections.findIndex(s=>s.id===current.id);setActive(sections[Math.min(n+1,sections.length-1)].id)}}>Next Topic →</button></div>
    </article>
   </div>
@@ -133,7 +140,7 @@ export default function StudyMaterialSubjectPage(){
 .note-head span{font:800 9px 'Plus Jakarta Sans',sans-serif;letter-spacing:1.5px;color:#0f766e}
 .note-head h2{font-size:clamp(23px,4vw,33px);line-height:1.25;margin:8px 0 5px;color:#172033;letter-spacing:-.4px}.note-head p{margin:0;color:#657386;font-size:13px}
 .source-chip{display:inline-flex;margin:17px 0 7px;padding:7px 11px;border-radius:9px;background:#f7f3ea;color:#765f32;font-size:11px;border:1px solid #eee3ca}
-.note-para{font-size:16px;line-height:2;color:#303d50;margin:18px 5px;max-width:850px;letter-spacing:.05px}
+.note-para mark,.fact mark{background:#ffe58a;color:#172033;padding:1px 3px;border-radius:4px;box-shadow:0 0 0 1px rgba(180,130,0,.12)}.note-para{font-size:16px;line-height:2;color:#303d50;margin:18px 5px;max-width:850px;letter-spacing:.05px}
 .note-para:first-of-type{margin-top:12px}
 .fact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px;margin:24px 0}
 .fact{padding:16px 17px;border:1px solid #e2e9ee;border-left:4px solid #d39b38;border-radius:12px;background:#fffdf8;box-shadow:0 5px 16px rgba(38,48,60,.035)}
