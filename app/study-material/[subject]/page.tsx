@@ -65,13 +65,13 @@ export default function StudyMaterialSubjectPage(){
    <aside className={chaptersOpen?"drawer-open":""}><button className="drawer-close" type="button" onClick={()=>setChaptersOpen(false)}>×</button><div className="toc-title">TOPICS</div>{filtered.map(s=><button className={active===s.id?"toc active":"toc"} key={s.id} onClick={async()=>{setActive(s.id);setChaptersOpen(false);if(language==="English")await translateSection(s)}}><span>{done.includes(s.id)?"✓":"○"}</span>{s.title}</button>)}</aside>
    <article>
     <div className="note-head"><span>LECTURE 01 • STUDY NOTE</span><h2>{current.title}</h2><p>{current.subtitle}</p></div>
-g&&<div className="search-result">✨ Translating notes into English…</div>}{translationError&&<div className="search-result">{translationError}</div>}{normalizedQuery&&<div className="search-result"><strong>{filtered.length}</strong> topic{filtered.length===1?"":"s"} found for “{query}”</div>}
+{translationLoading&&<div className="search-result">✨ Translating notes into English…</div>}{translationError&&<div className="search-result">{translationError}</div>}{normalizedQuery&&<div className="search-result"><strong>{filtered.length}</strong> topic{filtered.length===1?"":"s"} found for “{query}”</div>}
     {current.body.map((p,i)=><p className="note-para" key={i}>{highlight(p)}</p>)}
     {current.facts&&<div className="fact-grid">{current.facts.map((f,i)=><button type="button" className="fact fact-button" key={i} onClick={()=>openAi(f)}><strong>KEY POINT <em>✨ Explain</em></strong><span>{highlight(f)}</span></button>)}</div>}
     <div className="note-actions"><button onClick={()=>setDone(x=>x.includes(current.id)?x:x.concat(current.id))}>{done.includes(current.id)?"✓ Topic Completed":"Mark Topic Complete"}</button><button className="secondary" onClick={()=>{const n=sections.findIndex(s=>s.id===current.id);const next=sections[Math.min(n+1,sections.length-1)];setActive(next.id);if(language==="English")translateSection(next)}}>Next Topic →</button></div>
    </article>
   </div>
->
+ </section>
  <style jsx>{`
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 .study-shell{max-width:1500px!important;background:#f8fafc!important;border:1px solid #e7eaf0!important;padding:0!important;overflow:hidden;font-family:'Noto Sans Devanagari','Plus Jakarta Sans',system-ui,sans-serif;color:#172033}
