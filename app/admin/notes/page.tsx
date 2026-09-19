@@ -9,7 +9,7 @@ type Paper = { id:number; stage_id:number; paper_no:number; name:string; sort_or
 type Item = { id:number; paper_id:number; parent_id:number|null; item_type:string; name:string; sort_order:number };
 type Note = { id:number; syllabus_item_id:number|null; topic_id:number|null; title:string; content:string|null; language:string; status:string; version:number; created_at:string; updated_at:string; published_at:string|null };
 type Source = { id:number; note_id:number; source_type:string; title:string; url:string|null; file_url:string|null; storage_path:string|null; description:string|null; source_order:number };
-type NoteForm = { stage:string; paper:string; subject:string; topic:string; title:string; language:string; content:string };
+type NoteForm = { stage:string; paper:string; subject:string; topic:string; title:string; language:string; content:string; customTopic:string; instructions:string; sourceMode:string; format:string };
 type SourceForm = { type:string; title:string; url:string; file:string; description:string; upload:File|null };
 
 const emptyNote = ():NoteForm => ({ stage:"", paper:"", subject:"", topic:"", title:"", language:"English", content:"", customTopic:"", instructions:"", sourceMode:"ai_reference", format:"auto" });
@@ -54,7 +54,7 @@ export default function AdminNotesPage(){
 
   async function saveNote(e:FormEvent){
     e.preventDefault();setError("");setSuccess("");
-    if(!form.stage||!form.paper||!form.subject||(!form.topic&&!form.customTopic.trim())||!form.title.trim()){setError("Select the complete syllabus path and enter a note title.");return;}
+    if(!form.stage||!form.paper||!form.subject||!form.topic||!form.title.trim()){setError("Select the complete syllabus path and enter a note title.");return;}
     setSaving(true);
     const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}
     const payload={syllabus_item_id:Number(form.topic),topic_id:null,title:form.title.trim(),language:form.language,content:form.content,updated_at:new Date().toISOString()};
