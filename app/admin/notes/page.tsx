@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 type Stage = { id:number; name:string; sort_order:number };
 type Paper = { id:number; stage_id:number; paper_no:number; name:string; sort_order:number };
 type Item = { id:number; paper_id:number; parent_id:number|null; item_type:string; name:string; sort_order:number };
-type Note = { id:number; syllabus_item_id:number|null; topic_id:number|null; title:string; content:string|null; language:string; status:string; version:number; created_at:string; updated_at:string; published_at:string|null };
+type Note = { id:number; syllabus_item_id:number|null; topic_id:number|null; generation_topic:string|null; title:string; content:string|null; language:string; status:string; version:number; created_at:string; updated_at:string; published_at:string|null };
 type Source = { id:number; note_id:number; source_type:string; title:string; url:string|null; file_url:string|null; storage_path:string|null; description:string|null; source_order:number };
 type NoteForm = { stage:string; paper:string; subject:string; topic:string; title:string; language:string; content:string; customTopic:string; instructions:string; sourceMode:string; format:string };
 type SourceForm = { type:string; title:string; url:string; file:string; description:string; upload:File|null };
@@ -46,7 +46,7 @@ export default function AdminNotesPage(){
   async function editNote(note:Note){
     setError("");setSuccess("");setEditing(note);
     const item=items.find(x=>x.id===note.syllabus_item_id);const parent=item?.parent_id?items.find(x=>x.id===item.parent_id):null;const paper=papers.find(x=>x.id===item?.paper_id);const stage=stages.find(x=>x.id===paper?.stage_id);
-    setForm({stage:String(stage?.id||""),paper:String(paper?.id||""),subject:String(parent?.id||""),topic:String(item?.id||""),title:note.title,language:note.language,content:note.content||"",customTopic:"",instructions:"",sourceMode:"ai_reference",format:"auto"});
+    setForm({stage:String(stage?.id||""),paper:String(paper?.id||""),subject:String(parent?.id||""),topic:String(item?.id||""),title:note.title,language:note.language,content:note.content||"",customTopic:note.generation_topic||"",instructions:"",sourceMode:"ai_reference",format:"auto"});
     const {data,error:sourceError}=await supabase.from("ai_note_sources").select("*").eq("note_id",note.id).order("source_order");
     if(sourceError)setError(sourceError.message);else setSources((data||[]) as Source[]);
     window.scrollTo({top:0,behavior:"smooth"});
@@ -54,10 +54,10 @@ export default function AdminNotesPage(){
 
   async function saveNote(e:FormEvent){
     e.preventDefault();setError("");setSuccess("");
-    if(!form.stage||!form.paper||!form.subject||!form.topic||!form.title.trim()){setError("Select the complete syllabus path and enter a note title.");return;}
+    if(!form.stage||!form.paper||!form.subject||(!form.topic&&!form.customTopic.trim())||!form.title.trim()){setError("Select the complete syllabus path and enter a note title.");return;}
     setSaving(true);
     const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}
-    const payload={syllabus_item_id:Number(form.topic),topic_id:null,title:form.title.trim(),language:form.language,content:form.content,updated_at:new Date().toISOString()};
+    const payload={syllabus_item_id:form.topic?Number(form.topic):Number(form.subject),topic_id:null,generation_topic:form.customTopic.trim()||items.find(x=>x.id===Number(form.topic))?.name||null,title:form.title.trim(),language:form.language,content:form.content,updated_at:new Date().toISOString()};
     const result=editing?await supabase.from("ai_note_documents").update(payload).eq("id",editing.id).select().single():await supabase.from("ai_note_documents").insert({...payload,created_by:user.id}).select().single();
     if(result.error||!result.data)setError(result.error?.message||"Could not save the note.");else{const note=result.data as Note;setEditing(note);setNotes(v=>editing?v.map(n=>n.id===note.id?note:n):[note,...v]);setSuccess("Note saved. Add sources, then generate AI notes.");}
     setSaving(false);
@@ -93,7 +93,7 @@ export default function AdminNotesPage(){
   async function generateNotes(){
     setGenerating(true);setError("");setSuccess("");
     try{
-      if(!form.stage||!form.paper||!form.subject||!form.topic||!form.title.trim())throw new Error("Select the complete syllabus path and enter a note title.");
+      if(!form.stage||!form.paper||!form.subject||(!form.topic&&!form.customTopic.trim())||!form.title.trim())throw new Error("Select the stage, paper, subject and either a syllabus topic or a specific generation topic.");
       if(form.sourceMode==="reference_only"&&!sources.length)throw new Error("Reference-only generation requires at least one source. AI knowledge only does not require sources.");
 
       const {data:{session}}=await supabase.auth.getSession();
@@ -103,7 +103,7 @@ export default function AdminNotesPage(){
       if(!noteToGenerate){
         const {data:{user}}=await supabase.auth.getUser();
         if(!user)throw new Error("Your session has expired. Please sign in again.");
-        const payload={syllabus_item_id:Number(form.topic),topic_id:null,title:form.title.trim(),language:form.language,content:form.content,status:"draft",version:1,created_by:user.id,updated_at:new Date().toISOString()};
+        const payload={syllabus_item_id:form.topic?Number(form.topic):Number(form.subject),topic_id:null,generation_topic:form.customTopic.trim()||items.find(x=>x.id===Number(form.topic))?.name||null,title:form.title.trim(),language:form.language,content:form.content,status:"draft",version:1,created_by:user.id,updated_at:new Date().toISOString()};
         const {data:newNote,error:createError}=await supabase.from("ai_note_documents").insert(payload).select().single();
         if(createError||!newNote)throw new Error(createError?.message||"Could not create the draft note.");
         noteToGenerate=newNote as Note;
@@ -148,7 +148,7 @@ export default function AdminNotesPage(){
       <label>Examination Stage<select value={form.stage} onChange={e=>{setField("stage",e.target.value);setField("paper","");setField("subject","");setField("topic","")}}><option value="">Select stage</option>{stages.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
       <label>Paper<select value={form.paper} disabled={!form.stage} onChange={e=>{setField("paper",e.target.value);setField("subject","");setField("topic","")}}><option value="">Select paper</option>{selectedPapers.map(p=><option key={p.id} value={p.id}>Paper {p.paper_no} — {p.name}</option>)}</select></label>
       <label>Subject<select value={form.subject} disabled={!form.paper} onChange={e=>{setField("subject",e.target.value);setField("topic","")}}><option value="">Select subject</option>{selectedSubjects.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
-      <label>Syllabus Topic<select value={form.topic} disabled={!form.subject} onChange={e=>setField("topic",e.target.value)}><option value="">Select topic</option>{selectedTopics.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select></label>
+      <label>Syllabus Topic<select value={form.topic} disabled={!form.subject} onChange={e=>setField("topic",e.target.value)}><option value="">{selectedTopics.length?"Select topic":"No predefined topic — use Specific Generation Topic below"}</option>{selectedTopics.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</select>{form.subject&&selectedTopics.length===0&&<small className="field-help">This subject has no child topic in the syllabus database. Define the specific note topic below; the note will remain linked to this subject.</small>}</label>
       <label>Specific Generation Topic <span className="field-optional">(optional — customize wording without changing the syllabus link)</span><textarea value={form.customTopic} onChange={e=>setField("customTopic",e.target.value)} rows={3} placeholder="Example: Emotional Intelligence — meaning, components, administrative applications and MPSC answer-writing points."/></label><div className="form-grid"><label>Note Format<select value={form.format} onChange={e=>setField("format",e.target.value)}><option value="auto">Subject-specific MPSC format</option><option value="standard">Standard MPSC study note</option><option value="prelims">Prelims-focused</option><option value="mains">Mains-focused</option><option value="answer-writing">Mains answer-writing</option></select></label><label>Generation Source<select value={form.sourceMode} onChange={e=>setField("sourceMode",e.target.value)}><option value="ai_reference">AI + reference material</option><option value="ai_only">AI knowledge only</option><option value="reference_only">Reference material only</option></select></label></div><label>Additional AI Instructions <span className="field-optional">(optional)</span><textarea value={form.instructions} onChange={e=>setField("instructions",e.target.value)} rows={3} placeholder="Focus on specific points, examples, committees, Maharashtra relevance, Prelims and Mains."/></label><label>Note Title<input value={form.title} onChange={e=>setField("title",e.target.value)} placeholder="e.g. Indian National Movement"/></label>
       <label>Language<select value={form.language} onChange={e=>setField("language",e.target.value)}><option>English</option><option>Marathi</option><option>Bilingual</option></select></label>
       <label>Note Content<textarea value={form.content} onChange={e=>setField("content",e.target.value)} rows={14} placeholder="AI-generated or manually edited content appears here."/></label>
