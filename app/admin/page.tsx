@@ -213,6 +213,23 @@ export default function AdminPage() {
 
         <div className="admin-tools">
           <div>
+            <strong>Bulk AI Study Notes</strong>
+            <span>
+              Generate remaining syllabus-linked draft notes by stage, paper, or subject with progress tracking.
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => router.push("/admin/notes/bulk")}
+          >
+            Bulk Generator
+          </button>
+        </div>
+
+        <div className="admin-tools">
+          <div>
             <strong>AI Study Notes</strong>
             <span>
               Create syllabus-linked notes, add references, generate AI drafts, review and publish.
