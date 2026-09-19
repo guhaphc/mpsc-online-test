@@ -5,6 +5,7 @@ export type FundamentalRightsSection = {
   subtitle: string;
   body: string[];
   facts?: string[];
+  subtopics?: {title:string;points:string[]}[];
 };
 
 export const fundamentalRightsSections: FundamentalRightsSection[] = [
@@ -18,7 +19,7 @@ body:[
 "मूलभूत अधिकार निरपेक्ष नाहीत. काही अधिकारांवर संविधानानेच reasonable restrictions मान्य केल्या आहेत. त्यामुळे भारतीय Fundamental Rights व्यवस्था स्वातंत्र्य आणि सामाजिक हित, व्यक्तीची autonomy आणि सार्वजनिक सुव्यवस्था, तसेच अधिकार आणि राज्याच्या वैध नियमनामधील संतुलनावर आधारित आहे.",
 "संविधानाच्या प्रारंभी सात Fundamental Rights गट होते. Right to Property पूर्वी Article 19(1)(f) आणि Article 31 अंतर्गत Fundamental Right होता; 44th Constitutional Amendment Act, 1978 नंतर तो Part III मधून काढण्यात आला आणि Article 300A अंतर्गत constitutional/legal right म्हणून ठेवण्यात आला. त्यामुळे सध्याच्या वर्गीकरणात सहा प्रमुख गट मानले जातात.",
 "Fundamental Rights चा विकास स्थिर राहिलेला नाही. न्यायालयीन व्याख्येमुळे Article 21 च्या जीवन आणि वैयक्तिक स्वातंत्र्याच्या संकल्पनेत प्रतिष्ठा, privacy, legal aid, speedy trial, clean environment आणि इतर अनेक घटक समाविष्ट झाले. त्यामुळे संविधानातील शब्दरचना आणि न्यायालयीन अर्थ या दोन्हींचा एकत्रित अभ्यास आवश्यक आहे."
-],facts:[
+],subtopics:[{title:"घटनात्मक स्थान",points:["Part III मधील Articles 12–35 मूलभूत अधिकारांचे मुख्य घटनात्मक क्षेत्र आहे. हे अधिकार राज्यसत्तेवर मर्यादा घालतात आणि व्यक्तीचे स्वातंत्र्य, समानता व प्रतिष्ठा संरक्षित करतात."]},{title:"सहा प्रमुख गट",points:["समानता (14–18), स्वातंत्र्य (19–22), शोषणाविरुद्ध (23–24), धार्मिक स्वातंत्र्य (25–28), सांस्कृतिक व शैक्षणिक अधिकार (29–30) आणि घटनात्मक उपाय (32) हे सहा प्रमुख गट आहेत."]},{title:"मालमत्तेचा अधिकार",points:["मूळ संविधानात Article 19(1)(f) व Article 31 अंतर्गत मालमत्ता हा Fundamental Right होता. 44व्या घटनादुरुस्तीने तो Part III मधून काढून Article 300A अंतर्गत ठेवला."]},{title:"घटनात्मक तत्त्वज्ञान",points:["Fundamental Rights आणि Directive Principles यांचे उद्दिष्ट परस्परविरोधी नसून liberty, equality आणि social justice यांचे संतुलन साधणे हे व्यापक constitutional design आहे."]}],facts:[
 "Part III → Articles 12–35",
 "सध्याचे सहा प्रमुख Fundamental Rights groups",
 "Right to Property → Article 300A; आता Fundamental Right नाही",
@@ -33,7 +34,7 @@ body:[
 "Fundamental Rights आणि Directive Principles यांच्यात मूलभूत संघर्ष मानण्याऐवजी भारतीय घटनात्मक न्यायशास्त्राने दोन्हींचे harmonisation करण्याचा दृष्टिकोन विकसित केला आहे. सामाजिक न्यायासाठी राज्याने उपाययोजना करताना individual rights चा सन्मान करणे आणि rights चे अर्थ लावताना welfare objectives लक्षात घेणे हे constitutional balance चे प्रमुख तत्त्व आहे.",
 "Emergency provisions अंतर्गत काही अधिकारांच्या enforcement वर परिणाम होऊ शकतो; मात्र 44th Amendment नंतर Articles 20 आणि 21 यांचे संरक्षण अधिक मजबूत करण्यात आले आहे. Emergency, suspension आणि constitutional remedies यांचा अभ्यास स्वतंत्रपणे करणे आवश्यक आहे.",
 "Fundamental Rights च्या मर्यादा संविधान, वैध कायदा आणि न्यायालयीन proportionality/reasonableness यांच्या चौकटीत तपासल्या जातात. त्यामुळे ‘restriction’ आणि ‘destruction’ यांच्यातील फरक महत्त्वाचा आहे: वैध नियमन अधिकाराचे अस्तित्व नष्ट करू नये."
-],facts:[
+],subtopics:[{title:"न्यायालयीन अंमलबजावणी",points:["Fundamental Rights च्या उल्लंघनावर Article 32 आणि Article 226 अंतर्गत न्यायालयीन उपाय उपलब्ध होतात."]},{title:"Citizen आणि Person",points:["Articles 14, 20, 21, 22 यांतील संरक्षण समजताना person हा व्यापक संदर्भ आहे; Articles 15, 16, 19, 29 आणि 30 मधील अधिकार प्रामुख्याने citizens शी संबंधित आहेत."]},{title:"State action आणि private conduct",points:["Part III चा मुख्य भर State action वर असला तरी Articles 17, 23 आणि 24 सारख्या तरतुदी सामाजिक व private conduct वरही थेट परिणाम करतात."]},{title:"मर्यादा",points:["Fundamental Rights absolute नाहीत. संविधानाने मान्य केलेल्या reasonable restrictions, public interest आणि न्यायालयीन reasonableness/proportionality यांच्या चौकटीत त्यांचे परीक्षण होते."]}],facts:[
 "Article 32 → Supreme Court constitutional remedy",
 "Article 226 → High Court writ jurisdiction; scope broader",
 "‘Citizen’ vs ‘person’ → अनेक प्रश्नांचे केंद्र",
@@ -47,7 +48,7 @@ body:[
 "Public functions, governmental control, financial dependence, functional character आणि pervasive administrative control यांसारखे घटक काही प्रकरणांमध्ये संस्था Article 12 मधील State आहे का हे ठरवण्यासाठी वापरले गेले आहेत. हा विषय factual आणि institutional context वर अवलंबून असतो.",
 "Article 12 ची व्याख्या Article 13 सोबत वाचल्यास Part III चा core mechanism स्पष्ट होतो: State च्या कृतींना संविधानाच्या Fundamental Rights शी सुसंगत राहावे लागते.",
 "Private body प्रत्येक वेळी Article 12 मधील State ठरत नाही. मात्र एखाद्या private institution वर statutory obligations, public duties किंवा इतर constitutional remedies लागू होऊ शकतात का हा स्वतंत्र प्रश्न असू शकतो."
-],facts:[
+],subtopics:[{title:"Article 12 मधील घटक",points:["Union Government आणि Parliament, State Governments आणि Legislatures, local authorities तसेच territory of India किंवा Government of India च्या control अंतर्गत येणाऱ्या other authorities यांचा समावेश होतो."]},{title:"Instrumentality आणि agency",points:["एखादी संस्था सरकारची instrumentality/agency आहे का हे ठरवताना governmental control, public function, आर्थिक व प्रशासकीय अवलंबित्व यांसारखे घटक संदर्भानुसार विचारात घेतले जाऊ शकतात."]},{title:"Article 12 चे महत्त्व",points:["Fundamental Rights च्या enforcement साठी ‘State’ कोण आहे हे निश्चित करणे आवश्यक असल्याने Article 12 हा Part III चा प्रवेशद्वार आहे."]}],facts:[
 "Article 12 → definition of State for Part III",
 "Union Government + Parliament",
 "State Governments + State Legislatures",
@@ -64,7 +65,7 @@ body:[
 "Article 13 आणि constitutional amendment यांचा प्रश्न Golaknath आणि Kesavananda Bharati या घटनात्मक प्रकरणांशी जोडला जातो. Parliament च्या amendment power वर basic structure doctrine ने substantive constitutional limitation आणली.",
 "First Amendment ने Article 31A, 31B आणि Ninth Schedule संबंधित संरक्षणांची चौकट निर्माण केली. I.R. Coelho निर्णयाने Ninth Schedule मध्ये नंतर समाविष्ट झालेल्या कायद्यांवर basic structure च्या कसोटीवर judicial review चा मार्ग स्पष्ट केला.",
 "Article 13 चा व्यापक constitutional lesson असा आहे की Parliament किंवा executive कडे सत्ता असली तरी ती Constitution च्या चौकटीत वापरली पाहिजे. Fundamental Rights हे constitutional supremacy च्या संरक्षणातील महत्त्वाचे साधन आहेत."
-],facts:[
+],subtopics:[{title:"Pre आणि post-Constitution laws",points:["Article 13 pre-Constitution laws च्या विसंगतीचा आणि Constitution नंतर केलेल्या laws च्या constitutional validity चा वेगळ्या संदर्भात विचार करतो."]},{title:"Doctrine of Severability",points:["कायद्याचा असंवैधानिक भाग स्वतंत्रपणे वेगळा करता येत असल्यास उर्वरित कायदा टिकू शकतो."]},{title:"Doctrine of Eclipse",points:["पूर्व-संविधानिक कायदा Fundamental Rights शी विसंगत झाल्यास त्याच्या enforceability वर परिणाम होतो; doctrine चा मुख्य उपयोग pre-Constitution laws संदर्भात केला जातो."]},{title:"Judicial review आणि amendments",points:["Golaknath, Kesavananda Bharati आणि I.R. Coelho यांच्या माध्यमातून Parliament च्या amendment power आणि basic structure यांच्यातील घटनात्मक संबंध विकसित झाला."]}],facts:[
 "Article 13 → laws inconsistent with Fundamental Rights",
 "Severability → unconstitutional part वेगळा करता येत असल्यास उर्वरित कायदा टिकू शकतो",
 "Eclipse → pre-Constitution laws संदर्भातील doctrine",
@@ -80,7 +81,7 @@ body:[
 "नंतरच्या न्यायशास्त्रात Article 14 केवळ classification test पुरता मर्यादित राहिला नाही. Manifest arbitrariness आणि non-arbitrariness यांसारख्या संकल्पनांमधून State action च्या मनमानीवरही constitutional scrutiny वाढली.",
 "Article 14 चा reservation आणि affirmative action शी संबंध आहे. Equality ला substantive dimension देताना सामाजिक आणि शैक्षणिक मागासलेपणा, representation आणि historically disadvantaged groups साठी विशेष उपाययोजना यांचा घटनात्मक संदर्भ लक्षात घ्यावा.",
 "Article 14 हा केवळ formal equality नसून constitutional governance मध्ये fairness, reasoned state action आणि non-arbitrariness यांचा व्यापक आधार आहे."
-],facts:[
+],subtopics:[{title:"Equality before law",points:["कायद्यापुढे विशेष विशेषाधिकार नाकारणे आणि प्रत्येक व्यक्तीला सामान्य कायद्याच्या अधीन ठेवणे हा formal equality चा भाग आहे."]},{title:"Equal protection",points:["समान परिस्थितीत समान वागणूक आणि भिन्न परिस्थितीत योग्य classification ही substantive equality ची कार्यपद्धती आहे."]},{title:"Reasonable classification",points:["Intelligible differentia आणि त्या differentia चा legislative objective शी rational nexus या पारंपरिक कसोट्या महत्त्वाच्या आहेत."]},{title:"Arbitrariness",points:["नंतरच्या Article 14 jurisprudence मध्ये State action ची manifest arbitrariness आणि non-arbitrariness हाही महत्त्वाचा परीक्षणाचा आधार झाला."]}],facts:[
 "Equality before law → formal rule-of-law idea",
 "Equal protection → similarly situated persons treated alike",
 "Reasonable classification → intelligible differentia + rational nexus",
@@ -95,7 +96,7 @@ body:[
 "Reservation समजताना equality of opportunity म्हणजे सर्वांना identical treatment नव्हे. संविधान सामाजिक विषमता आणि अपुरे representation लक्षात घेऊन targeted measures ला परवानगी देते. त्यामुळे equality आणि affirmative action यांचा परस्परविरोधी नव्हे तर substantive equality च्या चौकटीतील संबंध अभ्यासला पाहिजे.",
 "Indra Sawhney प्रकरण reservation jurisprudence मधील महत्त्वाचा टप्पा आहे. त्यानंतर constitutional amendments आणि विविध न्यायालयीन निर्णयांमुळे promotion, creamy layer, educational institutions आणि EWS यांसंबंधी कायदेशीर चौकट विकसित झाली.",
 "Article 15 आणि Article 16 मधील सर्व clauses एकाच प्रकारच्या reservation ला परवानगी देतात असे समजणे चुकीचे आहे. प्रत्येक clause चे text, beneficiary class, field of operation आणि constitutional conditions स्वतंत्रपणे लक्षात ठेवणे आवश्यक आहे."
-],facts:[
+],subtopics:[{title:"Article 15(1) आणि 15(2)",points:["Religion, race, caste, sex आणि place of birth या आधारांवरील discrimination वर बंदी असून public access संदर्भात Article 15(2) महत्त्वाचा आहे."]},{title:"विशेष तरतुदी",points:["Women/children, socially and educationally backward classes, SC/ST आणि EWS संदर्भातील special provisions Article 15 च्या constitutional framework मध्ये येतात."]},{title:"Article 16",points:["Public employment मध्ये equality of opportunity हा Article 16 चा मुख्य आधार आहे; reservation आणि representation साठी त्यातील clauses स्वतंत्रपणे समजून घ्यावेत."]},{title:"Reservation jurisprudence",points:["Indra Sawhney आणि पुढील घटनात्मक दुरुस्त्या reservation च्या scope, backward classes आणि EWS यांचा अभ्यास करण्यासाठी महत्त्वाच्या आहेत."]}],facts:[
 "Article 15 → discrimination + special provisions",
 "Article 16 → equality of opportunity in public employment",
 "15(3) → women and children",
@@ -111,7 +112,7 @@ body:[
 "Article 17 ची अंमलबजावणी करण्यासाठी Protection of Civil Rights Act, 1955 सारख्या कायद्यांचा उपयोग होतो. Scheduled Castes and Scheduled Tribes (Prevention of Atrocities) Act, 1989 हा व्यापक सामाजिक संरक्षणाच्या संदर्भात स्वतंत्र महत्त्वाचा कायदा आहे.",
 "Article 18 titles च्या abolition शी संबंधित आहे. राज्याला military किंवा academic distinction वगळता titles देण्यावर घटनात्मक मर्यादा आहेत. National awards बाबत constitutional practice आणि Article 18 यांचा अभ्यास करताना award आणि title यातील फरक लक्षात घ्यावा.",
 "Articles 17 आणि 18 यांचा व्यापक उद्देश सामाजिक status hierarchy मधून निर्माण होणारी कायदेशीर किंवा सार्वजनिक विषमता कमी करणे हा आहे. त्यामुळे Fundamental Rights मध्ये individual liberty सोबत social equality चा स्पष्ट घटक दिसतो."
-],facts:[
+],subtopics:[{title:"Article 17",points:["Untouchability चे abolition आणि त्यातून निर्माण होणाऱ्या disability वर बंदी ही केवळ State विरुद्ध नसून सामाजिक व्यवहारावरही परिणाम करणारी constitutional prohibition आहे."]},{title:"कायदेशीर अंमलबजावणी",points:["Protection of Civil Rights Act, 1955 आणि Scheduled Castes and Scheduled Tribes (Prevention of Atrocities) Act, 1989 यांसारखे कायदे constitutional prohibition ला statutory enforcement देतात."]},{title:"Article 18",points:["State कडून titles देण्यावर सामान्य बंदी असून military आणि academic distinctions यांना constitutional exception आहे."]},{title:"राष्ट्रीय सन्मान आणि titles",points:["Article 18 चा उद्देश hereditary किंवा status-based distinctions टाळणे आहे; राष्ट्रीय पुरस्कारांचा constitutional treatment स्वतंत्रपणे समजून घ्यावा."]}],facts:[
 "Article 17 → abolition of untouchability",
 "Protection of Civil Rights Act, 1955 → enforcement framework",
 "Article 18 → abolition of titles",
@@ -130,7 +131,7 @@ body:[
 "Article 19(1)(e) भारताच्या कोणत्याही भागात reside and settle करण्याचे स्वातंत्र्य देते. General public interest आणि Scheduled Tribes च्या हिताचे संरक्षण या grounds वर restrictions लागू होऊ शकतात.",
 "Article 19(1)(g) profession, occupation, trade किंवा business करण्याचे स्वातंत्र्य देते. General public interest मध्ये regulation, professional qualifications आणि State monopoly यांसारख्या घटनात्मक बाबींचा समावेश होतो.",
 "Article 19 च्या प्रत्येक clause साठी restriction समान नसते. उदाहरणार्थ speech वर Article 19(2), assembly वर 19(3), association वर 19(4), movement/residence वर 19(5), आणि profession/business वर 19(6) लागू होतात. ही clause-wise mapping Prelims साठी अत्यंत महत्त्वाची आहे."
-],facts:[
+],subtopics:[{title:"सहा स्वातंत्र्ये",points:["Speech and expression, peaceful assembly, association, movement, residence आणि profession/occupation/trade/business ही Article 19(1) मधील प्रमुख स्वातंत्र्ये आहेत."]},{title:"Clause-specific restrictions",points:["19(2) speech, 19(3) assembly, 19(4) association, 19(5) movement/residence आणि 19(6) profession/business वरील restrictions सांगतात."]},{title:"नागरिकांना विशेष",points:["Article 19 मधील अधिकार citizens साठी आहेत. Foreigners आणि legal persons यांना त्याच स्वरूपात Article 19 rights उपलब्ध नाहीत."]},{title:"व्यवसाय आणि State monopoly",points:["Article 19(1)(g) अंतर्गत profession/trade/business चे स्वातंत्र्य आहे; technical qualifications, public interest regulation आणि State monopoly यांसारख्या मर्यादा संविधान मान्य करते."]}],facts:[
 "Article 19 → citizens only",
 "19(1)(a) → speech and expression",
 "19(1)(b) → peaceful assembly without arms",
@@ -150,7 +151,7 @@ body:[
 "Right to strike हा Fundamental Right नाही. Similarly, peaceful demonstration किंवा protest आणि strike हे समान constitutional categories नाहीत. Article 19 च्या अधिकारांचा वापर इतर कायदेशीर हक्क, public order आणि applicable labour laws यांच्या चौकटीत होतो.",
 "2025 मध्ये Supreme Court ने freedom of speech and expression च्या संरक्षणाबाबत constitutional courts ची भूमिका अधोरेखित केली आणि expression ला Article 19(1)(a) अंतर्गत संरक्षण देताना courts ने speech ला अनावश्यकपणे stifle करू नये असे नमूद केले. हे contemporary constitutional application म्हणून अभ्यासता येते.",
 "2026 मध्ये Supreme Court च्या एका निर्णयात Article 19(1)(a) च्या व्याप्तीमध्ये primary education साठी medium of instruction निवडीशी संबंधित freedom of choice चा विचार करण्यात आला. हा निर्णय expression, education आणि individual choice यांच्या परस्परसंबंधाचा contemporary example म्हणून वापरता येतो."
-],facts:[
+],subtopics:[{title:"Speech चे क्षेत्र",points:["Expression मध्ये विचार मांडणे, माहिती प्रसारित करणे आणि विविध माध्यमांतून communication यांचा व्यापक constitutional संदर्भ आहे."]},{title:"Article 19(2)",points:["Sovereignty and integrity of India, security of State, friendly relations with foreign States, public order, decency or morality, contempt of court, defamation आणि incitement to an offence हे constitutionally specified grounds आहेत."]},{title:"Internet",points:["Anuradha Bhasin प्रकरणाने speech/expression आणि profession/business च्या Internet-mediated exercise शी Article 19 चा संबंध स्पष्ट केला."]},{title:"Right to protest",points:["Peaceful protest हा Article 19 मधील freedoms शी संबंधित आहे; मात्र public order आणि इतर वैध constitutional restrictions लागू होऊ शकतात."]}],facts:[
 "Press freedom → Article 19(1)(a) मध्ये judicially protected",
 "RTI → Article 19(1)(a) च्या constitutional interpretation शी संबंधित",
 "Right to strike → Fundamental Right नाही",
@@ -165,7 +166,7 @@ body:[
 "Article 20(2) double jeopardy पासून संरक्षण देते: त्याच offence साठी एखाद्या व्यक्तीला एकदा prosecuted and punished झाल्यानंतर पुन्हा त्याच offence साठी prosecute आणि punish करण्यास constitutional protection लागू होते. Criminal prosecution आणि punishment या दोन्ही घटकांचा फरक लक्षात ठेवावा.",
 "Article 20(3) self-incrimination विरुद्ध संरक्षण देते. ‘No person accused of an offence shall be compelled to be a witness against himself’ ही तरतूद accused व्यक्तीच्या testimonial compulsion संदर्भात महत्त्वाची आहे.",
 "Article 20 चे संरक्षण emergency किंवा ordinary executive convenience मुळे मनमानीपणे बाजूला करता येत नाही. Criminal procedure मधील statutory safeguards आणि Article 20 safeguards यांचा संबंध प्रश्नानुसार वेगळा तपासावा."
-],facts:[
+],subtopics:[{title:"Article 20(1)",points:["कृत्याच्या वेळी अस्तित्वात नसलेल्या criminal law अंतर्गत नंतर शिक्षा करता येत नाही; तसेच नंतरची अधिक कठोर penalty मागील कृत्यावर लागू करता येत नाही."]},{title:"Article 20(2)",points:["त्याच offence साठी व्यक्तीला पुन्हा prosecution आणि punishment च्या स्वरूपात double jeopardy पासून संरक्षण मिळते."]},{title:"Article 20(3)",points:["स्वतःविरुद्ध साक्ष देण्यास compulsion पासून protection हा self-incrimination principle चा गाभा आहे."]},{title:"व्याप्ती",points:["Article 20 criminal conviction safeguards शी संबंधित असून citizens आणि non-citizens यांना व्यक्ती म्हणून संरक्षण देतो."]}],facts:[
 "20(1) → no ex-post-facto criminal punishment",
 "20(2) → protection against double jeopardy",
 "20(3) → protection against compelled self-incrimination",
@@ -183,7 +184,7 @@ body:[
 "Article 21 absolute नाही; deprivation of liberty कायद्याच्या authority वर आधारित असणे आवश्यक आहे आणि constitutional scrutiny मध्ये procedure, fairness आणि other Fundamental Rights चा विचार केला जातो.",
 "11 March 2026 रोजी Supreme Court च्या Harish Rana प्रकरणातील निर्णयाने Common Cause framework च्या संदर्भात dignity in death, privacy, autonomy आणि bodily integrity यांचा Article 21 शी संबंध स्पष्ट केला. हा contemporary development Article 21 च्या dignity dimension चे उदाहरण आहे.",
 "Article 21 चा अभ्यास करताना एक महत्त्वाची परीक्षा-तंत्र पद्धत अशी आहे: constitutional text → landmark judgment → derived right → present application. त्यामुळे फक्त derived rights ची यादी पाठ करण्यापेक्षा त्यांची constitutional reasoning समजणे आवश्यक आहे."
-],facts:[
+],subtopics:[{title:"Procedure established by law",points:["मूळ constitutional text मध्ये Article 21 ने ‘procedure established by law’ ही भाषा वापरली; Maneka Gandhi नंतर procedure ला fairness, justness आणि reasonableness शी जोडणारे interpretation विकसित झाले."]},{title:"Maneka Gandhi",points:["Passport impounding आणि personal liberty च्या संदर्भातून Articles 14, 19 आणि 21 यांना परस्परसंबंधित पद्धतीने वाचण्याची दिशा मजबूत झाली."]},{title:"Dignity",points:["Article 21 अंतर्गत life चा अर्थ केवळ physical existence नसून dignified existence असा विस्तारित झाला."]},{title:"State action",points:["जीवन आणि personal liberty वर परिणाम करणारी State action arbitrary, unfair किंवा constitutionally disproportionate आहे का याचे न्यायालयीन परीक्षण होऊ शकते."]}],facts:[
 "Article 21 → life + personal liberty",
 "Maneka Gandhi (1978) → fair, just and reasonable procedure approach",
 "Puttaswamy → privacy as constitutional right",
@@ -198,7 +199,7 @@ body:[
 "Article 21A चा संबंध Right of Children to Free and Compulsory Education Act, 2009 शी जोडला जातो. संविधानिक guarantee आणि statutory implementation यांचा संबंध समजणे आवश्यक आहे.",
 "Article 21A हा Article 19, 21 आणि Directive Principles मधील education-related provisions सोबत व्यापक educational rights framework तयार करतो.",
 "2026 मधील Supreme Court च्या एका प्रकरणात Article 19(1)(a) च्या संदर्भात primary education च्या medium of instruction निवडीचा प्रश्न विचारात आला. त्यामुळे education आणि freedom of expression/choice यांचा contemporary constitutional intersection अभ्यासता येतो."
-],facts:[
+],subtopics:[{title:"Article 21 मधून विकसित अधिकार",points:["Privacy, livelihood, legal aid, speedy trial, health, clean environment, shelter, dignity आणि इतर अनेक interests न्यायालयीन interpretation मधून Article 21 शी जोडले गेले आहेत."]},{title:"Right to privacy",points:["Puttaswamy jurisprudence ने privacy ला constitutional protection दिले आणि dignity, autonomy व informational control यांचा संदर्भ मजबूत केला."]},{title:"Speedy trial आणि legal aid",points:["Fair procedure च्या व्यापक अर्थामध्ये speedy trial आणि सक्षम legal assistance यांचा समावेश न्यायालयीन निर्णयांत दिसतो."]},{title:"पर्यावरण आणि आरोग्य",points:["जीवनाचा दर्जा, public health आणि pollution-free environment यांना Article 21 च्या dignity-oriented interpretation शी जोडले गेले आहे."]}],facts:[
 "Article 21A → age 6–14 years",
 "86th Amendment Act, 2002",
 "RTE Act, 2009 → statutory framework",
@@ -213,7 +214,7 @@ body:[
 "Preventive detention म्हणजे एखाद्या व्यक्तीने भूतकाळात गुन्हा केला म्हणून शिक्षा करणे नव्हे; भविष्यातील विशिष्ट धोक्याला प्रतिबंध करण्याच्या उद्देशाने detention करण्याची exceptional व्यवस्था आहे. त्यामुळे preventive detention मध्ये constitutional safeguards आणि statutory conditions अत्यंत महत्त्वाचे आहेत.",
 "Preventive detention संदर्भात Advisory Board, grounds of detention, representation ची संधी आणि maximum period संबंधित constitutional/statutory framework अभ्यासणे आवश्यक आहे. Article 22(4) आणि पुढील clauses यांचा स्वतंत्र अभ्यास Prelims साठी उपयुक्त आहे.",
 "Article 22 चा core tension असा आहे की State ला public security साठी preventive powers उपलब्ध असाव्यात, पण personal liberty च्या संरक्षणासाठी procedural safeguards कमकुवत होऊ नयेत. त्यामुळे detention laws चे परीक्षण constitutional safeguards च्या कसोटीवर केले जाते."
-],facts:[
+],subtopics:[{title:"86वी घटनादुरुस्ती",points:["86th Constitutional Amendment Act, 2002 ने Article 21A समाविष्ट करून 6–14 वयोगटातील मुलांसाठी free and compulsory education चे constitutional framework निर्माण केले."]},{title:"Article 21 शी संबंध",points:["Education ला dignity, development आणि meaningful participation in society शी जोडणारा constitutional दृष्टिकोन Article 21A आणि Article 21 यांच्या अभ्यासात महत्त्वाचा आहे."]},{title:"RTE framework",points:["Right of Children to Free and Compulsory Education Act, 2009 हा Article 21A च्या statutory implementation चा प्रमुख भाग आहे."]},{title:"Exam distinction",points:["Article 21A हा specific age group आणि education obligation शी संबंधित आहे; Article 21 चा scope त्यापेक्षा व्यापक आहे."]}],facts:[
 "Article 22(1) → grounds + legal practitioner",
 "Article 22(2) → magistrate within 24 hours, subject to constitutional wording",
 "Preventive detention → preventive, not punitive",
@@ -227,7 +228,7 @@ body:[
 "Article 24 चौदा वर्षांखालील मुलांना factory, mine किंवा hazardous employment मध्ये कामावर ठेवण्यास प्रतिबंध करतो. Child labour विषयातील statutory framework Article 24 च्या constitutional prohibition ला अधिक विस्तृत regulatory context देतो.",
 "Articles 23 आणि 24 चा व्यापक उद्देश मानवी प्रतिष्ठा, आर्थिक शोषणाविरुद्ध संरक्षण आणि vulnerable groups च्या constitutional protection शी जोडलेला आहे.",
 "या अधिकारांचा अभ्यास करताना trafficking, bonded labour, forced labour आणि hazardous child employment या चार संकल्पना वेगळ्या ठेवणे आवश्यक आहे."
-],facts:[
+],subtopics:[{title:"Arrested person चे अधिकार",points:["Arrest चे grounds सांगणे, legal counsel शी संपर्क आणि magistrate समोर वेळेत production हे Article 22 च्या महत्त्वाच्या safeguards पैकी आहेत."]},{title:"Preventive detention",points:["Punishment साठी झालेली ordinary detention आणि भविष्यातील संभाव्य harmful conduct रोखण्यासाठी preventive detention यांतील फरक समजणे आवश्यक आहे."]},{title:"Advisory Board",points:["Preventive detention च्या constitutional safeguards मध्ये Advisory Board ची भूमिका महत्त्वाची आहे."]},{title:"विशेष परिस्थिती",points:["Article 22 च्या clauses मध्ये preventive detention साठी स्वतंत्र constitutional treatment आहे; त्यामुळे ordinary arrest safeguards आणि preventive detention safeguards वेगळे शिकावेत."]}],facts:[
 "Article 23 → trafficking + begar + forced labour",
 "Article 23 → discrimination prohibited in compulsory public service",
 "Article 24 → children below 14 years in factory/mine/hazardous employment",
@@ -243,7 +244,7 @@ body:[
 "Article 28 पूर्णपणे State-funded educational institutions मध्ये religious instruction बाबत मर्यादा घालतो आणि काही प्रकारच्या aided/recognised institutions मध्ये participation संबंधी constitutional conditions स्पष्ट करतो.",
 "धर्मस्वातंत्र्य समजताना Indian secularism चा दृष्टिकोन लक्षात घ्यावा. संविधान धर्मविरोधी व्यवस्था निर्माण करत नाही; ते freedom of conscience, equality आणि religious pluralism यांचा constitutional balance साधते.",
 "S.R. Bommai निर्णयात secularism ला Constitution च्या basic structure शी जोडण्यात आले. त्यामुळे Articles 25–28 चा अभ्यास equality, secularism आणि State neutrality/engagement यांच्या व्यापक constitutional framework सोबत करावा."
-],facts:[
+],subtopics:[{title:"Article 23",points:["Human trafficking, begar आणि other similar forms of forced labour वर बंदी आहे; public purposes साठी compulsory service च्या बाबतीत constitutional qualification आहे."]},{title:"Article 24",points:["14 वर्षांखालील मुलांना factory, mine किंवा hazardous employment मध्ये काम देण्यावर constitutional prohibition आहे."]},{title:"Horizontal protection",points:["Articles 23 आणि 24 चा प्रभाव private persons च्या conduct वरही लागू होऊ शकतो; त्यामुळे Fundamental Rights केवळ vertical rights नाहीत."]},{title:"Statutory support",points:["Trafficking, bonded labour आणि child labour विरोधातील विविध कायदे constitutional protections ची अंमलबजावणी मजबूत करतात."]}],facts:[
 "Article 25 → conscience + profess + practise + propagate",
 "Article 26 → religious denomination",
 "Article 27 → tax specifically appropriated for promotion/maintenance of a particular religion",
@@ -259,7 +260,7 @@ body:[
 "Minority educational institution च्या administration ला पूर्ण regulatory immunity नाही. Academic standards, health, sanitation, transparency आणि lawful regulatory measures लागू होऊ शकतात, परंतु regulation minority character किंवा effective administration नष्ट करणारे नसावे.",
 "State acquisition, compensation आणि minority educational institutions संदर्भातील constitutional protections चा अभ्यास Article 30 सोबत Article 30(1A) च्या संदर्भात करावा.",
 "सांस्कृतिक आणि शैक्षणिक अधिकारांचा उद्देश national integration विरुद्ध diversity निर्माण करणे नाही; उलट linguistic, religious आणि cultural diversity constitutional framework मध्ये सुरक्षित ठेवणे हा आहे."
-],facts:[
+],subtopics:[{title:"Article 25",points:["Freedom of conscience आणि freely profess, practice and propagate religion यांची हमी; public order, morality आणि health subject to आहे."]},{title:"Article 26",points:["Religious denomination ला religious affairs manage करणे, institutions establish/maintain करणे आणि property administer करणे यांसाठी constitutional protection आहे."]},{title:"Article 27",points:["एखाद्या विशिष्ट religion च्या promotion किंवा maintenance साठी tax च्या compulsory payment बाबत constitutional restriction आहे."]},{title:"Article 28",points:["Wholly State-funded educational institutions मधील religious instruction आणि इतर प्रकारच्या institutions मधील participation यांचे constitutional treatment वेगळे आहे."]}],facts:[
 "Article 29(1) → language, script, culture protection",
 "Article 29(2) → admission discrimination protection",
 "Article 30 → religious and linguistic minorities",
@@ -274,7 +275,7 @@ body:[
 "Habeas Corpus हा personal liberty साठी अत्यंत प्रभावी remedy आहे. Mandamus statutory/public duty च्या performance साठी वापरला जातो. Prohibition आणि Certiorari मध्ये timing आणि purpose मधील फरक लक्षात ठेवावा: prohibition साधारणपणे proceeding पुढे जाण्यापूर्वी jurisdictional control करते, तर certiorari completed decision quash करण्यासाठी वापरली जाऊ शकते.",
 "Quo Warranto चा उद्देश एखादी व्यक्ती public office कायदेशीर अधिकाराने धारण करते का हे तपासणे हा आहे. यासाठी petitioner ला स्वतःचा personal legal injury दाखवणे आवश्यक नसते, जर constitutional/statutory conditions पूर्ण होत असतील.",
 "Article 32 हे judicial review, rule of law आणि constitutional supremacy यांना जोडणारे institutional bridge आहे. मात्र Article 32 च्या वापरात योग्य remedy, maintainability आणि alternative statutory remedies यांचा procedural संदर्भही महत्त्वाचा आहे."
-],facts:[
+],subtopics:[{title:"Essential Religious Practices",points:["न्यायालयाने एखादी practice religion च्या essential part शी संबंधित आहे का याचे परीक्षण करण्यासाठी doctrine विकसित केले."]},{title:"Article 25 आणि 26 चे संतुलन",points:["Individual freedom of conscience आणि denomination चे collective rights यांच्यात constitutional balance साधावा लागतो."]},{title:"Sabarimala context",points:["Women entry, equality आणि religious freedom यांचा intersection Article 14, 15, 25 आणि 26 च्या संदर्भात चर्चिला गेला."]},{title:"Secularism",points:["Indian secularism हे religious freedom, equality आणि State regulation यांचे मिश्र constitutional framework आहे; ते religion-State complete separation या एकाच मॉडेलपुरते मर्यादित नाही."]}],facts:[
 "Article 32 → Fundamental Right itself",
 "Habeas Corpus → unlawful detention",
 "Mandamus → public/statutory duty",
@@ -290,7 +291,7 @@ body:[
 "Article 34 martial law लागू असलेल्या क्षेत्राशी संबंधित आहे. अशा परिस्थितीत Parliament ला order and discipline restore करण्यासाठी केलेल्या acts संदर्भात indemnity देण्याचा कायदेशीर अधिकार आहे.",
 "Article 35 काही Fundamental Rights च्या प्रभावी अंमलबजावणीसाठी Parliament ला विशेष legislative competence देतो. त्यामुळे Part III मधील प्रत्येक विषयावर State Legislature आणि Parliament यांची समान legislative competence आहे असे समजणे चुकीचे आहे.",
 "Articles 33–35 हे Fundamental Rights नष्ट करण्याच्या तरतुदी नाहीत. त्यांचा उद्देश विशिष्ट constitutional situations मध्ये rights चे application आणि implementation यांचे नियमन करणे हा आहे."
-],facts:[
+],subtopics:[{title:"Article 29",points:["विशिष्ट language, script किंवा culture असलेल्या citizens च्या distinct culture चे संरक्षण करण्याची हमी."]},{title:"Article 30",points:["Religious किंवा linguistic minorities ना educational institutions establish आणि administer करण्याचा अधिकार."]},{title:"Regulation विरुद्ध administration",points:["Minority institution चा constitutional right absolute administrative immunity देत नाही; academic standards आणि lawful regulation यांचा प्रश्न वेगळा असतो."]},{title:"Article 29 आणि 30 मधील फरक",points:["Article 29 cultural interest protection शी आणि Article 30 minority educational institutions शी विशेषतः संबंधित आहे."]}],facts:[
 "Article 33 → Parliament; armed forces/public order/intelligence contexts",
 "Article 34 → martial law-related indemnity",
 "Article 35 → specified matters Parliament's legislative competence"
@@ -303,7 +304,7 @@ body:[
 "Article 31B Ninth Schedule मधील Acts and Regulations ला specified Fundamental Rights challenges पासून संरक्षण देण्यासाठी आणला गेला. मात्र I.R. Coelho (2007) नंतर Ninth Schedule absolute judicial immunity देत नाही; Kesavananda Bharati नंतरच्या constitutional amendments/basic structure scrutiny च्या चौकटीत judicial review शक्य आहे.",
 "Article 31C च्या माध्यमातून काही Directive Principles अंमलात आणणाऱ्या कायद्यांना Articles 14 आणि 19 च्या आव्हानांपासून संरक्षण देण्याचा प्रयत्न झाला. 42nd Amendment ने त्याची व्याप्ती व्यापक करण्याचा प्रयत्न केला, परंतु Minerva Mills ने त्या व्यापक विस्तारावर constitutional limitation घातली.",
 "Fundamental Rights आणि DPSP यांच्यातील constitutional balance समजण्यासाठी Kesavananda Bharati आणि Minerva Mills अत्यंत महत्त्वाचे आहेत. Parliament ची amendment power आणि Constitution ची basic structure यांचा संबंध स्वतंत्रपणे लक्षात ठेवावा."
-],facts:[
+],subtopics:[{title:"Article 32 चे स्वरूप",points:["Fundamental Rights च्या enforcement साठी Supreme Court कडे जाण्याचा constitutional remedy स्वतः Part III च्या संरक्षणाचा भाग आहे."]},{title:"पाच writs",points:["Habeas Corpus, Mandamus, Prohibition, Certiorari आणि Quo Warranto हे constitutional writ remedies आहेत."]},{title:"Article 32 vs 226",points:["Article 32 मुख्यतः Fundamental Rights enforcement साठी; Article 226 Fundamental Rights तसेच other legal rights साठीही वापरता येतो."]},{title:"Judicial review",points:["Writ jurisdiction arbitrary State action विरुद्ध constitutional accountability आणि rule of law सुनिश्चित करण्याचे महत्त्वाचे साधन आहे."]}],facts:[
 "31A → specified land/economic reform-related protection",
 "31B → Ninth Schedule",
 "31C → specified DPSP-related laws",
@@ -324,7 +325,7 @@ body:[
 "Navtej Singh Johar (2018) मध्ये dignity, equality, liberty आणि individual autonomy यांच्या आधारे Section 377 च्या constitutional validity चा प्रश्न विचारात आला. Joseph Shine (2018) मध्ये autonomy आणि equality शी संबंधित adultery law चे परीक्षण झाले.",
 "Common Cause (2018) मध्ये right to die with dignity चा Article 21 शी संबंध मान्य करण्यात आला. 2026 च्या Harish Rana निर्णयाने passive euthanasia आणि clinically assisted nutrition/hydration संदर्भातील guidelines अधिक स्पष्ट करण्याचा प्रयत्न केला.",
 "ही प्रकरणे फक्त case-name list म्हणून पाठ करू नयेत. प्रत्येक प्रकरणासाठी Background → Constitutional issue → Judgment → Doctrine → Significance हा format वापरल्यास Mains answers अधिक सुसंगत होतात."
-],facts:[
+],subtopics:[{title:"Article 33",points:["Parliament ला Armed Forces, public order maintaining forces, intelligence organisations आणि संबंधित personnel यांच्या Fundamental Rights च्या application मध्ये आवश्यक modification करण्याचा अधिकार आहे."]},{title:"Article 34",points:["Martial law लागू असलेल्या क्षेत्रात order restore करण्यासाठी केलेल्या acts संदर्भात Parliament ला indemnity देण्याची power आहे."]},{title:"Article 35",points:["Part III मधील काही विषयांवर कायदे करण्याची विशेष competence Parliament कडे ठेवली आहे."]},{title:"Exam focus",points:["Articles 33–35 हे स्वतः rights ची नवीन category नसून Fundamental Rights च्या application आणि implementation शी संबंधित constitutional provisions आहेत."]}],facts:[
 "Champakam Dorairajan → FR–DPSP early conflict",
 "Golaknath 1967 → amendment power debate",
 "Kesavananda Bharati 1973 → Basic Structure",
@@ -345,7 +346,7 @@ body:[
 "Article 19 आणि Article 21 यांचा संबंध Maneka Gandhi नंतर अधिक जवळचा झाला. Speech, movement, residence, profession आणि personal liberty यांचे वेगवेगळे constitutional text असले तरी State action च्या fairness आणि reasonableness च्या परीक्षणात rights interrelated असू शकतात.",
 "Article 20 आणि Article 22 दोन्ही criminal justice संदर्भात safeguards देतात, पण Article 20 conviction-related protections वर केंद्रित आहे तर Article 22 arrest/detention safeguards वर.",
 "Fundamental Right, constitutional right आणि statutory/legal right हे तीन वेगळे स्तर आहेत. Right to Property हा यासाठी प्रमुख उदाहरण आहे: Article 300A अंतर्गत constitutional protection आहे, पण तो Part III मधील Fundamental Right नाही."
-],facts:[
+],subtopics:[{title:"Article 31A",points:["Estate acquisition आणि काही प्रकारच्या agrarian/economic reform laws ना specific constitutional protection देण्याच्या उद्देशाने तरतूद."]},{title:"Article 31B आणि Ninth Schedule",points:["Ninth Schedule मधील laws ना Article 31B ने protection दिले; मात्र judicial review पूर्णपणे बंद नाही."]},{title:"Article 31C",points:["Certain Directive Principles implement करणाऱ्या laws च्या protection चा प्रश्न Article 31C शी संबंधित आहे; त्याचा scope constitutional amendments आणि Supreme Court judgments मुळे विकसित झाला."]},{title:"I.R. Coelho",points:["Kesavananda नंतर Ninth Schedule मध्ये समाविष्ट कायद्यांवर basic structure च्या संदर्भात judicial scrutiny शक्य असल्याचे स्पष्ट झाले."]}],facts:[
 "FR vs DPSP → enforceability हा मूलभूत फरक",
 "Article 32 vs 226 → remedy + scope",
 "Article 14 vs 15 → general equality vs specified discrimination/special provisions",
@@ -360,7 +361,7 @@ body:[
 "2026 मध्ये Supreme Court च्या एका निर्णयात primary education च्या medium of instruction निवडीचा प्रश्न Article 19(1)(a) च्या freedom of choice शी जोडला गेला. Education, expression आणि parental/child choice यांचा constitutional intersection हा Mains answer साठी contemporary example ठरू शकतो.",
 "11 March 2026 च्या Harish Rana निर्णयात Supreme Court ने Common Cause framework च्या संदर्भात passive euthanasia, withdrawal of clinically assisted nutrition and hydration, best interests, autonomy, privacy, bodily integrity आणि dignity in death यांचा विचार केला. Article 21 च्या evolving dignity jurisprudence साठी हा महत्त्वाचा current example आहे.",
 "Current affairs section चा उद्देश static constitutional framework बदलणे नाही. विद्यार्थी आधी Article आणि landmark doctrine समजून घेऊन त्यानंतर current judgment जोडेल अशी रचना असावी. त्यामुळे Prelims मध्ये factual accuracy आणि Mains मध्ये contemporary application दोन्ही साधता येतात."
-],facts:[
+],subtopics:[{title:"Static + Current approach",points:["Current judgment शिकताना आधी संबंधित Article, मग established doctrine आणि शेवटी नवीन judgment चे application समजून घ्यावे."]},{title:"Speech आणि digital sphere",points:["Speech, expression आणि online communication यांचे constitutional protection Article 19(1)(a) च्या established framework मधून समजावे."]},{title:"Education आणि choice",points:["Education-related contemporary disputes मध्ये Article 19(1)(a), Article 21 आणि statutory education framework यांचा परस्पर संबंध तपासता येतो."]},{title:"Dignity in death",points:["End-of-life autonomy, privacy, bodily integrity आणि dignity यांचे प्रश्न Article 21 jurisprudence शी जोडलेले आहेत."]}],facts:[
 "2025 → speech and expression protection in Supreme Court jurisprudence",
 "2026 → education-medium choice considered under Article 19(1)(a)",
 "11 March 2026 → Harish Rana judgment; dignity in death/privacy/autonomy context",
@@ -374,7 +375,7 @@ body:[
 "चौथ्या टप्प्यात contemporary issue जोडावा. उदाहरणार्थ speech प्रश्नात digital platforms, misinformation/hate speech/public order; privacy प्रश्नात data governance; Article 21 प्रश्नात dignity, health किंवा environmental protection यांचा संदर्भ देता येतो.",
 "पाचव्या टप्प्यात constitutional balance मांडावा. Fundamental Rights च्या प्रश्नांमध्ये ‘absolute freedom’ आणि ‘unlimited State power’ हे दोन्ही टोकाचे निष्कर्ष टाळून liberty, public order, equality, dignity आणि proportionality यांचा संतुलित विचार करावा.",
 "शेवटी constitutional value-oriented conclusion द्यावा: rule of law, constitutional supremacy, dignity, equality, liberty आणि fraternity यांच्यातील संतुलन हे भारतीय Fundamental Rights framework चे व्यापक उद्दिष्ट आहे."
-],facts:[
+],subtopics:[{title:"10 marks",points:["Definition + Article + 1 landmark case + concise contemporary example + constitutional conclusion."]},{title:"15 marks",points:["Constitutional provision + evolution through 2–3 cases + issue analysis + rights/State interest balance."]},{title:"20 marks",points:["Historical context + constitutional text + judicial evolution + contemporary challenge + reform/way forward + value-based conclusion."]},{title:"Case law वापर",points:["केवळ case names देण्याऐवजी त्या judgment ने कोणते constitutional principle विकसित केले हे एका वाक्यात स्पष्ट करावे."]}],facts:[
 "Introduction → Article + constitutional principle",
 "Body → provision + doctrine + landmark case",
 "Contemporary example → current judgment/policy",
@@ -391,7 +392,7 @@ body:[
 "Right to Property आता Fundamental Right नाही. Article 300A अंतर्गत ‘authority of law’ शिवाय property पासून deprivation करता येत नाही.",
 "Key case map: Golaknath → amendment debate; Kesavananda → basic structure; Maneka Gandhi → Articles 14/19/21; Minerva Mills → FR-DPSP balance; Indra Sawhney → reservation; Puttaswamy → privacy; Common Cause/Harish Rana → dignity in death.",
 "Prelims मध्ये ‘absolute’, ‘only’, ‘always’, ‘all persons’, ‘citizens only’, ‘Parliament only’ अशा शब्दांकडे विशेष लक्ष द्यावे. Constitutional provisions मध्ये exceptions आणि clauses अनेकदा प्रश्नाचा निर्णायक भाग असतात."
-],facts:[
+],subtopics:[{title:"Article map",points:["12 State, 13 judicial review, 14–18 equality, 19–22 freedom, 23–24 exploitation, 25–28 religion, 29–30 cultural/educational rights, 32 remedies, 33–35 special provisions."]},{title:"Beneficiary map",points:["Citizen-only आणि person-based protections वेगळे पाठ करणे हा Prelims साठी high-value revision point आहे."]},{title:"Restriction map",points:["Article 19 मधील 19(2)–19(6) grounds clause-wise revise करावेत; एका freedom च्या restriction ला दुसऱ्या freedom वर चुकीने लागू करू नये."]},{title:"Case map",points:["Golaknath, Kesavananda Bharati, Maneka Gandhi, Minerva Mills, Indra Sawhney, Puttaswamy आणि Article 32/writ jurisprudence यांचे one-line linkage तयार ठेवावे."]},{title:"Common traps",points:["Right to Property Fundamental Right नाही; Article 32 आणि 226 समान नाहीत; Article 14 म्हणजे mechanically identical treatment नाही; Fundamental Rights absolute नाहीत."]}],facts:[
 "Part III → Articles 12–35",
 "Six major FR groups",
 "Article 32 → FR remedy; Article 226 → FR + other legal rights",
