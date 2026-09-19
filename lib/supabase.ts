@@ -1,15 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabasePublishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://nijhvrddhkokfesyjzoq.supabase.co";
 
-// A harmless fallback lets Next.js prerender client routes in environments where
-// public runtime variables are injected only at deployment time. It is never a
-// credential and all real requests still require the configured public values.
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  "sb_publishable_1UIsEp5bqw4Rpvo59EdDNQ_pHAZcRZL";
+
+export const isSupabaseConfigured = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+);
 
 export const supabase = createClient(
-  supabaseUrl ?? "https://not-configured.supabase.co",
-  supabasePublishableKey ?? "not-configured-public-key"
+  supabaseUrl,
+  supabasePublishableKey
 );
