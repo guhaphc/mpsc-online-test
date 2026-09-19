@@ -13,4 +13,7 @@ export const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 );
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+export const supabase = createClient(
+  supabaseUrl,
+  supabasePublishableKey
+);
