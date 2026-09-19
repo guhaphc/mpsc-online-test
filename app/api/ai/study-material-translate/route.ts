@@ -18,16 +18,17 @@ export async function POST(req:NextRequest){
   if(!KEY)return NextResponse.json({error:"AI service is not configured."},{status:503});
   const body=await req.json();
   const target=body.targetLanguage==="English"?"English":"Marathi";
-  const sections=Array.isArray(body.sections)?body.sections:[];
-  if(!sections.length)return NextResponse.json({error:"No notes supplied."},{status:400});
-  const serialized=JSON.stringify(sections);
-  if(serialized.length>30000)return NextResponse.json({error:"Translation request is too large."},{status:400});
-  const prompt=`Translate the supplied study notes into ${target}. Preserve the exact structure, topic order, meaning, facts, tables, bullet points and exam terminology. Do not add, remove, correct, or expand information. For technical UPSC/MPSC terms, preserve the standard English term in parentheses where useful. Return JSON only: {"sections":[{"id":"same id","title":"translated","subtitle":"translated","body":["translated"],"facts":["translated"]}]}.`;
+  const section=body.section;
+  if(!section||typeof section!=="object")return NextResponse.json({error:"No study section supplied."},{status:400});
+  const serialized=JSON.stringify(section);
+  if(serialized.length>12000)return NextResponse.json({error:"Translation section is too large."},{status:400});
+  const prompt=`Translate the supplied study notes into ${target}. Preserve the exact structure, topic order, meaning, facts, tables, bullet points and exam terminology. Do not add, remove, correct, or expand information. For technical UPSC/MPSC terms, preserve the standard English term in parentheses where useful. Return JSON only: {"section":{"id":"same id","chapter":"translated","title":"translated","subtitle":"translated","body":["translated"],"facts":["translated"]}}.`;
   const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":KEY},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt},{text:serialized}]}],generationConfig:{temperature:.15,responseMimeType:"application/json"}})});
   const data=await res.json();
   if(!res.ok)throw new Error(data?.error?.message||`AI request failed (${res.status}).`);
   const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if(!raw)throw new Error("AI returned an empty response.");
-  return NextResponse.json(JSON.parse(raw));
+  const parsed=JSON.parse(raw);
+  return NextResponse.json(parsed);
  }catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Translation failed."},{status:500});}
 }
