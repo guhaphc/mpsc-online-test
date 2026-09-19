@@ -52,10 +52,17 @@ export async function POST(request:NextRequest){
     const subject=String(body.subject||"").trim(), topic=String(body.topic||"").trim();
     const title=String(body.title||"").trim(), language=String(body.language||"English").trim();
     const sources=Array.isArray(body.sources)?body.sources:[];
+    const additionalInstructions=String(body.additionalInstructions||"").trim();
+    const sourceMode=String(body.sourceMode||"ai_reference").trim();
+    const format=String(body.format||"auto").trim();
+    const syllabusTopic=String(body.syllabusTopic||"").trim();
     if(!stage||!paper||!subject||!topic||!title) return NextResponse.json({error:"Complete syllabus path and title are required."},{status:400});
     if(sources.length>10) return NextResponse.json({error:"Maximum 10 reference sources per generation."},{status:400});
+    if(sourceMode==="reference_only"&&!sources.length) return NextResponse.json({error:"Reference-only generation requires at least one reference."},{status:400});
 
     const bilingual=language==="Bilingual"||language==="Both";
+    const sourceRule=sourceMode==="ai_only"?"Use reliable general knowledge; no reference material was requested.":sourceMode==="reference_only"?"Use supplied reference material as the primary source and do not add unsupported claims.":"Use supplied reference material when present, then supplement with reliable general knowledge.";
+    const formatRule=format==="prelims"?"Prioritize factual revision and objective-test points.":format==="mains"?"Prioritize conceptual depth, analysis, examples, issues, reforms and conclusion.":format==="answer-writing"?"Prioritize answer-writing structure, keywords, arguments, examples, way forward and conclusion.":format==="standard"?"Use a balanced MPSC study-note structure.":"Choose a subject-appropriate MPSC structure.";
     const parts:any[]=[{text:`You are an expert MPSC/UPSC civil-services study-note editor.
 
 Create accurate, syllabus-linked, exam-oriented study notes.
@@ -68,7 +75,7 @@ TITLE: ${title}
 LANGUAGE: ${language}
 
 RULES:
-1. Stay tightly within the selected syllabus topic.
+1. Stay tightly within the selected topic and preserve the syllabus relationship.
 2. Prefer supplied reference material when relevant; synthesize rather than copy.
 3. Do not invent facts, dates, statistics, Articles, judgments, committees, quotations or references.
 4. Clearly flag uncertainty or conflicting source claims for administrator review.
@@ -78,7 +85,7 @@ RULES:
 8. Do not reproduce long copyrighted passages.
 9. Return structured JSON with a short summary, full note content in Markdown/plain text, and sections.
 10. Section types should be simple values such as overview, concept, timeline, facts, comparison, example, mains, prelims, revision, caution, source_note.
-11. ${bilingual?"Provide the main content in both English and Marathi where practical. Keep important English technical terms in parentheses when helpful.":"Write the notes in the requested language."}
+11. ${bilingual?"Provide the main content in both English and Marathi where practical. Keep important English technical terms in parentheses when helpful.":"Write the notes in the requested language."}\n12. Return an administrator-reviewable draft; never claim it is verified or automatically published.
 
 Return an administrator-reviewable draft, not an automatically published note.`}];
 
