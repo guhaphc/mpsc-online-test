@@ -1,6 +1,6 @@
 export type DetailedPolitySection = {
   id:string;
-  part:"Part 1";
+  part:"Part 1"|"Part 2";
   chapter:string;
   title:string;
   subtitle:string;
