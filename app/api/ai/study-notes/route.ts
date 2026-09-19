@@ -102,15 +102,15 @@ URL: ${url}`});
           if(!type.includes("text/html")&&!type.includes("text/plain")) throw new Error("The website URL did not return an HTML/text page. Upload the PDF instead.");
           const raw=await page.text();
           const clean=raw
-            .replace(/<script[\\s\\S]*?<\\/script>/gi," ")
-            .replace(/<style[\\s\\S]*?<\\/style>/gi," ")
-            .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi," ")
+            .replace(/<script[\s\S]*?<\/script>/gi," ")
+            .replace(/<style[\s\S]*?<\/style>/gi," ")
+            .replace(/<noscript[\s\S]*?<\/noscript>/gi," ")
             .replace(/<[^>]+>/g," ")
             .replace(/&nbsp;/gi," ")
             .replace(/&amp;/gi,"&")
             .replace(/&lt;/gi,"<")
             .replace(/&gt;/gi,">")
-            .replace(/\\s+/g," ")
+            .replace(/\s+/g," ")
             .trim()
             .slice(0,60000);
           if(!clean) throw new Error("The reference website contained no readable text.");
