@@ -346,12 +346,7 @@ export default function SubjectsPage() {
                         <div>
                           <strong>{topic.name}</strong>
 
-                          {topic.source_page && (
-                            <span>
-                              Source: syllabus page{" "}
-                              {topic.source_page}
-                            </span>
-                          )}
+
                         </div>
                       </div>
                     )
