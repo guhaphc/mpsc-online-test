@@ -80,11 +80,43 @@ Return an administrator-reviewable draft, not an automatically published note.`}
 
     for(const s of sources){
       if(!s?.storage_path){
+        const url=String(s?.url||"").trim();
         parts.push({text:`REFERENCE METADATA:
 Title: ${String(s?.title||"")}
 Type: ${String(s?.source_type||"")}
 Description: ${String(s?.description||"")}
-URL: ${String(s?.url||"")}`});
+URL: ${url}`});
+
+        // When an administrator supplies a website URL, fetch the public page so
+        // Gemini receives the actual reference content rather than only its URL.
+        if(url){
+          let parsed:URL;
+          try{ parsed=new URL(url); }catch{ throw new Error(`Invalid reference URL: ${url}`); }
+          if(!["http:","https:"].includes(parsed.protocol)) throw new Error("Reference URLs must use HTTP or HTTPS.");
+          const host=parsed.hostname.toLowerCase();
+          if(host==="localhost"||host.endsWith(".localhost")||host==="127.0.0.1"||host==="0.0.0.0"||host==="::1"||host.startsWith("10.")||host.startsWith("192.168.")||host.startsWith("169.254.")||host.startsWith("172.16.")||host.startsWith("172.17.")||host.startsWith("172.18.")||host.startsWith("172.19.")||host.startsWith("172.20.")||host.startsWith("172.21.")||host.startsWith("172.22.")||host.startsWith("172.23.")||host.startsWith("172.24.")||host.startsWith("172.25.")||host.startsWith("172.26.")||host.startsWith("172.27.")||host.startsWith("172.28.")||host.startsWith("172.29.")||host.startsWith("172.30.")||host.startsWith("172.31.")) throw new Error("Private/local reference URLs are not allowed.");
+
+          const page=await fetch(parsed.toString(),{headers:{"User-Agent":"MPSC-AI-Study-Notes/1.0"},redirect:"follow"});
+          if(!page.ok) throw new Error(`Could not fetch reference website (${page.status}).`);
+          const type=page.headers.get("content-type")||"";
+          if(!type.includes("text/html")&&!type.includes("text/plain")) throw new Error("The website URL did not return an HTML/text page. Upload the PDF instead.");
+          const raw=await page.text();
+          const clean=raw
+            .replace(/<script[\\s\\S]*?<\\/script>/gi," ")
+            .replace(/<style[\\s\\S]*?<\\/style>/gi," ")
+            .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi," ")
+            .replace(/<[^>]+>/g," ")
+            .replace(/&nbsp;/gi," ")
+            .replace(/&amp;/gi,"&")
+            .replace(/&lt;/gi,"<")
+            .replace(/&gt;/gi,">")
+            .replace(/\\s+/g," ")
+            .trim()
+            .slice(0,60000);
+          if(!clean) throw new Error("The reference website contained no readable text.");
+          parts.push({text:`REFERENCE WEBSITE CONTENT (fetched from ${parsed.toString()}):
+${clean}`});
+        }
         continue;
       }
       const path=String(s.storage_path);
