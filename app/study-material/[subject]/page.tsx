@@ -21,7 +21,7 @@ const subjects:Record<string,string>={
  "ethics":"Ethics, Integrity & Aptitude","applied-ethics":"Applied Ethics","essay":"Essay"
 };
 
-type Section={id:string;chapter?:string;title:string;subtitle:string;body:string[];facts?:string[]};
+type Section={id:string;chapter?:string;title:string;subtitle:string;body:string[];facts?:string[];subtopics?:{title:string;points:string[]}[]};
 
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>();
