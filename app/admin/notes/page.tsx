@@ -66,7 +66,7 @@ export default function AdminNotesPage(){
   async function addSource(e:FormEvent){
     e.preventDefault();setError("");setSuccess("");
     if(!editing){setError("Save the note first.");return;}
-    if(!sourceForm.title.trim()){setError("Enter a source title.");return;}
+    const autoTitle=sourceForm.title.trim() || sourceForm.upload?.name.replace(/\.[^/.]+$/,"") || "Reference source";
     if(!sourceForm.url.trim()&&!sourceForm.file.trim()&&!sourceForm.upload){setError("Add a URL or select a PDF/image from your phone.");return;}
     let storagePath:string|null=null;let fileUrl=sourceForm.file.trim()||null;
     if(sourceForm.upload){
@@ -78,9 +78,9 @@ export default function AdminNotesPage(){
       if(uploadError){setError(uploadError.message);return;}fileUrl=null;
     }
     const sourceType=sourceForm.upload?(sourceForm.upload.type==="application/pdf"?"pdf":"image"):sourceForm.type;
-    const {data,error:sourceError}=await supabase.from("ai_note_sources").insert({note_id:editing.id,source_type:sourceType,title:sourceForm.title.trim(),url:sourceForm.url.trim()||null,file_url:fileUrl,storage_path:storagePath,description:sourceForm.description.trim()||null,source_order:sources.length}).select().single();
+    const {data,error:sourceError}=await supabase.from("ai_note_sources").insert({note_id:editing.id,source_type:sourceType,title:autoTitle,url:sourceForm.url.trim()||null,file_url:fileUrl,storage_path:storagePath,description:sourceForm.description.trim()||null,source_order:sources.length}).select().single();
     if(sourceError||!data){if(storagePath)await supabase.storage.from("ai-note-sources").remove([storagePath]);setError(sourceError?.message||"Could not add source.");return;}
-    setSources(v=>[...v,data as Source]);setSourceForm(emptySource());setSuccess("Source added successfully.");
+    setSources(v=>[...v,data as Source]);setSourceForm(emptySource());setSuccess("Source added successfully. You can now generate AI notes.");
   }
 
   async function deleteSource(source:Source){
