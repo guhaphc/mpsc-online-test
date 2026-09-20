@@ -143,7 +143,7 @@ body:[
 "97व्या घटनादुरुस्तीने cooperative societies संदर्भात संविधानात महत्त्वपूर्ण बदल केले. Article 19(1)(c) मध्ये cooperative societies स्थापन करण्याचा संदर्भ जोडला गेला, Part IX-B समाविष्ट करण्यात आला आणि Article 43B मध्ये cooperative societies च्या voluntary formation, autonomous functioning, democratic control आणि professional management ची दिशा देण्यात आली.",
 "Cooperative governance मध्ये member participation, elected management, periodic elections, accountability, audit आणि professional administration यांना महत्त्व आहे. राज्यांच्या cooperative laws आणि multi-state cooperative framework यांचा संस्थांच्या प्रत्यक्ष कामकाजावर परिणाम होतो.",
 "Cooperatives शेती, पतपुरवठा, दुग्धव्यवसाय, विपणन, गृहनिर्माण आणि इतर क्षेत्रांमध्ये सामूहिक आर्थिक क्षमता वाढवू शकतात. ग्रामीण अर्थव्यवस्था आणि producer organisations च्या संदर्भात त्यांचा अभ्यास महत्त्वाचा आहे.",
-"97व्या घटनादुरुस्तीच्या Part IX-B च्या काही तरतुदींवर Supreme Court ने राज्यांच्या legislative competence आणि federal structure च्या संदर्भात परीक्षण केले. त्यामुळे cooperative governance आणि संघराज्यीय रचना यांचा परस्परसंबंधही परीक्षेसाठी महत्त्वाचा आहे.",
+"97व्या घटनादुरुस्तीच्या Part IX-B बाबत सर्वोच्च न्यायालयाने Union of India v. Rajendra N. Shah (2021) मध्ये राज्य सहकारी संस्थांशी संबंधित Part IX-B च्या तरतुदींना आवश्यक राज्य-मान्यता न मिळाल्याने घटनात्मक अडचण असल्याचे ठरवले. Multi-State cooperative societies शी संबंधित तरतुदींवर हा निर्णय त्याच प्रकारे लागू होत नाही. त्यामुळे cooperative governance आणि संघराज्यीय रचना यांचा परस्परसंबंध महत्त्वाचा आहे.",
 "Cooperative sector च्या प्रभावीतेसाठी autonomy आणि government support यांचा समतोल आवश्यक आहे. Excessive administrative control मुळे member-driven character कमी होऊ शकतो, तर weak accountability मुळे financial and governance problems निर्माण होऊ शकतात."
 ],
 subtopics:[
@@ -153,6 +153,6 @@ subtopics:[
 {title:"Federal dimension",points:["Cooperative societies हा State List/Concurrent legislative competence आणि constitutional amendment यांच्याशी जोडलेला विषय; Supreme Court scrutiny महत्त्वाची."]},
 {title:"Governance challenges",points:["Political/administrative interference, weak audit, professional capacity, member participation आणि financial sustainability."]}
 ],
-facts:["97th Constitutional Amendment → cooperatives","Article 19(1)(c) → cooperative societies association context","Part IX-B → cooperative societies","Article 43B → cooperative principles","Key values → voluntary + autonomous + democratic + professional"]
+facts:["97th Constitutional Amendment → cooperatives","Article 19(1)(c) → cooperative societies association context","Part IX-B → cooperative societies","Article 43B → cooperative principles","Rajendra N. Shah (2021) → State cooperative provisions of Part IX-B examined for ratification/federalism","Key values → voluntary + autonomous + democratic + professional"]
 }
 ];
