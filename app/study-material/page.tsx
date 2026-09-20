@@ -30,6 +30,7 @@ const subjects = [
   { icon:"⚖️", name:"Ethics, Integrity & Aptitude", key:"ethics" },
   { icon:"🧠", name:"Applied Ethics", key:"applied-ethics" },
   { icon:"📝", name:"Essay", key:"essay" },
+  { icon:"📰", name:"Current Affairs & Important Information", key:"current-affairs" },
 ];
 
 export default function StudyMaterialPage() {
