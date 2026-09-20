@@ -119,4 +119,4 @@ export const medievalHistoryChapter2Expansion = [
       "कुर्कई आणि कायल — स्रोतामधील प्रमुख बंदर संदर्भ."
     ]
   }
-] as const;
+];
