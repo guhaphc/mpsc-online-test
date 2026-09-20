@@ -279,6 +279,16 @@ export default function AdminPage() {
           </button>
         </div>
 
+        <div className="admin-tools">
+          <div>
+            <strong>Polity Current Affairs & Court Judgments</strong>
+            <span>Refresh recent monthly polity news and judgments, review AI drafts, and publish only after admin approval.</span>
+          </div>
+          <button type="button" className="secondary" onClick={() => router.push("/admin/polity-current-affairs")}>
+            Manage Current Affairs
+          </button>
+        </div>
+
         {error && (
           <p className="form-error">
             {error}
