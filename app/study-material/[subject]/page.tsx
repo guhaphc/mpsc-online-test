@@ -11,6 +11,7 @@ import { polityExecutiveAndDpspDetailedSections } from "@/lib/polity-executive-d
 import { polityParliamentJudiciaryDetailedSections } from "@/lib/polity-parliament-judiciary-detailed";
 import { polityJudicialLocalDetailedSections } from "@/lib/polity-judicial-local-detailed";
 import { polityPart2DetailedSections } from "@/lib/polity-part2-detailed";
+import { polityPart2Chapters40to54DetailedSections } from "@/lib/polity-part2-chapters40-54-detailed";
 import { fundamentalRightsSections } from "@/lib/fundamental-rights-complete";
 
 const subjects:Record<string,string>={
@@ -29,7 +30,7 @@ type Section={id:string;chapter?:string;title:string;subtitle:string;body:string
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>(); const subjectKey=params?.subject||"";
  const sections:Section[]=subjectKey==="polity"
-  ? [...polityFoundationDetailedSections,...polityExecutiveAndDpspDetailedSections,...fundamentalRightsSections,...polityParliamentJudiciaryDetailedSections,...polityJudicialLocalDetailedSections,...polityPart2DetailedSections,...politySections.filter(s=>s.id>"p2-39")]
+  ? [...polityFoundationDetailedSections,...polityExecutiveAndDpspDetailedSections,...fundamentalRightsSections,...polityParliamentJudiciaryDetailedSections,...polityJudicialLocalDetailedSections,...polityPart2DetailedSections,...polityPart2Chapters40to54DetailedSections]
   : subjectKey==="governance"?governanceSections
   : subjectKey==="ancient-history"?ancientHistorySections:[];
  const [loading,setLoading]=useState(true),[active,setActive]=useState(sections[0]?.id||"");
