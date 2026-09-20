@@ -44,12 +44,12 @@ body:[
 ],
 subtopics:[
 {title:"Constituent Assembly ची रचना",points:["संविधानसभा Cabinet Mission Plan, 1946 च्या आराखड्यातून अस्तित्वात आली. प्रांतीय विधानमंडळांच्या अप्रत्यक्ष निवडणुकीतून प्रतिनिधी आले आणि संस्थानांना प्रतिनिधित्व देण्यात आले. फाळणीनंतर सभेची सदस्यसंख्या बदलली."]},
-{title:"महत्त्वाच्या समित्या",points:["Drafting Committee → मसुद्याची रचना; Union Powers Committee → संघाची अधिकाररचना; Union Constitution Committee → केंद्राची घटनात्मक रचना; Provincial Constitution Committee → प्रांतीय रचना; Advisory Committee → मूलभूत अधिकार, अल्पसंख्याक व आदिवासी क्षेत्रांशी संबंधित प्रश्न."]},
+{title:"महत्त्वाच्या समित्या",points:["Drafting Committee → मसुद्याची रचना; Union Powers Committee → संघाची अधिकाररचना; Union Constitution Committee → केंद्राची घटनात्मक रचना; Provincial Constitution Committee → प्रांतीय रचना; Advisory Committee → मूलभूत अधिकार, अल्पसंख्याक व आदिवासी क्षेत्रांशी संबंधित प्रश्न.","PDF cross-check: B.N. Rau हे Constitutional Adviser होते; H.V.R. Iyengar हे संविधानसभेचे Secretary होते; S.N. Mukherjee हे Chief Draftsman होते; Drafting Committee ने 1948 मध्ये पहिला मसुदा प्रकाशित केला आणि जनतेकडून सूचना मागवल्या."]},
 {title:"Objective Resolution",points:["Objective Resolution ने सार्वभौमत्व, लोकशाही, न्याय, स्वातंत्र्य, समानता आणि राष्ट्राच्या एकात्मतेशी संबंधित मूलभूत दिशादर्शक मूल्ये मांडली. त्याचा पुढील प्रस्तावनेच्या विचारविश्वावर प्रभाव पडला."]},
 {title:"स्वीकृती आणि अंमलबजावणी",points:["26 नोव्हेंबर 1949 → संविधान स्वीकृती; 26 जानेवारी 1950 → संविधानाचा व्यापक अंमल. या दोन तारखांमधील फरक Prelims साठी महत्त्वाचा आहे."]},
 {title:"संविधाननिर्मितीचा दृष्टिकोन",points:["भारतीय संविधान हे विविध घटनात्मक स्रोतांचा स्वीकार करणारे असले तरी त्याची रचना भारतीय सामाजिक परिस्थिती, स्वातंत्र्यलढा आणि लोकशाही उद्दिष्टांशी जुळवून करण्यात आली."]}
 ],
-facts:["9 Dec 1946 → संविधानसभेची पहिली बैठक","डॉ. राजेंद्र प्रसाद → संविधानसभेचे अध्यक्ष","Drafting Committee → डॉ. B. R. Ambedkar","26 Nov 1949 → संविधान स्वीकृती","26 Jan 1950 → अंमलबजावणी"]
+facts:["1934 → M.N. Roy यांनी Constituent Assembly ची कल्पना मांडली","1946 → Cabinet Mission Plan; प्रस्तावित एकूण 389 सदस्य","9 Dec 1946 → संविधानसभेची पहिली बैठक","B.N. Rau → Constitutional Adviser","Drafting Committee → डॉ. B. R. Ambedkar","26 Nov 1949 → संविधान स्वीकृती","26 Jan 1950 → अंमलबजावणी"]
 },
 {
 id:"p1-03",part:"Part 1",chapter:"03 • Salient Features",title:"भारतीय संविधानाची वैशिष्ट्ये",subtitle:"लिखित संविधान, संघराज्य, संसदीय शासन, अधिकार आणि स्वतंत्र न्यायपालिका",
@@ -119,7 +119,7 @@ body:[
 "Article 3 अंतर्गत संबंधित राज्याच्या विधानमंडळाचे मत मागवले जाते. हे मत बंधनकारक संमतीच्या स्वरूपाचे नाही. त्यामुळे भारतीय संघराज्याच्या territorial reorganisation मध्ये संसदेला महत्त्वाची घटनात्मक भूमिका आहे.",
 "Article 4 नुसार Articles 2 आणि 3 अंतर्गत केलेल्या कायद्यांद्वारे First Schedule आणि Fourth Schedule मध्ये आवश्यक बदल करता येतात. अशा कायद्यांना Article 368 अंतर्गत घटनादुरुस्ती मानले जात नाही, हा Prelims मधील महत्त्वाचा मुद्दा आहे.",
 "स्वातंत्र्यानंतर राज्यांची पुनर्रचना भाषिक, प्रशासकीय, सांस्कृतिक आणि विकासात्मक मागण्यांशी संबंधित राहिली. States Reorganisation Commission च्या शिफारशींच्या पार्श्वभूमीवर 1956 मध्ये मोठ्या प्रमाणात राज्य पुनर्रचना झाली.",
-"राज्य पुनर्रचनेमुळे भारतीय संघराज्य स्थिर झाले असे एकरेषीय निष्कर्ष काढण्याऐवजी, विविध प्रादेशिक आकांक्षा घटनात्मक प्रक्रियेत सामावून घेण्याची क्षमता ही त्याची महत्त्वाची वैशिष्ट्ये आहेत.",
+"राज्य पुनर्रचनेमुळे भारतीय संघराज्य स्थिर झाले असे एकरेषीय निष्कर्ष काढण्याऐवजी, विविध प्रादेशिक आकांक्षा घटनात्मक प्रक्रियेत सामावून घेण्याची क्षमता ही त्याची महत्त्वाची वैशिष्ट्ये आहेत. PDF मध्ये 2019 मध्ये जम्मू-काश्मीरचे दोन केंद्रशासित प्रदेशांमध्ये पुनर्गठन आणि 2020 मध्ये दादरा आणि नगर हवेली व दमण आणि दीव यांचे विलिनीकरण यांचा आधुनिक territorial reorganisation च्या उदाहरणांमध्ये समावेश आहे.",
 "Union Territories आणि राज्ये यांच्यातील घटनात्मक फरक देखील महत्त्वाचा आहे. काही केंद्रशासित प्रदेशांना विधानमंडळाची विशेष रचना आहे, परंतु त्यांची घटनात्मक स्थिती राज्यांपेक्षा वेगळी आहे."
 ],
 subtopics:[
@@ -185,7 +185,7 @@ body:[
 subtopics:[
 {title:"Doctrine ची पार्श्वभूमी",points:["Shankari Prasad → Sajjan Singh → Golaknath → Kesavananda Bharati या क्रमातून amendment power आणि Fundamental Rights यावरील न्यायालयीन दृष्टिकोनाचा विकास समजतो."]},
 {title:"Kesavananda Bharati, 1973",points:["Parliament चा amendment power मान्य; पण Constitution ची basic structure नष्ट करता येत नाही. हा doctrine चा मुख्य घटनात्मक आधार आहे."]},
-{title:"Basic Structure मधील तत्त्वे",points:["Constitutional supremacy, rule of law, judicial review, separation of powers, federalism, secularism, democracy, republican form आणि free and fair elections यांसारखी तत्त्वे विविध निर्णयांमध्ये basic structure शी जोडली गेली आहेत."]},
+{title:"Basic Structure मधील तत्त्वे",points:["Constitutional supremacy, rule of law, judicial review, separation of powers, federalism, secularism, democracy, republican form आणि free and fair elections यांसारखी तत्त्वे विविध निर्णयांमध्ये basic structure शी जोडली गेली आहेत.","PDF cross-check: Indira Gandhi v. Raj Narain → free and fair elections; Minerva Mills → limited amending power आणि FR–DPSP harmony; Waman Rao → Kesavananda नंतर Ninth Schedule मध्ये ठेवलेल्या कायद्यांच्या judicial review चा संदर्भ; I.R. Coelho → basic-structure scrutiny चा पुढील विकास."]},
 {title:"Minerva Mills",points:["Limited amending power स्वतः basic structure शी संबंधित आहे. Fundamental Rights आणि Directive Principles यांच्यातील constitutional harmony ला महत्त्व देण्यात आले."]},
 {title:"I.R. Coelho",points:["Ninth Schedule मधील कायद्यांवर basic structure च्या संदर्भात judicial scrutiny शक्य असल्याचे स्पष्ट झाले. Constitutional immunity ही अमर्यादित नाही."]},
 {title:"Mains analytical frame",points:["प्रश्न सोडवताना Amendment Power → Judicial Review → Basic Structure → Constitutional Balance या चार टप्प्यांत मांडणी केल्यास उत्तराची रचना स्पष्ट राहते."]}
