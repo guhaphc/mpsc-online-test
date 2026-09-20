@@ -18,7 +18,7 @@ export async function POST(req:NextRequest){
   if(!GEMINI)return NextResponse.json({error:"AI service is not configured."},{status:503});
   const b=await req.json(), title=String(b.title||""), subtitle=String(b.subtitle||""), content=String(b.content||"");
   if(!title||!content)return NextResponse.json({error:"Page content is required."},{status:400});
-  const prompt=`From the supplied MPSC/UPSC study page, identify 5-8 IMPORTANT KEYWORDS or named concepts that a student would reasonably want to tap for related AI knowledge. Prefer people, rulers, dynasties, battles, places, institutions, concepts, texts, movements, monuments and technical historical terms. Use the source wording where possible. Do not create facts or keywords not supported by the supplied page. Return JSON only: {"keywords":["..."]}.
+  const prompt=`From the supplied MPSC/UPSC study page, identify a comprehensive set of 10-20 IMPORTANT KEYWORDS or named concepts that a student would reasonably want to tap for related AI knowledge. Prefer people, rulers, dynasties, battles, places, institutions, concepts, texts, movements, monuments and technical historical terms. Use the source wording where possible. Do not create facts or keywords not supported by the supplied page. Return JSON only: {"keywords":["..."]}. Order them by importance for understanding the opened note. Include all major people, rulers, dynasties, battles, places, institutions, concepts, texts, movements, monuments and technical historical terms actually present in the note.
 Title: ${title}
 Subtitle: ${subtitle}
 Page:
