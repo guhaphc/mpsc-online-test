@@ -329,14 +329,7 @@ export const polityPart2Sections: PolitySection[] = [
     "interest groups चे प्रकार, lobbying, professional associations, business groups, farmers’ organisations आणि civil society organisations यांचा अभ्यास आहे.",
     "Pressure groups policy inputs, public mobilisation आणि specialised information देऊ शकतात; त्याच वेळी unequal influence आणि transparency च्या समस्या उद्भवू शकतात.",
     "लोकशाहीतील हितसंबंधांचे प्रतिनिधित्व आणि public interest यांच्यात संतुलन राखण्यासाठी transparent consultation महत्त्वाची आहे."
-  ],facts:["Pressure group → policy influence","Political party → government formation seeking","Lobbying → policy advocacy","Risk → unequal/opaque influence"]},
-  {id:"p2-54",part:"Part 2",chapter:"54 • Polity Current Affairs",title:"Polity Current Affairs",subtitle:"भारतीय राज्यव्यवस्थेतील चालू घडामोडी",body:[
-    "भारतीय राज्यव्यवस्था, संविधान, संसद, न्यायपालिका, निवडणुका, संघराज्य आणि घटनात्मक व वैधानिक संस्थांशी संबंधित चालू घडामोडींचे परीक्षाभिमुख संकलन."
-  ],facts:["Current Affairs → Constitution + Institution + Development"]},
-{id:"p2-55",part:"Part 2",chapter:"55 • Important Court Judgments",title:"Important Court Judgments",subtitle:"भारतीय राज्यव्यवस्थेतील महत्त्वाचे सर्वोच्च न्यायालयीन निर्णय",body:[
-    "MPSC/UPSC साठी महत्त्वाचे सर्वोच्च न्यायालयीन निर्णय: प्रकरणाचे नाव, वर्ष, संबंधित Article, मुख्य घटनात्मक प्रश्न, न्यायालयाचा निर्णय आणि त्याचे महत्त्व.",
-    "Basic Structure, Fundamental Rights, Federalism, Judicial Independence, Elections आणि Anti-Defection या विषयांनुसार निर्णयांचे वर्गीकरण."
-  ],facts:["Case → Article → Constitutional Issue → Holding → Significance"]},
+  ],facts:["Pressure group → policy influence","Political party → government formation seeking","Lobbying → policy advocacy","Risk → unequal/opaque influence"]}
 ];
 
 export const politySections: PolitySection[] = [...polityPart1Sections, ...polityPart2Sections];
