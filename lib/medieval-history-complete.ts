@@ -1010,7 +1010,19 @@ export const medievalHistorySections: MedievalSection[] = [
 
 export const medievalHistorySourceInfo = {
   source: "MEDIEVAL HISTORY.pdf",
-  pages: 170,
+  pages: 164,
+  printedContentPages: "1–162",
   chapters: 9,
-  note: "This module is a structured, exam-oriented synthesis of the uploaded source. The source's terminology and chapter organization are retained while the notes are presented in original concise wording."
+  chapterRanges: [
+    { chapter: 1, title: "The Early Medieval India", pdfPages: "2–13", printedPages: "1–12" },
+    { chapter: 2, title: "Southern India (c. 850–1200 CE)", pdfPages: "14–29", printedPages: "13–28" },
+    { chapter: 3, title: "Northern India (c. 1000–1200 CE)", pdfPages: "30–51", printedPages: "29–50" },
+    { chapter: 4, title: "The Delhi Sultanate", pdfPages: "52–73", printedPages: "51–72" },
+    { chapter: 5, title: "Vijayanagar Empire and Bahamani Kingdoms", pdfPages: "74–90", printedPages: "73–89" },
+    { chapter: 6, title: "Provincial Kingdoms of Medieval India", pdfPages: "91–102", printedPages: "90–101" },
+    { chapter: 7, title: "The Mughal Rule and Later Mughals (c. 1526–1857)", pdfPages: "103–134", printedPages: "102–133" },
+    { chapter: 8, title: "The Marathas and Other Provincial Kingdoms", pdfPages: "135–149", printedPages: "134–148" },
+    { chapter: 9, title: "Bhakti and Sufi Movements", pdfPages: "150–163", printedPages: "149–162" }
+  ],
+  note: "The uploaded 164-page PDF is the primary source. This structured module is an exam-oriented layer over that source; it must not be treated as a substitute for the complete source text. Source-supported terminology and chapter organization are retained."
 };
