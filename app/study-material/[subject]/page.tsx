@@ -106,8 +106,7 @@ export default function StudyMaterialSubjectPage(){
    const data=await response.json();if(!response.ok)throw new Error(data.error||"AI analysis failed.");setAiAnalysis(String(data.analysis||""));
   }catch(e){setAiError(e instanceof Error?e.message:"AI analysis failed.");}finally{setAiLoading(false);}
  }
- const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\ const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");
- const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");");
+ const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");
  const highlight=(text:string)=>{
   const q=query.trim().toLowerCase();
   if(!q)return text;
