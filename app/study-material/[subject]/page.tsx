@@ -81,34 +81,59 @@ export default function StudyMaterialSubjectPage(){
    for(const el of elements){
     const key=el.dataset.highlightBlock;
     if(!key)continue;
-    const probe=document.createRange(); probe.selectNodeContents(el);
-    const startsAfter=range.compareBoundaryPoints(Range.END_TO_START,probe)>=0;
-    const endsBefore=range.compareBoundaryPoints(Range.START_TO_END,probe)<=0;
-    if(startsAfter||endsBefore)continue;
-    const startRange=document.createRange(); startRange.selectNodeContents(el);
-    const endRange=document.createRange(); endRange.selectNodeContents(el);
-    let start=0,end=el.textContent?.length||0;
-    if(range.compareBoundaryPoints(Range.START_TO_START,probe)>0){
-      startRange.setEnd(range.startContainer,range.startOffset); start=startRange.toString().length;
+    const blockRange=document.createRange();
+    blockRange.selectNodeContents(el);
+    // Ignore blocks that are completely outside the user's selection.
+    if(range.compareBoundaryPoints(Range.END_TO_START,blockRange)<=0)continue;
+    if(range.compareBoundaryPoints(Range.START_TO_END,blockRange)>=0)continue;
+    const text=el.textContent||"";
+    let start=0,end=text.length;
+    if(range.compareBoundaryPoints(Range.START_TO_START,blockRange)>0){
+     const startRange=document.createRange();
+     startRange.setStart(el,0);
+     startRange.setEnd(range.startContainer,range.startOffset);
+     start=startRange.toString().length;
     }
-    if(range.compareBoundaryPoints(Range.END_TO_END,probe)<0){
-      endRange.setEnd(range.endContainer,range.endOffset); end=endRange.toString().length;
+    if(range.compareBoundaryPoints(Range.END_TO_END,blockRange)<0){
+     const endRange=document.createRange();
+     endRange.setStart(el,0);
+     endRange.setEnd(range.endContainer,range.endOffset);
+     end=endRange.toString().length;
     }
-    start=Math.max(0,Math.min(start,end)); end=Math.max(start,Math.min(end,el.textContent?.length||0));
-    if(end>start)blocks.push({block_key:key,start_offset:start,end_offset:end,selected_text:(el.textContent||"").slice(start,end)});
+    start=Math.max(0,Math.min(start,text.length));
+    end=Math.max(start,Math.min(end,text.length));
+    if(end>start)blocks.push({block_key:key,start_offset:start,end_offset:end,selected_text:text.slice(start,end)});
    }
    return blocks.length?blocks:null;
   };
   const handle=()=>{
-   const blocks=selectionBlocks(); if(!blocks){clear();return;}
-   const selected=blocks.some(b=>highlights.some(h=>h.block_key===b.block_key&&h.start_offset<b.end_offset&&h.end_offset>b.start_offset));
-   const rect=window.getSelection()?.getRangeAt(0).getBoundingClientRect();
-   setHighlightAction({label:selected?"Remove Highlight":"Highlight",x:Math.min(Math.max((rect?.left||0),8),window.innerWidth-130),y:Math.max((rect?.top||0)-46,8),blocks});
+   const blocks=selectionBlocks();
+   if(!blocks){clear();return;}
+   const hasHighlight=blocks.some(b=>highlights.some(h=>h.block_key===b.block_key&&h.start_offset<b.end_offset&&h.end_offset>b.start_offset));
+   const range=window.getSelection()?.getRangeAt(0);
+   const rect=range?.getBoundingClientRect();
+   setHighlightAction({
+    label:hasHighlight?"Remove Highlight":"Highlight",
+    x:Math.min(Math.max(rect?.left||0,8),Math.max(8,window.innerWidth-150)),
+    y:Math.max((rect?.top||0)-48,8),
+    blocks
+   });
   };
+  const onSelectionChange=()=>{
+   window.clearTimeout((onSelectionChange as any)._timer);
+   (onSelectionChange as any)._timer=window.setTimeout(handle,60);
+  };
+  document.addEventListener("selectionchange",onSelectionChange);
   document.addEventListener("mouseup",handle);
-  document.addEventListener("touchend",()=>setTimeout(handle,0));
+  document.addEventListener("touchend",onSelectionChange,{passive:true});
   document.addEventListener("scroll",clear,true);
-  return()=>{document.removeEventListener("mouseup",handle);document.removeEventListener("scroll",clear,true);};
+  return()=>{
+   window.clearTimeout((onSelectionChange as any)._timer);
+   document.removeEventListener("selectionchange",onSelectionChange);
+   document.removeEventListener("mouseup",handle);
+   document.removeEventListener("touchend",onSelectionChange);
+   document.removeEventListener("scroll",clear,true);
+  };
  },[highlights,current?.id,language]);
 
  async function applyHighlightAction(){
