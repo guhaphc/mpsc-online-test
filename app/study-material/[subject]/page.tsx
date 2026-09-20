@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ancientHistorySections } from "@/lib/ancient-history-complete";
 import { governanceSections } from "@/lib/governance-complete";
+import { governanceComprehensiveEnhancements } from "@/lib/governance-comprehensive";
 import { politySections } from "@/lib/polity-complete";
 import { polityFoundationDetailedSections } from "@/lib/polity-foundation-detailed";
 import { polityExecutiveAndDpspDetailedSections } from "@/lib/polity-executive-dpsp-detailed";
@@ -32,7 +33,7 @@ export default function StudyMaterialSubjectPage(){
   ? currentAffairItems.map(x=>({id:`ca-${x.id}`,chapter:x.subject,title:x.title,subtitle:[x.topic,x.published_date,x.importance].filter(Boolean).join(" • "),body:[],facts:[]}))
   : subjectKey==="polity"
   ? [...polityFoundationDetailedSections,...polityExecutiveAndDpspDetailedSections,...fundamentalRightsSections,...polityParliamentJudiciaryDetailedSections,...polityJudicialLocalDetailedSections,...polityPart2DetailedSections,...polityPart2Chapters40to54DetailedSections]
-  : subjectKey==="governance"?governanceSections
+  : subjectKey==="governance"?governanceSections.map(s=>{const e=governanceComprehensiveEnhancements[s.id];return e?{...s,...e,facts:[...(s.facts||[]),...(e.facts||[])]}:s})
   : subjectKey==="ancient-history"?ancientHistorySections:[];
  const [loading,setLoading]=useState(true),[active,setActive]=useState(sections[0]?.id||"");
  const [chapterOpen,setChapterOpen]=useState(false),[topicsOpen,setTopicsOpen]=useState(false);
