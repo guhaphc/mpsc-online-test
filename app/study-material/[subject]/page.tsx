@@ -139,14 +139,14 @@ export default function StudyMaterialSubjectPage(){
 
    <article className="notes">
     <div id={`topic-${current.id}`} className="note-title"><span>STUDY NOTE • MPSC / UPSC</span><h1>{current.title}</h1><p>{current.subtitle}</p><div className="note-meta"><span>📖 Focused Reading</span><span>•</span><span>{language}</span><span>•</span><span>{current.chapter}</span></div></div>
-    {translationLoading&&<div className="notice">इंग्रजी भाषांतर तयार केले जात आहे…</div>}{translationError&&<div className="notice error">{translationError}</div>}
+    {translationLoading&&<div className="notice">{language==="Marathi"?"मराठी भाषांतर केले जात आहे…":"इंग्रजी भाषांतर तयार केले जात आहे…"}</div>}{translationError&&<div className="notice error">{translationError}</div>}
 
     {current.body.map((p,i)=><p className="paragraph" key={i}>{highlight(p)}</p>)}
     {current.subtopics?.map((st,si)=><section id={`subtopic-${current.id}-${si}`} className="subtopic" key={si}><h2>{highlight(st.title)}</h2>{st.points.map((pt,pi)=><p className="paragraph" key={pi}>{highlight(pt)}</p>)}</section>)}
     {current.facts&&current.facts.length>0&&<section className="exam-points"><h2>परीक्षेच्या दृष्टीने महत्त्वाचे</h2>{current.facts.map((f,i)=><div className="exam-point" key={i}><span>•</span><p>{highlight(f)}</p></div>)}</section>}
     <section className="keyword-strip">
-      <div className="keyword-head"><div><span>IMPORTANT KEYWORDS</span><h2>महत्त्वाचे Keywords</h2></div><small>या पूर्ण note मधील महत्त्वाचे शब्द • टॅप करा → AI Knowledge</small></div>
-      {keywordsLoading?<div className="keyword-loading">या note मधील महत्त्वाचे keywords शोधले जात आहेत…</div>:keywords.length>0?<div className="keyword-chips">{keywords.map((k,i)=><button key={i} onClick={()=>openAi(k)}>✦ {k}</button>)}</div>:<div className="keyword-empty">{keywordsError||"या note साठी keywords उपलब्ध नाहीत."}</div>}
+      <div className="keyword-head"><div><span>IMPORTANT KEYWORDS</span><h2>महत्त्वाचे Keywords</h2></div></div>
+      {keywordsLoading?<div className="keyword-loading">या note मधील महत्त्वाचे keywords शोधले जात आहेत…</div>:keywords.length>0?<div className="keyword-chips">{keywords.map((k,i)=><button key={i} onClick={()=>openAi(k)}>{k} <span aria-hidden="true">✦</span></button>)}</div>:<div className="keyword-empty">{keywordsError||"या note साठी keywords उपलब्ध नाहीत."}</div>}
     </section>
     <div className="bottom-nav"><button onClick={()=>setDone(x=>x.includes(current.id)?x:[...x,current.id])}>{done.includes(current.id)?"✓ अभ्यासले":"अभ्यासले म्हणून चिन्हांकित करा"}</button>{(()=>{const n=sections.findIndex(s=>s.id===current.id);const next=sections[Math.min(n+1,sections.length-1)];return <button className="next" disabled={n===sections.length-1} onClick={()=>openTopic(next.id)}>पुढील विषय →</button>})()}</div>
    </article>
