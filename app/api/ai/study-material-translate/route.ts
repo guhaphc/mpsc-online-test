@@ -21,14 +21,15 @@ export async function POST(req:NextRequest){
   const section=body.section;
   if(!section||typeof section!=="object")return NextResponse.json({error:"No study section supplied."},{status:400});
   const serialized=JSON.stringify(section);
-  if(serialized.length>12000)return NextResponse.json({error:"Translation section is too large."},{status:400});
+  if(serialized.length>30000)return NextResponse.json({error:"Translation page is too large."},{status:400});
   const prompt=target==="Marathi"?`Translate the supplied study notes into academically correct, natural Marathi. This is MPSC/UPSC study material. Use established Marathi constitutional, legal, historical and academic terminology wherever a proper Marathi equivalent exists. Avoid unnecessary English-Marathi mixing. Do not retain an English word merely for convenience when a standard Marathi term exists. Retain the original English term in parentheses only when there is no clear/common Marathi equivalent or when the English term is essential for examination recognition. Preserve the exact structure, topic order, meaning, facts, tables, bullet points and examination terminology. Do not add, remove, correct, infer, or expand information. Return JSON only: {"section":{"id":"same id","chapter":"translated","title":"translated","subtitle":"translated","body":["translated"],"facts":["translated"],"subtopics":[{"title":"translated","points":["translated"]}]}}.`:`Translate the supplied study notes into academically correct English. Preserve the exact structure, topic order, meaning, facts, tables, bullet points and MPSC/UPSC examination terminology. Do not add, remove, correct, infer, or expand information. Use standard constitutional, legal, historical and academic English. Return JSON only: {"section":{"id":"same id","chapter":"translated","title":"translated","subtitle":"translated","body":["translated"],"facts":["translated"],"subtopics":[{"title":"translated","points":["translated"]}]}}.`;
   const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":KEY},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt},{text:serialized}]}],generationConfig:{temperature:.15,responseMimeType:"application/json"}})});
   const data=await res.json();
   if(!res.ok)throw new Error(data?.error?.message||`AI request failed (${res.status}).`);
   const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if(!raw)throw new Error("AI returned an empty response.");
-  const parsed=JSON.parse(raw);
+  const cleaned=raw.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim();
+  const parsed=JSON.parse(cleaned);
   return NextResponse.json(parsed);
  }catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Translation failed."},{status:500});}
 }
