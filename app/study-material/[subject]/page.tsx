@@ -27,9 +27,6 @@ const subjects:Record<string,string>={
 };
 
 type Section={id:string;chapter?:string;title:string;subtitle:string;body:string[];facts?:string[];subtopics?:{title:string;points:string[]}[]};
-type CurrentAffair={id:number;headline:string;category:string;what_happened:string;polity_relevance:string;prelims_fact:string;mains_angle:string;source_url:string|null;updated_at:string;month:number;year:number};
-type CourtJudgment={id:number;case_name:string;issue:string;constitutional_provision:string;judgment_summary:string;importance:string;prelims_point:string;mains_angle:string;source_url:string|null;updated_at:string;month:number;year:number};
-
 
 export default function StudyMaterialSubjectPage(){
  const router=useRouter(); const params=useParams<{subject:string}>(); const subjectKey=params?.subject||"";
@@ -123,31 +120,6 @@ export default function StudyMaterialSubjectPage(){
     {current.body.map((p,i)=><p className="paragraph" key={i}>{highlight(p)}</p>)}
     {current.subtopics?.map((st,si)=><section id={`subtopic-${current.id}-${si}`} className="subtopic" key={si}><h2>{highlight(st.title)}</h2>{st.points.map((pt,pi)=><p className="paragraph" key={pi}>{highlight(pt)}</p>)}</section>)}
     {current.facts&&current.facts.length>0&&<section className="exam-points"><h2>परीक्षेच्या दृष्टीने महत्त्वाचे</h2>{current.facts.map((f,i)=><div className="exam-point" key={i}><span>•</span><p>{highlight(f)}</p><button onClick={()=>openAi(f)}>AI समजावून सांगा</button></div>)}</section>}
-    {currentChapter==="54 • Polity Current Affairs"&&currentAffairs.length>0&&<section className="live-updates">
-      <div className="live-head"><div><span>MONTHLY UPDATE</span><h2>चालू घडामोडी</h2><p>प्रशासकीय मंजुरीनंतर प्रकाशित केलेल्या अलीकडील परीक्षाभिमुख नोंदी</p></div><b>{currentAffairs[0].month}/{currentAffairs[0].year}</b></div>
-      {currentAffairs.slice(0,30).map(x=><article className="live-item" key={x.id}>
-        <div className="live-meta"><span>{x.category}</span><time>{new Date(x.updated_at).toLocaleDateString()}</time></div>
-        <h3>{x.headline}</h3>
-        <p><strong>काय घडले?</strong> {x.what_happened}</p>
-        <p><strong>राज्यव्यवस्था महत्त्व:</strong> {x.polity_relevance}</p>
-        <p><strong>Prelims:</strong> {x.prelims_fact}</p>
-        <p><strong>Mains:</strong> {x.mains_angle}</p>
-        {x.source_url&&<a href={x.source_url} target="_blank" rel="noreferrer">मूळ स्रोत</a>}
-      </article>)}
-    </section>}
-    {currentChapter==="55 • Important Court Judgments"&&courtJudgments.length>0&&<section className="live-updates">
-      <div className="live-head"><div><span>MONTHLY UPDATE</span><h2>महत्त्वाचे न्यायालयीन निर्णय</h2><p>प्रशासकीय मंजुरीनंतर प्रकाशित केलेले अलीकडील निर्णय</p></div><b>{courtJudgments[0].month}/{courtJudgments[0].year}</b></div>
-      {courtJudgments.slice(0,30).map(x=><article className="live-item" key={x.id}>
-        <div className="live-meta"><span>Supreme Court / Constitutional Law</span><time>{new Date(x.updated_at).toLocaleDateString()}</time></div>
-        <h3>{x.case_name}</h3>
-        <p><strong>विषय:</strong> {x.issue}</p>
-        <p><strong>घटनात्मक तरतूद:</strong> {x.constitutional_provision}</p>
-        <p><strong>निर्णय:</strong> {x.judgment_summary}</p>
-        <p><strong>Prelims:</strong> {x.prelims_point}</p>
-        <p><strong>Mains:</strong> {x.mains_angle}</p>
-        {x.source_url&&<a href={x.source_url} target="_blank" rel="noreferrer">मूळ स्रोत</a>}
-      </article>)}
-    </section>}
     <div className="bottom-nav"><button onClick={()=>setDone(x=>x.includes(current.id)?x:[...x,current.id])}>{done.includes(current.id)?"✓ अभ्यासले":"अभ्यासले म्हणून चिन्हांकित करा"}</button>{(()=>{const n=sections.findIndex(s=>s.id===current.id);const next=sections[Math.min(n+1,sections.length-1)];return <button className="next" disabled={n===sections.length-1} onClick={()=>openTopic(next.id)}>पुढील विषय →</button>})()}</div>
    </article>
   </div>
