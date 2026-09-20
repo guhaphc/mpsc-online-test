@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ancientHistorySections } from "@/lib/ancient-history-complete";
@@ -36,9 +36,6 @@ export default function StudyMaterialSubjectPage(){
  const [chapterOpen,setChapterOpen]=useState(false),[topicsOpen,setTopicsOpen]=useState(false);
  const [searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(""),[nightMode,setNightMode]=useState(false);
  const [done,setDone]=useState<string[]>([]),[language,setLanguage]=useState<"Marathi"|"English">("English");
- const [highlights,setHighlights]=useState<Array<{id:string;user_id:string;note_id:string;language:"Marathi"|"English";block_key:string;start_offset:number;end_offset:number;selected_text:string;highlight_group_id:string}>>([]);
- const [highlightAction,setHighlightAction]=useState<{label:"Highlight"|"Remove Highlight";x:number;y:number;blocks:Array<{block_key:string;start_offset:number;end_offset:number;selected_text:string}>}|null>(null);
- const notesRef=useRef<HTMLElement|null>(null);
  const [translatedById,setTranslatedById]=useState<Record<string,Section>>({});
  const [translationLoading,setTranslationLoading]=useState(false),[translationError,setTranslationError]=useState("");
  const [aiOpen,setAiOpen]=useState(false),[aiLoading,setAiLoading]=useState(false),[aiError,setAiError]=useState(""),[aiAnalysis,setAiAnalysis]=useState(""),[aiPoint,setAiPoint]=useState("");
@@ -57,100 +54,6 @@ export default function StudyMaterialSubjectPage(){
 
  useEffect(()=>{try{const saved=localStorage.getItem(`study-progress-${subjectKey}`);if(saved)setDone(JSON.parse(saved));}catch{}},[subjectKey]);
  useEffect(()=>{try{localStorage.setItem(`study-progress-${subjectKey}`,JSON.stringify(done));}catch{}},[done,subjectKey]);
- useEffect(()=>{
-  let cancelled=false;
-  (async()=>{
-   if(!current?.id)return;
-   const {data:{user}}=await supabase.auth.getUser();
-   if(!user||cancelled)return;
-   const {data}=await supabase.from("study_material_highlights").select("id,user_id,note_id,language,block_key,start_offset,end_offset,selected_text,highlight_group_id").eq("user_id",user.id).eq("note_id",current.id).eq("language",language).order("created_at",{ascending:true});
-   if(!cancelled)setHighlights((data||[]) as typeof highlights);
-  })();
-  return()=>{cancelled=true};
- },[current?.id,language]);
-
- useEffect(()=>{
-  const clear=()=>setHighlightAction(null);
-  const selectionBlocks=()=>{
-   const sel=window.getSelection();
-   if(!sel||sel.rangeCount===0||sel.isCollapsed||!notesRef.current)return null;
-   const range=sel.getRangeAt(0);
-   if(!notesRef.current.contains(range.commonAncestorContainer))return null;
-   const elements=Array.from(notesRef.current.querySelectorAll<HTMLElement>("[data-highlight-block]"));
-   const blocks:Array<{block_key:string;start_offset:number;end_offset:number;selected_text:string}>=[];
-   for(const el of elements){
-    const key=el.dataset.highlightBlock;
-    if(!key)continue;
-    const blockRange=document.createRange();
-    blockRange.selectNodeContents(el);
-    // Ignore blocks that are completely outside the user's selection.
-    if(range.compareBoundaryPoints(Range.END_TO_START,blockRange)<=0)continue;
-    if(range.compareBoundaryPoints(Range.START_TO_END,blockRange)>=0)continue;
-    const text=el.textContent||"";
-    let start=0,end=text.length;
-    if(range.compareBoundaryPoints(Range.START_TO_START,blockRange)>0){
-     const startRange=document.createRange();
-     startRange.setStart(el,0);
-     startRange.setEnd(range.startContainer,range.startOffset);
-     start=startRange.toString().length;
-    }
-    if(range.compareBoundaryPoints(Range.END_TO_END,blockRange)<0){
-     const endRange=document.createRange();
-     endRange.setStart(el,0);
-     endRange.setEnd(range.endContainer,range.endOffset);
-     end=endRange.toString().length;
-    }
-    start=Math.max(0,Math.min(start,text.length));
-    end=Math.max(start,Math.min(end,text.length));
-    if(end>start)blocks.push({block_key:key,start_offset:start,end_offset:end,selected_text:text.slice(start,end)});
-   }
-   return blocks.length?blocks:null;
-  };
-  const handle=()=>{
-   const blocks=selectionBlocks();
-   if(!blocks){clear();return;}
-   const hasHighlight=blocks.some(b=>highlights.some(h=>h.block_key===b.block_key&&h.start_offset<b.end_offset&&h.end_offset>b.start_offset));
-   const range=window.getSelection()?.getRangeAt(0);
-   const rect=range?.getBoundingClientRect();
-   setHighlightAction({
-    label:hasHighlight?"Remove Highlight":"Highlight",
-    x:Math.min(Math.max(rect?.left||0,8),Math.max(8,window.innerWidth-150)),
-    y:Math.max((rect?.top||0)-48,8),
-    blocks
-   });
-  };
-  const onSelectionChange=()=>{
-   window.clearTimeout((onSelectionChange as any)._timer);
-   (onSelectionChange as any)._timer=window.setTimeout(handle,60);
-  };
-  document.addEventListener("selectionchange",onSelectionChange);
-  document.addEventListener("mouseup",handle);
-  document.addEventListener("touchend",onSelectionChange,{passive:true});
-  document.addEventListener("scroll",clear,true);
-  return()=>{
-   window.clearTimeout((onSelectionChange as any)._timer);
-   document.removeEventListener("selectionchange",onSelectionChange);
-   document.removeEventListener("mouseup",handle);
-   document.removeEventListener("touchend",onSelectionChange);
-   document.removeEventListener("scroll",clear,true);
-  };
- },[highlights,current?.id,language]);
-
- async function applyHighlightAction(){
-  if(!highlightAction||!current)return;
-  const action=highlightAction; setHighlightAction(null);
-  const {data:{user}}=await supabase.auth.getUser(); if(!user)return;
-  if(action.label==="Highlight"){
-   const groupId=crypto.randomUUID();
-   const rows=action.blocks.map(b=>({...b,user_id:user.id,note_id:current.id,language,highlight_group_id:groupId}));
-   const {data,error}=await supabase.from("study_material_highlights").insert(rows).select("id,user_id,note_id,language,block_key,start_offset,end_offset,selected_text,highlight_group_id");
-   if(!error&&data)setHighlights(h=>[...h,...(data as typeof h)]);
-  }else{
-   const ids=highlights.filter(h=>action.blocks.some(b=>h.block_key===b.block_key&&h.start_offset<b.end_offset&&h.end_offset>b.start_offset)).map(h=>h.id);
-   if(ids.length){await supabase.from("study_material_highlights").delete().in("id",ids);setHighlights(h=>h.filter(x=>!ids.includes(x.id)));}
-  }
-  window.getSelection()?.removeAllRanges();
- }
  useEffect(()=>{
   let cancelled=false;
   (async()=>{
@@ -204,17 +107,11 @@ export default function StudyMaterialSubjectPage(){
   }catch(e){setAiError(e instanceof Error?e.message:"AI analysis failed.");}finally{setAiLoading(false);}
  }
  const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");
- const renderSelectableText=(text:string,blockKey:string)=>{
-  const ranges=highlights.filter(h=>h.block_key===blockKey).sort((a,b)=>a.start_offset-b.start_offset);
-  const parts:Array<{text:string;highlight?:string}>=[]; let cursor=0;
-  for(const r of ranges){if(r.start_offset>cursor)parts.push({text:text.slice(cursor,r.start_offset)});parts.push({text:text.slice(r.start_offset,r.end_offset),highlight:r.id});cursor=r.end_offset;}
-  if(cursor<text.length)parts.push({text:text.slice(cursor)});
-  const q=query.trim(); const out:React.ReactNode[]=[];
-  parts.forEach((part,pi)=>{
-   const pieces=q?part.text.split(new RegExp(`(${escapeRegex(q)})`,"gi")):[part.text];
-   pieces.forEach((p,i)=>{const node=p.toLowerCase()===q.toLowerCase()&&q?<mark key={`${pi}-${i}`}>{p}</mark>:p;out.push(part.highlight?<span key={`${pi}-h-${i}`} className="saved-highlight" data-highlight-id={part.highlight}>{node}</span>:<span key={`${pi}-p-${i}`}>{node}</span>);});
-  });
-  return out;
+ const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");
+ const highlight=(text:string)=>{
+  const q=query.trim().toLowerCase();
+  if(!q)return text;
+  return text.split(new RegExp(`(${escapeRegex(q)})`,"gi")).map((p,i)=>p.toLowerCase()===q?<mark key={i}>{p}</mark>:p);
  };
 
  if(loading)return <main className="reader-page"><div className="status">प्रवेश तपासला जात आहे…</div></main>;
@@ -245,13 +142,13 @@ export default function StudyMaterialSubjectPage(){
 
    {topicsOpen&&<div className="topic-menu"><div className="topic-menu-head"><strong>{currentChapter}</strong><button onClick={()=>setTopicsOpen(false)}>×</button></div>{chapterSections.map((s,i)=><button key={s.id} className={s.id===active?"active":""} onClick={()=>openTopic(s.id)}><span>{String(i+1).padStart(2,"0")}</span><b>{s.title}</b></button>)}</div>}
 
-   <article className="notes" ref={notesRef}>
+   <article className="notes">
     <div id={`topic-${current.id}`} className="note-title"><span>STUDY NOTE • MPSC / UPSC</span><h1>{current.title}</h1><p>{current.subtitle}</p><div className="note-meta"><span>📖 Focused Reading</span><span>•</span><span>{language}</span><span>•</span><span>{current.chapter}</span></div></div>
     {translationLoading&&<div className="notice">{language==="Marathi"?"मराठी भाषांतर केले जात आहे…":"इंग्रजी भाषांतर तयार केले जात आहे…"}</div>}{translationError&&<div className="notice error">{translationError}</div>}
 
-    {current.body.map((p,i)=><p className="paragraph" data-highlight-block={`body:${i}`} key={i}>{renderSelectableText(p,`body:${i}`)}</p>)}
-    {current.subtopics?.map((st,si)=><section id={`subtopic-${current.id}-${si}`} className="subtopic" key={si}><h2 data-highlight-block={`sub:${si}:title`}>{renderSelectableText(st.title,`sub:${si}:title`)}</h2>{st.points.map((pt,pi)=><p className="paragraph" data-highlight-block={`sub:${si}:point:${pi}`} key={pi}>{renderSelectableText(pt,`sub:${si}:point:${pi}`)}</p>)}</section>)}
-    {current.facts&&current.facts.length>0&&<section className="exam-points"><h2>परीक्षेच्या दृष्टीने महत्त्वाचे</h2>{current.facts.map((f,i)=><div className="exam-point" key={i}><span>•</span><p data-highlight-block={`fact:${i}`}>{renderSelectableText(f,`fact:${i}`)}</p></div>)}</section>}
+    {current.body.map((p,i)=><p className="paragraph" key={i}>{highlight(p)}</p>)}
+    {current.subtopics?.map((st,si)=><section id={`subtopic-${current.id}-${si}`} className="subtopic" key={si}><h2>{highlight(st.title)}</h2>{st.points.map((pt,pi)=><p className="paragraph" key={pi}>{highlight(pt)}</p>)}</section>)}
+    {current.facts&&current.facts.length>0&&<section className="exam-points"><h2>परीक्षेच्या दृष्टीने महत्त्वाचे</h2>{current.facts.map((f,i)=><div className="exam-point" key={i}><span>•</span><p>{highlight(f)}</p></div>)}</section>}
     <section className="keyword-strip">
       <div className="keyword-head"><div><span>IMPORTANT KEYWORDS</span><h2>महत्त्वाचे Keywords</h2></div></div>
       {keywordsLoading?<div className="keyword-loading">या note मधील महत्त्वाचे keywords शोधले जात आहेत…</div>:keywords.length>0?<div className="keyword-chips">{keywords.map((k,i)=><button key={i} onClick={()=>openAi(k)}>{k} <span aria-hidden="true">✦</span></button>)}</div>:<div className="keyword-empty">{keywordsError||"या note साठी keywords उपलब्ध नाहीत."}</div>}
@@ -260,7 +157,7 @@ export default function StudyMaterialSubjectPage(){
    </article>
   </div>
 
-  {highlightAction&&<button type="button" className="highlight-action" style={{left:highlightAction.x,top:highlightAction.y}} onMouseDown={e=>e.preventDefault()} onClick={applyHighlightAction}>{highlightAction.label}</button>}
+  
   {aiOpen&&<div className="ai-overlay" onClick={()=>!aiLoading&&setAiOpen(false)}><div className="ai-modal" onClick={e=>e.stopPropagation()}><div className="ai-head"><div><span>AI KNOWLEDGE</span><h2>{aiPoint}</h2></div><button onClick={()=>setAiOpen(false)}>×</button></div><div className="ai-body">{aiLoading?<div className="ai-loading"><div className="spinner"/>AI Knowledge तयार केले जात आहे…</div>:aiError?<div className="ai-error"><strong>AI Knowledge उपलब्ध झाले नाही</strong><p>{aiError}</p><button onClick={()=>openAi(aiPoint)}>पुन्हा प्रयत्न करा</button></div>:<div className="ai-response">{aiAnalysis.split(/(Exam Focus:)/i).map((part,i)=>/exam focus:/i.test(part)?<h3>परीक्षेचा केंद्रबिंदू</h3>:<p key={i}>{part.trim()}</p>)}</div>}</div></div></div>}
  <style jsx>{`
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -272,7 +169,7 @@ export default function StudyMaterialSubjectPage(){
 .reader{max-width:900px;margin:auto;padding:28px 20px 70px}.chapter-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.chapter-picker{position:relative}.chapter-button{width:min(560px,76vw);display:flex;align-items:center;gap:9px;text-align:left;background:#fff;border:1px solid #dfe5e3;border-radius:9px;padding:9px 11px;cursor:pointer}.chapter-button small{font-size:8px;color:#87939b}.chapter-button strong{flex:1;color:#24475e;font-size:13px}.chapter-button b{color:#0f766e}.chapter-menu{position:absolute;top:calc(100% + 5px);left:0;width:min(560px,86vw);max-height:55vh;overflow:auto;background:#fff;border:1px solid #dfe5e3;border-radius:10px;box-shadow:0 12px 30px rgba(30,50,60,.12);padding:5px;z-index:40}.chapter-menu button{width:100%;text-align:left;border:0;background:transparent;border-radius:7px;padding:9px;font:500 11px 'Noto Sans Devanagari';color:#465562;cursor:pointer}.chapter-menu button:hover,.chapter-menu button.selected{background:#eef7f5;color:#0f766e}.progress{font:600 10px 'Plus Jakarta Sans';color:#87939b;white-space:nowrap}
 .topics-row{display:flex;align-items:center;gap:9px;border-bottom:1px solid #e3e7e5;padding:9px 0;margin-bottom:25px}.topics-row button{border:1px solid #d8e3e0;background:#fff;border-radius:8px;padding:7px 11px;color:#245b57;font:700 10px 'Noto Sans Devanagari';cursor:pointer}.topics-row span{font-size:10px;color:#8a969e}.topics-row i{margin-left:auto;width:80px;height:3px;background:#e8eceb;border-radius:5px;overflow:hidden}.topics-row i b{display:block;height:100%;background:#0f766e}
 .topic-menu{margin:-16px 0 20px;background:#fff;border:1px solid #dfe5e3;border-radius:11px;box-shadow:0 12px 30px rgba(30,50,60,.10);padding:7px;max-height:58vh;overflow:auto}.topic-menu-head{display:flex;justify-content:space-between;align-items:center;padding:5px 7px 9px;border-bottom:1px solid #edf0ef;margin-bottom:3px}.topic-menu-head strong{font-size:12px;color:#24475e}.topic-menu-head button{border:0;background:transparent;font-size:20px;color:#66737d;cursor:pointer}.topic-menu>button{width:100%;display:flex;gap:10px;text-align:left;border:0;background:transparent;border-radius:7px;padding:8px;color:#435166;cursor:pointer;font:500 11px/1.55 'Noto Sans Devanagari'}.topic-menu>button span{min-width:22px;color:#0f766e;font:800 9px 'Plus Jakarta Sans'}.topic-menu>button:hover,.topic-menu>button.active{background:#eef7f5;color:#0b625c}
-.saved-highlight{background:#fff09a;border-radius:2px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.highlight-action{position:fixed;z-index:1000;border:1px solid rgba(0,0,0,.12);border-radius:8px;background:#1f2937;color:#fff;padding:7px 11px;font-size:13px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18);touch-action:manipulation}.night .saved-highlight{background:#806f1b}.night .highlight-action{background:#f5f5f5;color:#111}.notes{background:#fffdf9;padding:58px 72px 70px;box-shadow:0 8px 35px rgba(35,45,48,.10),0 1px 3px rgba(20,35,45,.06);border:1px solid #ebe9e1;border-radius:4px;position:relative}.notes:before{content:'';position:absolute;left:22px;top:0;bottom:0;width:1px;background:#eef0eb}.note-title{scroll-margin-top:82px;border-bottom:1px solid #e8eceb;padding-bottom:23px;margin-bottom:25px}.note-title span{font:800 8px 'Plus Jakarta Sans';letter-spacing:1.5px;color:#0f766e}.note-title h1{margin:10px 0 8px;color:#183e5a;font-size:clamp(28px,4vw,40px);line-height:1.28;font-weight:700;letter-spacing:-.3px}.note-meta{display:flex;gap:8px;align-items:center;margin-top:15px;color:#8a918e;font:600 9px 'Plus Jakarta Sans';letter-spacing:.3px}.note-title p{margin:0;color:#72808a;font-size:13px;line-height:1.7}.paragraph{font-family:'Noto Serif Devanagari','Noto Sans Devanagari',serif;font-size:17px;line-height:2.08;letter-spacing:.05px;color:#303b46;margin:0 0 25px;text-align:left}.paragraph mark{background:#fff0a8;padding:1px 2px}.keyword-strip{margin:46px 0 0;padding:15px 16px;border:1px solid #dfe9e6;border-radius:12px;background:linear-gradient(135deg,#f5faf8,#fbfcfa);box-shadow:0 2px 8px rgba(25,55,55,.04)}.keyword-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.keyword-head span{font:800 8px 'Plus Jakarta Sans';letter-spacing:1.2px;color:#0f766e}.keyword-head h2{margin:3px 0 0;font-size:16px;color:#204b55}.keyword-head small{font-size:9px;color:#72807f}.keyword-chips{display:flex;flex-wrap:wrap;gap:7px}.keyword-chips button{border:1px solid #b9ddd7;background:#fff;color:#176b63;border-radius:999px;padding:8px 11px;font:600 10px 'Noto Sans Devanagari';cursor:pointer;transition:.15s}.keyword-chips button:hover{background:#eaf7f4;transform:translateY(-1px)}.keyword-loading,.keyword-empty{font-size:10px;color:#71807e;padding:5px 0}.subtopic{scroll-margin-top:82px;margin:34px 0 0}.subtopic h2{margin:0 0 13px;color:#173f5f;font-size:21px;line-height:1.5}.exam-points{margin-top:36px;padding-top:18px;border-top:2px solid #e5ecea}.exam-points h2{margin:0 0 12px;color:#245b57;font-size:17px}.exam-point{display:grid;grid-template-columns:17px 1fr auto;gap:8px;align-items:start;margin:9px 0}.exam-point>span{color:#0f766e}.exam-point p{margin:0;color:#3f4c5b;font-size:14px;line-height:1.8}.exam-point button{border:0;background:none;color:#0f766e;font:600 10px 'Noto Sans Devanagari';cursor:pointer}.bottom-nav{display:flex;justify-content:space-between;gap:10px;margin-top:42px;padding-top:18px;border-top:1px solid #e8eceb}.bottom-nav button{border:1px solid #d5e1df;background:#eef7f5;color:#0b625c;border-radius:8px;padding:9px 12px;font:600 10px 'Noto Sans Devanagari';cursor:pointer}.bottom-nav .next{background:#0f766e;color:#fff;border-color:#0f766e}.bottom-nav .next:disabled{opacity:.4}.live-updates{margin:38px 0 18px;padding:22px 0;border-top:2px solid #e5ecea}.live-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:15px}.live-head span{font:800 8px 'Plus Jakarta Sans';letter-spacing:1.4px;color:#0f766e}.live-head h2{margin:6px 0 3px;color:#173f5f;font-size:21px}.live-head p{margin:0;color:#72808a;font-size:11px}.live-head>b{font:800 11px 'Plus Jakarta Sans';color:#0f766e;white-space:nowrap}.live-item{border:1px solid #e1e7e5;border-radius:10px;padding:15px;margin:10px 0;background:#fbfcfb}.live-meta{display:flex;justify-content:space-between;gap:10px;font-size:9px;color:#7a8992}.live-item h3{margin:6px 0 9px;color:#173f5f;font-size:16px;line-height:1.5}.live-item p{margin:6px 0;color:#3f4c5b;font-size:13px;line-height:1.75}.live-item a{font-size:10px;color:#0f766e}.night .live-updates{border-color:#2d4147}.night .live-head h2,.night .live-item h3{color:#b8e5df}.night .live-head p,.night .live-item p,.night .live-meta{color:#c7d2d8}.night .live-item{background:#172127;border-color:#34444d}@media(max-width:700px){.live-head{display:block}.live-head>b{display:block;margin-top:7px}.live-item{padding:13px}.live-item p{font-size:12px}}.notice{margin-bottom:18px;padding:9px 11px;border-left:3px solid #0f766e;background:#f2f8f7;color:#49635f;font-size:10px}.notice.error{border-color:#b45353;background:#fff6f6;color:#8b3d3d}
+.notes{background:#fffdf9;padding:58px 72px 70px;box-shadow:0 8px 35px rgba(35,45,48,.10),0 1px 3px rgba(20,35,45,.06);border:1px solid #ebe9e1;border-radius:4px;position:relative}.notes:before{content:'';position:absolute;left:22px;top:0;bottom:0;width:1px;background:#eef0eb}.note-title{scroll-margin-top:82px;border-bottom:1px solid #e8eceb;padding-bottom:23px;margin-bottom:25px}.note-title span{font:800 8px 'Plus Jakarta Sans';letter-spacing:1.5px;color:#0f766e}.note-title h1{margin:10px 0 8px;color:#183e5a;font-size:clamp(28px,4vw,40px);line-height:1.28;font-weight:700;letter-spacing:-.3px}.note-meta{display:flex;gap:8px;align-items:center;margin-top:15px;color:#8a918e;font:600 9px 'Plus Jakarta Sans';letter-spacing:.3px}.note-title p{margin:0;color:#72808a;font-size:13px;line-height:1.7}.paragraph{font-family:'Noto Serif Devanagari','Noto Sans Devanagari',serif;font-size:17px;line-height:2.08;letter-spacing:.05px;color:#303b46;margin:0 0 25px;text-align:left}.paragraph mark{background:#fff0a8;padding:1px 2px}.keyword-strip{margin:46px 0 0;padding:15px 16px;border:1px solid #dfe9e6;border-radius:12px;background:linear-gradient(135deg,#f5faf8,#fbfcfa);box-shadow:0 2px 8px rgba(25,55,55,.04)}.keyword-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.keyword-head span{font:800 8px 'Plus Jakarta Sans';letter-spacing:1.2px;color:#0f766e}.keyword-head h2{margin:3px 0 0;font-size:16px;color:#204b55}.keyword-head small{font-size:9px;color:#72807f}.keyword-chips{display:flex;flex-wrap:wrap;gap:7px}.keyword-chips button{border:1px solid #b9ddd7;background:#fff;color:#176b63;border-radius:999px;padding:8px 11px;font:600 10px 'Noto Sans Devanagari';cursor:pointer;transition:.15s}.keyword-chips button:hover{background:#eaf7f4;transform:translateY(-1px)}.keyword-loading,.keyword-empty{font-size:10px;color:#71807e;padding:5px 0}.subtopic{scroll-margin-top:82px;margin:34px 0 0}.subtopic h2{margin:0 0 13px;color:#173f5f;font-size:21px;line-height:1.5}.exam-points{margin-top:36px;padding-top:18px;border-top:2px solid #e5ecea}.exam-points h2{margin:0 0 12px;color:#245b57;font-size:17px}.exam-point{display:grid;grid-template-columns:17px 1fr auto;gap:8px;align-items:start;margin:9px 0}.exam-point>span{color:#0f766e}.exam-point p{margin:0;color:#3f4c5b;font-size:14px;line-height:1.8}.exam-point button{border:0;background:none;color:#0f766e;font:600 10px 'Noto Sans Devanagari';cursor:pointer}.bottom-nav{display:flex;justify-content:space-between;gap:10px;margin-top:42px;padding-top:18px;border-top:1px solid #e8eceb}.bottom-nav button{border:1px solid #d5e1df;background:#eef7f5;color:#0b625c;border-radius:8px;padding:9px 12px;font:600 10px 'Noto Sans Devanagari';cursor:pointer}.bottom-nav .next{background:#0f766e;color:#fff;border-color:#0f766e}.bottom-nav .next:disabled{opacity:.4}.live-updates{margin:38px 0 18px;padding:22px 0;border-top:2px solid #e5ecea}.live-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:15px}.live-head span{font:800 8px 'Plus Jakarta Sans';letter-spacing:1.4px;color:#0f766e}.live-head h2{margin:6px 0 3px;color:#173f5f;font-size:21px}.live-head p{margin:0;color:#72808a;font-size:11px}.live-head>b{font:800 11px 'Plus Jakarta Sans';color:#0f766e;white-space:nowrap}.live-item{border:1px solid #e1e7e5;border-radius:10px;padding:15px;margin:10px 0;background:#fbfcfb}.live-meta{display:flex;justify-content:space-between;gap:10px;font-size:9px;color:#7a8992}.live-item h3{margin:6px 0 9px;color:#173f5f;font-size:16px;line-height:1.5}.live-item p{margin:6px 0;color:#3f4c5b;font-size:13px;line-height:1.75}.live-item a{font-size:10px;color:#0f766e}.night .live-updates{border-color:#2d4147}.night .live-head h2,.night .live-item h3{color:#b8e5df}.night .live-head p,.night .live-item p,.night .live-meta{color:#c7d2d8}.night .live-item{background:#172127;border-color:#34444d}@media(max-width:700px){.live-head{display:block}.live-head>b{display:block;margin-top:7px}.live-item{padding:13px}.live-item p{font-size:12px}}.notice{margin-bottom:18px;padding:9px 11px;border-left:3px solid #0f766e;background:#f2f8f7;color:#49635f;font-size:10px}.notice.error{border-color:#b45353;background:#fff6f6;color:#8b3d3d}
 .status{max-width:700px;margin:100px auto;text-align:center;padding:30px}.status button{border:0;background:#0f766e;color:#fff;padding:9px 15px;border-radius:8px}
 .night{background:#10161b;color:#dbe4e9}.night .reader-header{background:rgba(16,22,27,.97);border-color:#29363e}.night .header-title strong{color:#dce8ed}.night .header-title span,.night .progress{color:#91a1ab}.night .header-actions>button,.night .language{background:#172127;border-color:#34444d;color:#dbe4e9}.night .language button{color:#aebbc2}.night .language button.selected{background:#176b63;color:#fff}.night .search-row input,.night .chapter-button,.night .chapter-menu,.night .topic-menu,.night .notes{background:#172127;border-color:#34444d;color:#dbe4e9}.night .chapter-button strong,.night .chapter-menu button,.night .topic-menu>button,.night .topic-menu-head strong{color:#dbe4e9}.night .chapter-menu button:hover,.night .chapter-menu button.selected,.night .topic-menu>button:hover,.night .topic-menu>button.active{background:#183b3a;color:#9ce9df}.night .topics-row{border-color:#2a383f}.night .topics-row button{background:#172127;border-color:#34444d;color:#9ce9df}.night .note-title{border-color:#2a383f}.night .note-title h1,.night .subtopic h2{color:#b8e5df}.night .keyword-strip{background:#172127;border-color:#34444d}.night .keyword-head h2{color:#b8e5df}.night .keyword-head small,.night .keyword-loading,.night .keyword-empty{color:#aebbc2}.night .keyword-chips button{background:#183b3a;border-color:#315653;color:#9ce9df}.night .note-title p,.night .paragraph,.night .exam-point p{color:#c7d2d8}.night .exam-points,.night .bottom-nav{border-color:#2d4147}.night .exam-points h2{color:#9ce9df}.night .bottom-nav button{background:#183b3a;color:#9ce9df;border-color:#315653}.night .bottom-nav .next{background:#176b63;color:#fff}
 .ai-overlay{position:fixed;inset:0;z-index:1000;background:rgba(10,25,38,.55);display:flex;align-items:center;justify-content:center;padding:18px}.ai-modal{width:min(620px,100%);max-height:82vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.22)}.ai-head{display:flex;justify-content:space-between;gap:12px;padding:19px 20px;background:#173f5f;color:#fff}.ai-head span{font-size:9px;color:#c9f7ed}.ai-head h2{margin:6px 0 0;font-size:19px;line-height:1.4}.ai-head button{width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font-size:21px}.ai-body{padding:20px}.ai-response p{font-size:14px;line-height:1.8;color:#344455;white-space:pre-line;margin:0 0 13px}.ai-response h3{font-size:13px;color:#0f766e;margin:18px 0 8px}.ai-loading{min-height:160px;display:flex;align-items:center;justify-content:center;gap:10px;color:#53616c}.spinner{width:24px;height:24px;border:3px solid #dceeea;border-top-color:#0f766e;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.ai-error{padding:15px;background:#fff6f6;border:1px solid #f0d1d1;color:#7f1d1d;border-radius:9px}.ai-error p{font-size:12px}.ai-error button{border:0;background:#0f766e;color:#fff;padding:8px 12px;border-radius:7px}
