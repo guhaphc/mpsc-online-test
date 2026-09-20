@@ -25,18 +25,18 @@ function monthRange(){
   const now=new Date(); return {year:now.getUTCFullYear(),month:now.getUTCMonth()+1};
 }
 function cleanHtml(s:string){
-  return s.replace(/<script[\\s\\S]*?<\\/script>/gi," ").replace(/<style[\\s\\S]*?<\\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/&amp;/gi,"&").replace(/&lt;/gi,"<").replace(/&gt;/gi,">").replace(/\\s+/g," ").trim();
+  return s.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," ").replace(/&nbsp;/gi," ").replace(/&amp;/gi,"&").replace(/&lt;/gi,"<").replace(/&gt;/gi,">").replace(/\s+/g," ").trim();
 }
 async function rss(query:string){
   const url=`https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`;
   const r=await fetch(url,{headers:{"User-Agent":"MPSC-Current-Affairs/1.0"},cache:"no-store"});
   if(!r.ok) throw new Error(`News feed unavailable (${r.status}).`);
   const xml=await r.text();
-  const items=[...xml.matchAll(/<item>([\\s\\S]*?)<\\/item>/g)].map(m=>m[1]).slice(0,25).map(x=>({
-    title:cleanHtml((x.match(/<title>([\\s\\S]*?)<\\/title>/i)?.[1]||"")),
-    url:(x.match(/<link>([\\s\\S]*?)<\\/link>/i)?.[1]||"").trim(),
-    pubDate:(x.match(/<pubDate>([\\s\\S]*?)<\\/pubDate>/i)?.[1]||"").trim(),
-    description:cleanHtml(x.match(/<description>([\\s\\S]*?)<\\/description>/i)?.[1]||"")
+  const items=[...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m=>m[1]).slice(0,25).map(x=>({
+    title:cleanHtml((x.match(/<title>([\s\S]*?)<\/title>/i)?.[1]||"")),
+    url:(x.match(/<link>([\s\S]*?)<\/link>/i)?.[1]||"").trim(),
+    pubDate:(x.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1]||"").trim(),
+    description:cleanHtml(x.match(/<description>([\s\S]*?)<\/description>/i)?.[1]||"")
   }));
   return items.filter(x=>x.title&&x.url);
 }
