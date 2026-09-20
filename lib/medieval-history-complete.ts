@@ -1006,7 +1006,7 @@ export const medievalHistorySections: MedievalSection[] = [
       "तुलना करताना तात्त्विक चौकट, भाषा, संस्था, सामाजिक संदेश आणि राजसत्तेशी संबंध वेगळे ठेवा.",
       "भक्ती-सूफी परंपरा एकसंध नसून अनेक प्रादेशिक प्रवाहांचा समूह आहेत."
     ]
-  }
+  },
   ...medievalHistoryChapter2Expansion
 ];
 
