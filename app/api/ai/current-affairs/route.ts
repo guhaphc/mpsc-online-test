@@ -19,7 +19,7 @@ const schema={type:"OBJECT",properties:{
  title:{type:"STRING"},topic:{type:"STRING"},summary:{type:"STRING"},content:{type:"STRING"},prelims_points:{type:"STRING"},mains_angle:{type:"STRING"},keywords:{type:"STRING"}
 },required:["title","topic","summary","content","prelims_points","mains_angle","keywords"]};
 
-async function gemini(subject:string,file:{mimeType:string,data:string},sourceName:string){
+async function gemini(subject:string,file:{mimeType:string,data:string}|null,sourceName:string,sourceText:string){
  if(!geminiApiKey) throw new Error("GEMINI_API_KEY is not configured.");
  const prompt=`You are a senior UPSC/MPSC current-affairs editor and visual study-material writer.
 
@@ -71,9 +71,9 @@ Recommended structure when relevant:
 Return:
 title, topic, 2-3 sentence summary, formatted content, compact prelims_points, compact mains_angle, comma-separated keywords.`;
 
- const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{
+ const parts:any[]=[{text:prompt}]; if(file) parts.push({inlineData:{mimeType:file.mimeType,data:file.data}}); else parts[0]={text:prompt+"\n\nSOURCE TEXT:\n"+sourceText};\n const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{
   method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":geminiApiKey},
-  body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt},{inlineData:{mimeType:file.mimeType,data:file.data}}]}],generationConfig:{temperature:0.25,responseMimeType:"application/json",responseSchema:schema}})
+  body:JSON.stringify({contents:[{role:"user",parts}],generationConfig:{temperature:0.25,responseMimeType:"application/json",responseSchema:schema}})
  });
  const data=await response.json(); if(!response.ok) throw new Error(data?.error?.message||`Gemini request failed (${response.status}).`);
  const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text; if(!raw) throw new Error("AI returned an empty response.");
@@ -82,9 +82,9 @@ title, topic, 2-3 sentence summary, formatted content, compact prelims_points, c
 
 export async function POST(request:NextRequest){
  try{
-  const sb=await requireAdmin(request); const body=await request.json(); const subject=String(body.subject||"").trim(); const sourcePath=String(body.sourcePath||"").trim(); const sourceName=String(body.sourceName||"source").trim(); const sourceMime=String(body.sourceMime||"").trim();
+  const sb=await requireAdmin(request); const body=await request.json(); const subject=String(body.subject||"").trim(); const sourcePath=String(body.sourcePath||"").trim(); const sourceName=String(body.sourceName||"source").trim(); const sourceMime=String(body.sourceMime||"").trim(); const sourceText=String(body.sourceText||"").trim();
   if(!subject) return NextResponse.json({error:"Select a subject."},{status:400});
-  if(!sourcePath||!sourceMime) return NextResponse.json({error:"Upload a PDF or image first."},{status:400});
+  if(!sourcePath && sourceText.length<80) return NextResponse.json({error:"Upload a PDF/image or provide source text."},{status:400});
   if(!["application/pdf","image/jpeg","image/png","image/webp"].includes(sourceMime)) return NextResponse.json({error:"Only PDF, JPG, PNG and WEBP files are supported."},{status:400});
   const {data:file,error}=await sb.storage.from("current-affairs-sources").download(sourcePath); if(error||!file) throw new Error(error?.message||"Unable to read uploaded source.");
   const bytes=Buffer.from(await file.arrayBuffer()); if(bytes.length>15*1024*1024) throw new Error("Source file is too large. Please upload a file below 15 MB.");
