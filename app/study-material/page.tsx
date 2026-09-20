@@ -4,34 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-const subjects = [
-  { icon:"🏛️", name:"Indian Polity", key:"polity" },
-  { icon:"🏛️", name:"Governance", key:"governance" },
-  { icon:"📜", name:"Ancient History", key:"ancient-history" },
-  { icon:"🏰", name:"Medieval History", key:"medieval-history" },
-  { icon:"🇮🇳", name:"Modern Indian History", key:"modern-history" },
-  { icon:"🌍", name:"World History", key:"world-history" },
-  { icon:"🎭", name:"Indian Culture", key:"indian-culture" },
-  { icon:"🗺️", name:"Physical Geography", key:"physical-geography" },
-  { icon:"🌏", name:"Indian Geography", key:"indian-geography" },
-  { icon:"👥", name:"Indian Society", key:"indian-society" },
-  { icon:"🌾", name:"Agriculture", key:"agriculture" },
-  { icon:"💹", name:"Indian Economy", key:"economy" },
-  { icon:"🏭", name:"Industry & Infrastructure", key:"industry-infrastructure" },
-  { icon:"🔬", name:"Science & Technology", key:"science-technology" },
-  { icon:"🛡️", name:"Defence & Security", key:"defence-security" },
-  { icon:"☢️", name:"Nuclear Energy & Technology", key:"nuclear-energy" },
-  { icon:"🧬", name:"Nano Technology", key:"nanotechnology" },
-  { icon:"📚", name:"Intellectual Property Rights", key:"ipr" },
-  { icon:"🌱", name:"Environment & Ecology", key:"environment-ecology" },
-  { icon:"🌡️", name:"Climate Change", key:"climate-change" },
-  { icon:"🚨", name:"Internal Security", key:"internal-security" },
-  { icon:"🌪️", name:"Disaster Management", key:"disaster-management" },
-  { icon:"⚖️", name:"Ethics, Integrity & Aptitude", key:"ethics" },
-  { icon:"🧠", name:"Applied Ethics", key:"applied-ethics" },
-  { icon:"📝", name:"Essay", key:"essay" },
-  { icon:"📰", name:"Current Affairs & Important Information", key:"current-affairs" },
-];
+import { STUDY_MATERIAL_SUBJECTS } from "@/lib/study-material-subjects";
+
+const subjects = STUDY_MATERIAL_SUBJECTS;
 
 export default function StudyMaterialPage() {
   const router = useRouter();
