@@ -21,6 +21,9 @@ const emptyForm = () => ({
   source_path: "",
   source_name: "",
   source_mime: "",
+  source_path: "",
+  source_name: "",
+  source_mime: "",
   status: "draft",
 });
 
@@ -98,6 +101,7 @@ export default function CurrentAffairsAdmin() {
           sourcePath: form.source_path,
           sourceName: form.source_name,
           sourceMime: form.source_mime,
+          sourceText: form.source_text,
         }),
       });
       const data = await response.json();
