@@ -1026,3 +1026,5 @@ export const medievalHistorySourceInfo = {
   ],
   note: "The uploaded 164-page PDF is the primary source. This structured module is an exam-oriented layer over that source; it must not be treated as a substitute for the complete source text. Source-supported terminology and chapter organization are retained."
 };
+
+export { medievalHistoryFigureReferences, medievalHistorySourceCoverage } from "./medieval-history-source-index";
