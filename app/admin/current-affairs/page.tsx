@@ -204,6 +204,9 @@ export default function CurrentAffairsAdmin() {
       mains_angle: item.mains_angle || "",
       keywords: item.keywords || "",
       source_text: item.source_text || "",
+      source_path: item.source_path || "",
+      source_name: item.source_name || "",
+      source_mime: item.source_mime || "",
       status: item.status || "draft",
     });
     setMessage("");
