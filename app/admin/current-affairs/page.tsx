@@ -18,9 +18,6 @@ const emptyForm = () => ({
   mains_angle: "",
   keywords: "",
   source_text: "",
-  source_path: "",
-  source_name: "",
-  source_mime: "",
   status: "draft",
 });
 
@@ -34,7 +31,6 @@ export default function CurrentAffairsAdmin() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
 
   async function auth() {
     const { data: { session } } = await supabase.auth.getSession();
@@ -95,9 +91,6 @@ export default function CurrentAffairsAdmin() {
         },
         body: JSON.stringify({
           subject: form.subject,
-          sourcePath: form.source_path,
-          sourceName: form.source_name,
-          sourceMime: form.source_mime,
           sourceText: form.source_text,
         }),
       });
@@ -145,9 +138,6 @@ export default function CurrentAffairsAdmin() {
         mains_angle: form.mains_angle || null,
         keywords: form.keywords || null,
         source_text: form.source_text || null,
-        source_path: form.source_path || null,
-        source_name: form.source_name || null,
-        source_mime: form.source_mime || null,
         status,
         created_by: user.id,
         updated_at: new Date().toISOString(),
@@ -201,9 +191,6 @@ export default function CurrentAffairsAdmin() {
       mains_angle: item.mains_angle || "",
       keywords: item.keywords || "",
       source_text: item.source_text || "",
-      source_path: item.source_path || "",
-      source_name: item.source_name || "",
-      source_mime: item.source_mime || "",
       status: item.status || "draft",
     });
     setMessage("");
@@ -252,49 +239,22 @@ export default function CurrentAffairsAdmin() {
           </label>
 
           <label className="ca-field">
-            <span>Upload Source PDF / Image</span>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
-              disabled={uploading || generating}
-              onChange={async e => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                setUploading(true); setError(""); setMessage("");
-                try {
-                  if (!["application/pdf","image/jpeg","image/png","image/webp"].includes(file.type)) throw new Error("Please upload a PDF, JPG, PNG or WEBP file.");
-                  if (file.size > 15 * 1024 * 1024) throw new Error("Please upload a file below 15 MB.");
-                  const { data: { user } } = await supabase.auth.getUser();
-                  if (!user) throw new Error("Admin session not found.");
-                  const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-                  const path = user.id + "/" + Date.now() + "-" + safe;
-                  const { error: upError } = await supabase.storage.from("current-affairs-sources").upload(path, file, { upsert: false, contentType: file.type });
-                  if (upError) throw new Error(upError.message);
-                  setForm((current:any)=>({...current,source_path:path,source_name:file.name,source_mime:file.type,source_text:""}));
-                  setMessage("Source uploaded. Now generate the AI note.");
-                } catch(e) { setError(e instanceof Error ? e.message : "Upload failed."); }
-                finally { setUploading(false); }
-              }}
-            />
-          </label>
-          {form.source_name && <div className="ca-uploaded">📄 <strong>{form.source_name}</strong><span>Ready for AI</span></div>}
-          <label className="ca-field">
-            <span>Optional source text (fallback)</span>
+            <span>Paste Current Affairs / Source Material</span>
             <textarea
               className="ca-source"
               value={form.source_text}
               onChange={e => setField("source_text", e.target.value)}
-              placeholder="Optional: paste text if you do not have a PDF or image."
+              placeholder="Paste newspaper article, PDF text, government release or other source material here..."
             />
           </label>
 
           <button
             className="ca-generate"
             type="button"
-            disabled={generating || uploading || (!form.source_path && !form.source_text.trim())}
+            disabled={generating || !form.source_text.trim()}
             onClick={generate}
           >
-            {generating ? "Generating Professional Notes..." : "✨ Generate Professional AI Notes"}
+            {generating ? "Generating AI Notes..." : "✨ Generate AI Notes"}
           </button>
         </section>
 
@@ -358,7 +318,7 @@ export default function CurrentAffairsAdmin() {
       <style jsx>{`
         .ca-admin{max-width:1050px;margin:auto}
         .ca-generator,.ca-review,.ca-library{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:var(--radius-md);background:#fff}
-        .ca-generator{background:#f8fbfe}.ca-uploaded{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px dashed #9bb7d4;border-radius:9px;background:#eef6ff;margin:8px 0 12px;color:#173f5f}.ca-uploaded span{margin-left:auto;color:#16715e;font-size:11px;font-weight:800}
+        .ca-generator{background:#f8fbfe}
         .ca-section-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
         .ca-section-title>div{display:grid;gap:3px}.ca-section-title span{color:var(--muted);font-size:12px}
         .ca-field{display:grid;gap:6px;margin:10px 0;font-size:13px;font-weight:700}.ca-field span{color:var(--muted);font-size:11px}
