@@ -15,6 +15,7 @@ import { polityJudicialLocalDetailedSections } from "@/lib/polity-judicial-local
 import { polityPart2DetailedSections } from "@/lib/polity-part2-detailed";
 import { polityPart2Chapters40to54DetailedSections } from "@/lib/polity-part2-chapters40-54-detailed";
 import { fundamentalRightsSections } from "@/lib/fundamental-rights-complete";
+import { medievalHistorySections } from "@/lib/medieval-history-complete";
 
 const subjects:Record<string,string>={
  "polity":"Indian Polity","governance":"Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
@@ -29,7 +30,8 @@ export default function StudyMaterialSubjectPage(){
   ? [...polityFoundationDetailedSections,...polityExecutiveAndDpspDetailedSections,...fundamentalRightsSections,...polityParliamentJudiciaryDetailedSections,...polityJudicialLocalDetailedSections,...polityPart2DetailedSections,...polityPart2Chapters40to54DetailedSections]
   : subjectKey==="governance"?governanceSections
   : subjectKey==="governance"?governanceSections.map(s=>{const e=governanceComprehensiveEnhancements[s.id];return e?{...s,...e,facts:[...(s.facts||[]),...(e.facts||[])]}:s})
-  : subjectKey==="ancient-history"?ancientHistorySections:[];
+  : subjectKey==="ancient-history"?ancientHistorySections
+  : subjectKey==="medieval-history"?medievalHistorySections:[];
  const [loading,setLoading]=useState(true),[active,setActive]=useState(sections[0]?.id||"");
  const [chapterOpen,setChapterOpen]=useState(false),[topicsOpen,setTopicsOpen]=useState(false);
  const [searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(""),[nightMode,setNightMode]=useState(false);
