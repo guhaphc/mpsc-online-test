@@ -8,7 +8,7 @@ export type MedievalHistorySourceChapter = {
 
 export const medievalHistorySource = {
   file: "MEDIEVAL HISTORY.pdf",
-  sourceVersion: "uploaded 2026-09-20",
+  sourceVersion: "uploaded 2026-09-20 • integrated build 2026-09-21",
   pdfPages: 164,
   printedContentPages: "1–162",
   contentsPage: 1,
