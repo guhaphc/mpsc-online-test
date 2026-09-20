@@ -110,7 +110,7 @@ export const medievalHistoryFigureReferences: MedievalFigureReference[] = [
 export const medievalHistorySourceCoverage = {
   pdfPages: 164,
   historicalContentPages: "1–162",
-  structuredSectionCount: 64,
+  structuredSectionCount: 71,
   figureReferenceCount: medievalHistoryFigureReferences.length,
   chapters: 9,
   note: "Figure descriptions preserve the source's figure numbering and broad subject. They are references for study organization, not replacements for the original visual figures."
