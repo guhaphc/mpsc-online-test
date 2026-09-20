@@ -1024,7 +1024,7 @@ export const medievalHistorySourceInfo = {
     { chapter: 8, title: "The Marathas and Other Provincial Kingdoms", pdfPages: "135–149", printedPages: "134–148" },
     { chapter: 9, title: "Bhakti and Sufi Movements", pdfPages: "150–163", printedPages: "149–162" }
   ],
-  note: "The uploaded 164-page PDF is the primary source. This structured module is an exam-oriented layer over that source; it must not be treated as a substitute for the complete source text. Source-supported terminology and chapter organization are retained."
+  note: "Primary source: uploaded 164-page MEDIEVAL HISTORY.pdf. The structured sections above are the student study layer; source indexing is maintained separately so source coverage is not mistaken for a complete transcription."
 };
 
 export { medievalHistoryFigureReferences, medievalHistorySourceCoverage } from "./medieval-history-source-index";
