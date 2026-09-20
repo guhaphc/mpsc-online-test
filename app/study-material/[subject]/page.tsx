@@ -17,13 +17,7 @@ import { fundamentalRightsSections } from "@/lib/fundamental-rights-complete";
 
 const subjects:Record<string,string>={
  "polity":"Indian Polity","governance":"Governance","ancient-history":"Ancient History","medieval-history":"Medieval History",
- "modern-history":"Modern Indian History","world-history":"World History","indian-culture":"Indian Culture",
- "physical-geography":"Physical Geography","indian-geography":"Indian Geography","indian-society":"Indian Society",
- "agriculture":"Agriculture","economy":"Indian Economy","industry-infrastructure":"Industry & Infrastructure",
- "science-technology":"Science & Technology","defence-security":"Defence & Security","nuclear-energy":"Nuclear Energy & Technology",
- "nanotechnology":"Nano Technology","ipr":"Intellectual Property Rights","environment-ecology":"Environment & Ecology",
- "climate-change":"Climate Change","internal-security":"Internal Security","disaster-management":"Disaster Management",
- "ethics":"Ethics, Integrity & Aptitude","applied-ethics":"Applied Ethics","essay":"Essay"
+ "modern-history":"Modern Indian History","world-history":"World History","indian-culture":"Indian Culture","physical-geography":"Physical Geography","indian-geography":"Indian Geography","indian-society":"Indian Society","agriculture":"Agriculture","economy":"Indian Economy","industry-infrastructure":"Industry & Infrastructure","science-technology":"Science & Technology","defence-security":"Defence & Security","nuclear-energy":"Nuclear Energy & Technology","nanotechnology":"Nano Technology","ipr":"Intellectual Property Rights","environment-ecology":"Environment & Ecology","climate-change":"Climate Change","internal-security":"Internal Security","disaster-management":"Disaster Management","ethics":"Ethics, Integrity & Aptitude","applied-ethics":"Applied Ethics","essay":"Essay","current-affairs":"Current Affairs & Important Information"
 };
 
 type Section={id:string;chapter?:string;title:string;subtitle:string;body:string[];facts?:string[];subtopics?:{title:string;points:string[]}[]};
