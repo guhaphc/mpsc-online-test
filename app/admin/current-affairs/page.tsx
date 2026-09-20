@@ -21,9 +21,6 @@ const emptyForm = () => ({
   source_path: "",
   source_name: "",
   source_mime: "",
-  source_path: "",
-  source_name: "",
-  source_mime: "",
   status: "draft",
 });
 
