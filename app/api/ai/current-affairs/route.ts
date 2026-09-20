@@ -85,10 +85,18 @@ export async function POST(request:NextRequest){
   const sb=await requireAdmin(request); const body=await request.json(); const subject=String(body.subject||"").trim(); const sourcePath=String(body.sourcePath||"").trim(); const sourceName=String(body.sourceName||"source").trim(); const sourceMime=String(body.sourceMime||"").trim(); const sourceText=String(body.sourceText||"").trim();
   if(!subject) return NextResponse.json({error:"Select a subject."},{status:400});
   if(!sourcePath && sourceText.length<80) return NextResponse.json({error:"Upload a PDF/image or provide source text."},{status:400});
-  if(!["application/pdf","image/jpeg","image/png","image/webp"].includes(sourceMime)) return NextResponse.json({error:"Only PDF, JPG, PNG and WEBP files are supported."},{status:400});
-  const {data:file,error}=await sb.storage.from("current-affairs-sources").download(sourcePath); if(error||!file) throw new Error(error?.message||"Unable to read uploaded source.");
-  const bytes=Buffer.from(await file.arrayBuffer()); if(bytes.length>15*1024*1024) throw new Error("Source file is too large. Please upload a file below 15 MB.");
-  const generated=await gemini(subject,{mimeType:sourceMime,data:bytes.toString("base64")},sourceName); const clean=(v:unknown)=>String(v||"").trim();
+  let generated:any;
+  if(sourcePath){
+    if(!["application/pdf","image/jpeg","image/png","image/webp"].includes(sourceMime)) return NextResponse.json({error:"Only PDF, JPG, PNG and WEBP files are supported."},{status:400});
+    const {data:file,error}=await sb.storage.from("current-affairs-sources").download(sourcePath);
+    if(error||!file) throw new Error(error?.message||"Unable to read uploaded source.");
+    const bytes=Buffer.from(await file.arrayBuffer());
+    if(bytes.length>15*1024*1024) throw new Error("Source file is too large. Please upload a file below 15 MB.");
+    generated=await gemini(subject,{mimeType:sourceMime,data:bytes.toString("base64")},sourceName,"");
+  }else{
+    generated=await gemini(subject,null,sourceName,sourceText);
+  }
+  const clean=(v:unknown)=>String(v||"").trim();
   return NextResponse.json({...generated,title:clean(generated.title),topic:clean(generated.topic),summary:clean(generated.summary),content:clean(generated.content),prelims_points:clean(generated.prelims_points),mains_angle:clean(generated.mains_angle),keywords:clean(generated.keywords),source_path:sourcePath,source_name:sourceName,source_mime:sourceMime,model:MODEL});
  }catch(error){console.error("Current affairs generation error",error);return NextResponse.json({error:error instanceof Error?error.message:"Current affairs generation failed."},{status:500});}
 }
