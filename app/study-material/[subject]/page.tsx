@@ -53,10 +53,11 @@ export default function StudyMaterialSubjectPage(){
  const completedCount=done.filter(id=>sections.some(s=>s.id===id)).length;
  const progress=Math.round(completedCount/Math.max(sections.length,1)*100);
 
+ useEffect(()=>{if(subjectKey==="current-affairs"&&sections[0]?.id&&!active)setActive(sections[0].id);},[subjectKey,sections.length,active]);
  useEffect(()=>{try{const saved=localStorage.getItem(`study-progress-${subjectKey}`);if(saved)setDone(JSON.parse(saved));}catch{}},[subjectKey]);
  useEffect(()=>{try{localStorage.setItem(`study-progress-${subjectKey}`,JSON.stringify(done));}catch{}},[done,subjectKey]);
  useEffect(()=>{(async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user){router.replace("/");return;}const {data:profile}=await supabase.from("mpsc_profiles").select("role,access_status").eq("id",user.id).single();if(profile?.role==="admin"&&profile?.access_status==="approved"){router.replace("/admin");return;}if(profile?.access_status!=="approved"){router.replace("/pending");return;}if(subjectKey!=="current-affairs")setLoading(false);})();},[router]);
- useEffect(()=>{(async()=>{if(subjectKey!=="current-affairs")return;setCurrentAffairLoading(true);const {data,error}=await supabase.from("current_affairs").select("*").eq("status","published").order("published_date",{ascending:false}).order("created_at",{ascending:false});if(!error)setCurrentAffairItems((data||[]) as CurrentAffair[]);setCurrentAffairLoading(false);})();},[subjectKey]);
+ useEffect(()=>{(async()=>{if(subjectKey!=="current-affairs")return;setCurrentAffairLoading(true);const {data,error}=await supabase.from("current_affairs").select("*").eq("status","published").order("published_date",{ascending:false}).order("created_at",{ascending:false});if(!error)setCurrentAffairItems((data||[]) as CurrentAffair[]);setCurrentAffairLoading(false);setLoading(false);})();},[subjectKey]);
  useEffect(()=>{(async()=>{
    if(subjectKey!=="polity")return;
    const [a,b]=await Promise.all([
