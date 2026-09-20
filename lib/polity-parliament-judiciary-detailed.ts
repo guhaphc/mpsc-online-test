@@ -60,9 +60,9 @@ subtopics:[
 {title:"Legislative Council",points:["Article 169 → creation/abolition by Parliament after required State Assembly resolution. Council is not compulsory in every State."]},
 {title:"Money Bill",points:["State Money Bill मध्ये Assembly ची primacy; Council ला मर्यादित कालावधी आणि recommendatory role."]},
 {title:"Governor and Bills",points:["Governor may assent, withhold assent, return a non-Money Bill for reconsideration or reserve a bill for President in constitutionally specified situations."]},
-{title:"Accountability",points:["Questions, debates, motions, committees आणि budgetary control ही State executive accountability ची साधने आहेत."]}
+{title:"Accountability",points:["Questions, debates, motions, committees आणि budgetary control ही State executive accountability ची साधने आहेत."]},{title:"Women’s Reservation",points:["106th Amendment, 2023 → Lok Sabha, State Legislative Assemblies आणि Delhi Legislative Assembly मध्ये one-third reservation framework; implementation संबंधित constitutional delimitation conditions शी जोडलेली आहे."]}
 ],
-facts:["Article 168 → State Legislature","Assembly → directly elected","Council → permanent revising chamber","Article 169 → creation/abolition of Legislative Council","Governor → integral part of State Legislature","Money Bill → Assembly primacy"]
+facts:["Article 168 → State Legislature","Assembly → directly elected","Council → permanent revising chamber","Article 169 → creation/abolition of Legislative Council","Governor → integral part of State Legislature","Money Bill → Assembly primacy","106th Amendment, 2023 → women’s reservation framework"]
 },
 {
 id:"p1-21",part:"Part 1",chapter:"21 • Supreme Court",title:"भारताचे सर्वोच्च न्यायालय",subtitle:"Articles 124–147 • संविधानाचे संरक्षण, Fundamental Rights आणि सर्वोच्च अपीलीय न्यायालय",
