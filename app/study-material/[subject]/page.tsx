@@ -71,10 +71,6 @@ export default function StudyMaterialSubjectPage(){
 
  useEffect(()=>{
   const clear=()=>setHighlightAction(null);
-  const getBlock=(node:Node|null)=>{
-   let el=node instanceof Element?node:node?.parentElement;
-   return el?.closest("[data-highlight-block]") as HTMLElement|null;
-  };
   const selectionBlocks=()=>{
    const sel=window.getSelection();
    if(!sel||sel.rangeCount===0||sel.isCollapsed||!notesRef.current)return null;
@@ -182,8 +178,7 @@ export default function StudyMaterialSubjectPage(){
    const data=await response.json();if(!response.ok)throw new Error(data.error||"AI analysis failed.");setAiAnalysis(String(data.analysis||""));
   }catch(e){setAiError(e instanceof Error?e.message:"AI analysis failed.");}finally{setAiLoading(false);}
  }
- const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\ const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");
- const highlight=(text:string)=>{const q=query.trim().toLowerCase();if(!q)return text;return text.split(new RegExp(`(${escapeRegex(q)})`,"gi")).map((p,i)=>p.toLowerCase()===q?<mark key={i}>{p}</mark>:p);};");
+ const escapeRegex=(v:string)=>v.replace(/[.*+?^()|[\]\\]/g,"\\$&");
  const renderSelectableText=(text:string,blockKey:string)=>{
   const ranges=highlights.filter(h=>h.block_key===blockKey).sort((a,b)=>a.start_offset-b.start_offset);
   const parts:Array<{text:string;highlight?:string}>=[]; let cursor=0;
