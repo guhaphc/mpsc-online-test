@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const MODEL=process.env.GEMINI_TRANSLATION_MODEL||"gemini-3.1-pro-preview";
+const MODEL=process.env.GEMINI_MODEL||"gemini-3.1-flash-lite";
 const supabaseUrl=process.env.NEXT_PUBLIC_SUPABASE_URL||"https://nijhvrddhkokfesyjzoq.supabase.co";
 const supabaseKey=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||"sb_publishable_1UIsEp5bqw4Rpvo59EdDNQ_pHAZcRZL";
 const KEY=process.env.GEMINI_API_KEY!;
