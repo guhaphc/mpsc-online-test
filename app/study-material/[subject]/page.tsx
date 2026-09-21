@@ -48,7 +48,8 @@ export default function StudyMaterialSubjectPage(){
  const chapters=useMemo(()=>Array.from(new Set(sections.map(s=>s.chapter||"General"))),[sections]);
  const currentChapter=current?.chapter||"General";
  const chapterSections=displaySections.filter(s=>(s.chapter||"General")===currentChapter);
- const sectionSearchText=(s:Section)=>(s.title+" "+s.subtitle+" "+s.body.join("\n")+" "+(s.subtopics||[]).map(x=>x.title+" "+x.points.join("\n")).join("\n")+" "+(s.facts||[]).join("\n"));\n const filtered=useMemo(()=>{const q=query.trim().toLowerCase();if(!q)return displaySections;return displaySections.filter(s=>sectionSearchText(s).toLowerCase().includes(q));},[query,displaySections]);
+ const sectionSearchText=(s:Section)=>(s.title+" "+s.subtitle+" "+s.body.join("\n")+" "+(s.subtopics||[]).map(x=>x.title+" "+x.points.join("\n")).join("\n")+" "+(s.facts||[]).join("\n"));
+ const filtered=useMemo(()=>{const q=query.trim().toLowerCase();if(!q)return displaySections;return displaySections.filter(s=>sectionSearchText(s).toLowerCase().includes(q));},[query,displaySections]);
  const completedCount=done.filter(id=>sections.some(s=>s.id===id)).length;
  const progress=Math.round(completedCount/Math.max(sections.length,1)*100);
 
