@@ -210,41 +210,6 @@ export default function AdminPage() {
             Logout
           </button>
         </div>
-
-        <div className="admin-tools">
-          <div>
-            <strong>Bulk AI Study Notes</strong>
-            <span>
-              Generate remaining syllabus-linked draft notes by stage, paper, or subject with progress tracking.
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => router.push("/admin/notes/bulk")}
-          >
-            Bulk Generator
-          </button>
-        </div>
-
-        <div className="admin-tools">
-          <div>
-            <strong>AI Study Notes</strong>
-            <span>
-              Create syllabus-linked notes, add references, generate AI drafts, review and publish.
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => router.push("/admin/notes")}
-          >
-            Manage AI Notes
-          </button>
-        </div>
-
         <div className="admin-tools">
           <div>
             <strong>Test management</strong>
@@ -261,24 +226,6 @@ export default function AdminPage() {
             Manage Tests
           </button>
         </div>
-
-        <div className="admin-tools">
-          <div>
-            <strong>Premium management</strong>
-            <span>
-              Activate, disable, and manage Premium Question Bank access.
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => router.push("/admin/premium")}
-          >
-            Manage Premium
-          </button>
-        </div>
-
         <div className="admin-tools">
           <div>
             <strong>Current Affairs & Important Information</strong>

@@ -1548,7 +1548,7 @@ export default function AdminTestsPage() {
 
       setSuccess(
         question.status === "published"
-          ? "Model answer saved and is now available in the Premium Question Bank."
+          ? "Model answer saved and is now available in the published test."
           : "Model answer saved successfully."
       );
       setProgress("");

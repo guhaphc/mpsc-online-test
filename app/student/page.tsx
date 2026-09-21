@@ -52,14 +52,6 @@ export default function StudentPage() {
             <strong>📚 Subjects</strong><span>Study MPSC/UPSC subjects</span>
           </button>
 
-          <button type="button" className="dashboard-item" onClick={() => router.push("/notes")}>
-            <strong>📖 AI Study Notes</strong><span>Syllabus-linked notes with AI-powered learning</span>
-          </button>
-
-          <button type="button" className="dashboard-item" onClick={() => router.push("/premium")}>
-            <strong>👑 Premium Question Bank</strong><span>Access premium questions and printable study material</span>
-          </button>
-
           <button type="button" className="dashboard-item" onClick={() => router.push("/tests")}>
             <strong>📝 Tests</strong><span>Practice objective and descriptive tests</span>
           </button>
