@@ -64,6 +64,10 @@ export default function StudentPage() {
             <strong>✍️ Mains Answer Writing</strong><span>Practice UPSC/MPSC descriptive answers</span>
           </button>
 
+          <button type="button" className="dashboard-item" onClick={() => router.push("/student/custom-mains")}>
+            <strong>🧠 Upload Your Own Mains Question</strong><span>Create your own question, upload handwritten answers, and get rubric-based evaluation</span>
+          </button>
+
           <button type="button" className="dashboard-item" onClick={() => router.push("/ai-evaluation")}>
             <strong>🤖 AI Evaluation</strong><span>Get marks and detailed feedback</span>
           </button>
