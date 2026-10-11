@@ -175,3 +175,46 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not submit your answer." }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request: NextRequest) {
+  const context = await getStudentContext(request);
+  if (!context.ok) return context.response;
+
+  try {
+    const body = await request.json();
+    const submissionId = String(body.submission_id || "");
+    const answerText = String(body.answer_text || "").trim();
+    if (!/^[0-9a-f-]{36}$/i.test(submissionId)) {
+      return NextResponse.json({ error: "A valid submission ID is required." }, { status: 400 });
+    }
+    if (!answerText || answerText.length > 50000) {
+      return NextResponse.json({ error: "Transcription must contain 1–50,000 characters." }, { status: 400 });
+    }
+
+    const { data: submission, error: submissionError } = await context.adminClient
+      .from("mpsc_student_custom_mains_submissions")
+      .select("id,status,answer_type")
+      .eq("id", submissionId)
+      .eq("user_id", context.user.id)
+      .single();
+
+    if (submissionError || !submission) return NextResponse.json({ error: "Submission not found." }, { status: 404 });
+    if (submission.status === "evaluated") {
+      return NextResponse.json({ error: "An evaluated answer cannot be edited. Create a new submission to try again." }, { status: 409 });
+    }
+
+    const words = countWords(answerText);
+    const { error: updateError } = await context.adminClient
+      .from("mpsc_student_custom_mains_submissions")
+      .update({ answer_text: answerText, word_count: words, status: "submitted", updated_at: new Date().toISOString() })
+      .eq("id", submissionId)
+      .eq("user_id", context.user.id);
+
+    if (updateError) return NextResponse.json({ error: "Could not save the corrected transcription." }, { status: 500 });
+    return NextResponse.json({ success: true, submission_id: submissionId, word_count: words });
+  } catch (error) {
+    console.error("Custom Mains transcription update failed:", error);
+    return NextResponse.json({ error: "Could not save the transcription." }, { status: 500 });
+  }
+}
