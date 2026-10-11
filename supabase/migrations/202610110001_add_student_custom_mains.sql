@@ -1,18 +1,18 @@
--- Custom student-authored Mains questions and isolated answer submissions.
--- The model answer and rubric are intentionally protected by RLS with no client policies.
--- Access is limited to server routes using the Supabase service role after validating the student session.
+-- Reference migration for the isolated student-created Mains workflow.
+-- The live schema was applied separately before application code was added.
+-- Model answers and marking rubrics are server-only; RLS is enabled without client policies.
 
 create table if not exists public.mpsc_student_custom_mains_questions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   subject text,
   question_text text not null,
-  marks integer not null check (marks between 1 and 100),
-  word_limit integer check (word_limit is null or word_limit between 25 and 5000),
+  marks numeric not null check (marks > 0 and marks <= 100),
+  word_limit integer not null default 150 check (word_limit > 0 and word_limit <= 5000),
   source_filename text,
   model_answer text not null,
   evaluation_rubric jsonb not null,
-  status text not null default 'active',
+  status text not null default 'ready' check (status = any (array['ready'::text, 'archived'::text])),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -21,11 +21,12 @@ create table if not exists public.mpsc_student_custom_mains_submissions (
   id uuid primary key default gen_random_uuid(),
   custom_question_id uuid not null references public.mpsc_student_custom_mains_questions(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  answer_type text not null check (answer_type in ('typed', 'handwritten')),
+  answer_type text not null default 'typed' check (answer_type = any (array['typed'::text, 'handwritten'::text])),
   answer_text text,
-  word_count integer not null default 0,
-  status text not null default 'submitted' check (status in ('submitted', 'evaluated')),
+  word_count integer not null default 0 check (word_count >= 0),
+  status text not null default 'submitted' check (status = any (array['submitted'::text, 'evaluated'::text])),
   evaluation jsonb,
+  submitted_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -36,10 +37,9 @@ create table if not exists public.mpsc_student_custom_mains_pages (
   user_id uuid not null references auth.users(id) on delete cascade,
   page_number integer not null check (page_number > 0),
   storage_path text not null,
-  file_name text not null,
-  mime_type text not null,
-  created_at timestamptz not null default now(),
-  unique (submission_id, page_number)
+  file_name text,
+  mime_type text,
+  created_at timestamptz not null default now()
 );
 
 create index if not exists idx_student_custom_mains_questions_user_created
