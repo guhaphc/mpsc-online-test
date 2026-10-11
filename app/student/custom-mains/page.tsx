@@ -260,17 +260,18 @@ export default function CustomMainsPage() {
   if (loading) return <main className="page"><section className="card"><p>Loading your custom Mains workspace…</p></section></main>;
 
   return (
-    <main className="page">
-      <section className="card" style={{ width: "min(100%, 1000px)", margin: "0 auto" }}>
+    <main className="page custom-mains-page">
+      <section className="card custom-mains-shell" style={{ width: "min(100%, 1000px)", margin: "0 auto" }}>
         <button type="button" className="secondary" onClick={() => router.push("/student")}>← Student Dashboard</button>
-        <div className="brand" style={{ marginTop: 18 }}>MPSC / UPSC · MAINS PRACTICE</div>
-        <h1>Upload Your Own Mains Question</h1>
-        <p className="muted">Create a question, submit a typed or handwritten answer, and receive detailed evaluation against a marking guide saved before your answer is assessed.</p>
+        <div className="brand custom-mains-eyebrow" style={{ marginTop: 18 }}>MPSC / UPSC · MAINS PRACTICE</div>
+        <h1 className="custom-mains-title">Upload Your Own Mains Question</h1>
+        <p className="muted custom-mains-intro">Create a question, submit a typed or handwritten answer, and receive detailed evaluation against a marking guide saved before your answer is assessed.</p>
+        <div className="custom-mains-steps" aria-label="Practice steps"><span>01&nbsp; Create question</span><span>02&nbsp; Write answer</span><span>03&nbsp; Review feedback</span></div>
 
         {error && <div role="alert" style={{ padding: 12, margin: "14px 0", borderRadius: 8, background: "#fff0f0", color: "#9b1c1c" }}>{error}</div>}
         {notice && <div role="status" style={{ padding: 12, margin: "14px 0", borderRadius: 8, background: "#edf8ef", color: "#176b31" }}>{notice}</div>}
 
-        <section style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 20 }}>
+        <section className="custom-mains-section" style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 20 }}>
           <h2 style={{ marginTop: 0 }}>1. Add your question</h2>
           <p className="muted">Type/paste the question or upload a PDF/image. AI prepares a model answer and marking rubric privately on the server.</p>
           <form onSubmit={createQuestion}>
@@ -289,7 +290,7 @@ export default function CustomMainsPage() {
           </form>
         </section>
 
-        <section style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 18 }}>
+        <section className="custom-mains-section" style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 18 }}>
           <h2 style={{ marginTop: 0 }}>2. Submit your answer</h2>
           {questions.length === 0 ? <p className="muted">Create a question above to begin.</p> : <>
             <label htmlFor="custom-question-select">Choose your question</label>
@@ -327,7 +328,7 @@ export default function CustomMainsPage() {
           </>}
         </section>
 
-        {submissions.length > 0 && <section style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 18 }}>
+        {submissions.length > 0 && <section className="custom-mains-section" style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 18 }}>
           <h2 style={{ marginTop: 0 }}>3. Your submissions & results</h2>
           <div style={{ display: "grid", gap: 12 }}>
             {submissions.map((submission) => {
@@ -348,7 +349,7 @@ export default function CustomMainsPage() {
           </div>
         </section>}
 
-        {activeEvaluation && <section style={{ border: "2px solid var(--accent, #3559e0)", borderRadius: 12, padding: 18, marginTop: 18 }}>
+        {activeEvaluation && <section className="custom-mains-section custom-mains-evaluation" style={{ border: "2px solid var(--accent, #3559e0)", borderRadius: 12, padding: 18, marginTop: 18 }}>
           <h2 style={{ marginTop: 0 }}>Evaluation result</h2>
           <div style={{ fontSize: 28, fontWeight: 750 }}>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks</div>
           <p className="muted">{activeEvaluation.word_count} words{activeEvaluation.word_limit ? ` · Word limit: ${activeEvaluation.word_limit}` : ""} · AI confidence: {Math.round(activeEvaluation.evaluation_confidence * 100)}%</p>
