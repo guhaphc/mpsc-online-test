@@ -85,6 +85,8 @@ export default function CustomMainsPage() {
   const [cropTarget, setCropTarget] = useState<"question" | "answer" | null>(null);
   const [cropIndex, setCropIndex] = useState(0);
   const [cropMargins, setCropMargins] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
+  const [cropDrag, setCropDrag] = useState<{ edges: string[]; startX: number; startY: number; initial: typeof cropMargins } | null>(null);
+  const [cropRotation, setCropRotation] = useState(0);
   const [cropBusy, setCropBusy] = useState(false);
   const [cropPreviewUrl, setCropPreviewUrl] = useState("");
 
@@ -401,22 +403,43 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
     setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 });
   }
 
+  function updateCropFromPointer(event: React.PointerEvent<HTMLElement>, edges: string[], startX: number, startY: number, initial: typeof cropMargins) {
+    const imageElement = document.getElementById("crop-editor-image");
+    if (!imageElement) return;
+    const bounds = imageElement.getBoundingClientRect();
+    const dx = ((event.clientX - startX) / bounds.width) * 100;
+    const dy = ((event.clientY - startY) / bounds.height) * 100;
+    setCropMargins({
+      top: Math.max(0, Math.min(80, initial.top + (edges.includes("top") ? dy : 0))),
+      right: Math.max(0, Math.min(80, initial.right + (edges.includes("right") ? -dx : 0))),
+      bottom: Math.max(0, Math.min(80, initial.bottom + (edges.includes("bottom") ? -dy : 0))),
+      left: Math.max(0, Math.min(80, initial.left + (edges.includes("left") ? dx : 0))),
+    });
+  }
+
+  function beginCropDrag(event: React.PointerEvent<HTMLElement>, edges: string[]) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setCropDrag({ edges, startX: event.clientX, startY: event.clientY, initial: cropMargins });
+  }
+
   async function applyCrop() {
-    if (!cropFile || !cropTarget || cropFile.type === "application/pdf") return;
+    if (!cropFile || !cropPreviewUrl) return;
     setCropBusy(true);
     try {
-      const image = new Image();
       const sourceUrl = URL.createObjectURL(cropFile);
       try {
+        const image = new Image();
         image.src = sourceUrl;
         await new Promise<void>((resolve, reject) => {
           image.onload = () => resolve();
           image.onerror = () => reject(new Error("Could not load this image for cropping."));
         });
-        const left = Math.min(45, Math.max(0, cropMargins.left));
-        const right = Math.min(45, Math.max(0, cropMargins.right));
-        const top = Math.min(45, Math.max(0, cropMargins.top));
-        const bottom = Math.min(45, Math.max(0, cropMargins.bottom));
+        const left = Math.min(80, Math.max(0, cropMargins.left));
+        const right = Math.min(80, Math.max(0, cropMargins.right));
+        const top = Math.min(80, Math.max(0, cropMargins.top));
+        const bottom = Math.min(80, Math.max(0, cropMargins.bottom));
         if (left + right >= 95 || top + bottom >= 95) throw new Error("Keep a readable area of the image inside the crop.");
         const x = Math.round(image.naturalWidth * left / 100);
         const y = Math.round(image.naturalHeight * top / 100);
@@ -427,7 +450,17 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
         canvas.height = height;
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Could not prepare the cropped image.");
-        context.drawImage(image, x, y, width, height, 0, 0, width, height);
+        context.save();
+        if (cropRotation) {
+          canvas.width = height;
+          canvas.height = width;
+          context.translate(canvas.width / 2, canvas.height / 2);
+          context.rotate((cropRotation * Math.PI) / 180);
+          context.drawImage(image, x, y, width, height, -width / 2, -height / 2, width, height);
+        } else {
+          context.drawImage(image, x, y, width, height, 0, 0, width, height);
+        }
+        context.restore();
         const mime = cropFile.type === "image/png" ? "image/png" : cropFile.type === "image/webp" ? "image/webp" : "image/jpeg";
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mime, 0.94));
         if (!blob) throw new Error("Could not create the cropped image.");
@@ -435,7 +468,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
         const cropped = new File([blob], cropFile.name.replace(/\\.[^.]+$/, "") + "-cropped" + extension, { type: mime, lastModified: Date.now() });
         if (cropTarget === "question") setQuestionFile(cropped);
         else setAnswerFiles((current) => current.map((file, index) => index === cropIndex ? cropped : file));
-        setNotice("Cropped image prepared. The original upload is not changed on your device; you can choose it again to reset.");
+        setNotice("Crop applied. You can reopen the editor to adjust the image again.");
         setCropTarget(null);
       } finally {
         URL.revokeObjectURL(sourceUrl);
@@ -565,14 +598,44 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
           </div>
         </details>}
 
-        {cropTarget && cropFile && <div role="dialog" aria-modal="true" aria-label="Crop uploaded image" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,.72)", display: "grid", placeItems: "center", padding: 12 }}>
-          <section className="card" style={{ width: "min(100%, 760px)", maxHeight: "92vh", overflow: "auto", padding: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}><div><h2 style={{ margin: 0 }}>Crop {cropTarget === "question" ? "question image" : `answer page ${cropIndex + 1}`}</h2><p className="muted">Adjust each edge to remove unwanted background. Keep all text, question numbers and instructions.</p></div><button type="button" className="secondary" onClick={closeCrop} disabled={cropBusy}>Close</button></div>
-            {cropPreviewUrl ? <div style={{ maxHeight: "42vh", overflow: "auto", background: "#eef2f7", padding: 8, textAlign: "center", borderRadius: 8 }}><img src={cropPreviewUrl} alt="Crop preview" style={{ display: "block", maxWidth: "100%", maxHeight: "40vh", margin: "0 auto", objectFit: "contain", clipPath: `inset(${cropMargins.top}% ${cropMargins.right}% ${cropMargins.bottom}% ${cropMargins.left}%)` }} /></div> : <p role="alert">Image preview unavailable. Please reselect the image.</p>}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, margin: "14px 0" }}>{(["top", "right", "bottom", "left"] as const).map((side) => <label key={side} style={{ display: "grid", gap: 5 }}>{side[0].toUpperCase() + side.slice(1)} edge: {cropMargins[side]}%<input type="range" min="0" max="45" value={cropMargins[side]} onChange={(event) => setCropMargins((current) => ({ ...current, [side]: Number(event.target.value) }))} /></label>)}</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" className="secondary" onClick={() => setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 })} disabled={cropBusy}>Reset crop</button><button type="button" className="primary" onClick={applyCrop} disabled={cropBusy || !cropPreviewUrl}>{cropBusy ? "Preparing crop…" : "Apply crop"}</button></div>
-            <p className="muted" style={{ marginBottom: 0, marginTop: 10 }}>Cropping removes margins; it does not sharpen blurry text. The cropped copy is used for OCR, and you can reselect the original file to reset.</p>
-          </section>
+        {cropTarget && cropFile && <div role="dialog" aria-modal="true" aria-label="Crop uploaded image" style={{ position: "fixed", inset: 0, zIndex: 2000, background: "#101827", display: "flex", flexDirection: "column", padding: "max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom))", color: "#fff" }}>
+          <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, minHeight: 48, flexShrink: 0 }}>
+            <button type="button" onClick={closeCrop} disabled={cropBusy} aria-label="Close crop editor" style={{ border: 0, color: "#fff", background: "transparent", fontSize: 26, padding: "4px 10px" }}>✕</button>
+            <div style={{ minWidth: 0, textAlign: "center" }}><strong style={{ display: "block", fontSize: 16 }}>Crop image</strong><small style={{ color: "#cbd5e1" }}>{cropTarget === "question" ? "Question image" : `Answer page ${cropIndex + 1}`}</small></div>
+            <button type="button" onClick={() => { setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 }); setCropRotation(0); }} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "8px 12px", color: "#fff", background: "#263449" }}>Reset</button>
+          </header>
+          <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", margin: "8px 0 12px", touchAction: "none" }}>
+            {cropPreviewUrl ? <div style={{ position: "relative", display: "inline-block", maxWidth: "96vw", maxHeight: "100%", lineHeight: 0, userSelect: "none", touchAction: "none" }}>
+              <img id="crop-editor-image" src={cropPreviewUrl} alt="Image to crop" draggable={false} style={{ display: "block", width: "auto", height: "auto", maxWidth: "96vw", maxHeight: "100%", objectFit: "contain", transform: `rotate(${cropRotation}deg)`, transformOrigin: "center" }} />
+              <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.48)", clipPath: `polygon(0 0, 100% 0, 100% ${100 - cropMargins.bottom}%, ${100 - cropMargins.right}% ${100 - cropMargins.bottom}%, ${100 - cropMargins.right}% ${cropMargins.top}%, ${cropMargins.left}% ${cropMargins.top}%, ${cropMargins.left}% ${100 - cropMargins.bottom}%, 0 ${100 - cropMargins.bottom}%)` }} />
+                <div style={{ position: "absolute", left: `${cropMargins.left}%`, right: `${cropMargins.right}%`, top: `${cropMargins.top}%`, bottom: `${cropMargins.bottom}%`, border: "2px solid #fff", boxShadow: "0 0 0 1px rgba(15,23,42,.75)", pointerEvents: "auto", touchAction: "none" }}
+                  onPointerMove={(event) => { if (cropDrag) updateCropFromPointer(event, cropDrag.edges, cropDrag.startX, cropDrag.startY, cropDrag.initial); }}
+                  onPointerUp={() => setCropDrag(null)} onPointerCancel={() => setCropDrag(null)}>
+                  {[
+                    { name: "top-left", edges: ["top", "left"], pos: { top: -8, left: -8, cursor: "nwse-resize" } },
+                    { name: "top", edges: ["top"], pos: { top: -5, left: "50%", transform: "translateX(-50%)", cursor: "ns-resize", width: 42, height: 10 } },
+                    { name: "top-right", edges: ["top", "right"], pos: { top: -8, right: -8, cursor: "nesw-resize" } },
+                    { name: "right", edges: ["right"], pos: { right: -5, top: "50%", transform: "translateY(-50%)", cursor: "ew-resize", width: 10, height: 42 } },
+                    { name: "bottom-right", edges: ["bottom", "right"], pos: { bottom: -8, right: -8, cursor: "nwse-resize" } },
+                    { name: "bottom", edges: ["bottom"], pos: { bottom: -5, left: "50%", transform: "translateX(-50%)", cursor: "ns-resize", width: 42, height: 10 } },
+                    { name: "bottom-left", edges: ["bottom", "left"], pos: { bottom: -8, left: -8, cursor: "nesw-resize" } },
+                    { name: "left", edges: ["left"], pos: { left: -5, top: "50%", transform: "translateY(-50%)", cursor: "ew-resize", width: 10, height: 42 } },
+                  ].map((handle) => <button key={handle.name} type="button" aria-label={`Adjust ${handle.name} crop edge`} onPointerDown={(event) => beginCropDrag(event, handle.edges)} style={{ position: "absolute", ...handle.pos, width: handle.pos.width || 18, height: handle.pos.height || 18, border: "2px solid #fff", borderRadius: handle.name.length > 5 && handle.name.includes("-") ? 4 : 7, background: "#2563eb", boxShadow: "0 1px 5px rgba(0,0,0,.6)", padding: 0, pointerEvents: "auto", touchAction: "none" }} />)}
+                  <div style={{ position: "absolute", left: "33.33%", right: "33.33%", top: 0, bottom: 0, borderLeft: "1px solid rgba(255,255,255,.55)", borderRight: "1px solid rgba(255,255,255,.55)", pointerEvents: "none" }} />
+                  <div style={{ position: "absolute", top: "33.33%", bottom: "33.33%", left: 0, right: 0, borderTop: "1px solid rgba(255,255,255,.55)", borderBottom: "1px solid rgba(255,255,255,.55)", pointerEvents: "none" }} />
+                </div>
+              </div>
+            </div> : <p role="alert">Image preview unavailable. Please reselect the image.</p>}
+          </div>
+          <footer style={{ flexShrink: 0, borderTop: "1px solid #334155", paddingTop: 10 }}>
+            <p style={{ color: "#cbd5e1", fontSize: 13, textAlign: "center", margin: "0 0 10px" }}>Drag the corner or side handles to frame the text. The area outside the frame will be removed.</p>
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 12 }}>
+              <button type="button" onClick={() => setCropRotation((current) => (current + 270) % 360)} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "9px 14px", color: "#fff", background: "#263449" }}>↶ Rotate 90°</button>
+              <button type="button" onClick={() => setCropRotation((current) => (current + 90) % 360)} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "9px 14px", color: "#fff", background: "#263449" }}>Rotate 90° ↻</button>
+            </div>
+            <button type="button" onClick={applyCrop} disabled={cropBusy || !cropPreviewUrl || cropMargins.left + cropMargins.right >= 95 || cropMargins.top + cropMargins.bottom >= 95} style={{ width: "100%", border: 0, borderRadius: 12, padding: "14px 18px", color: "#fff", background: "#2563eb", fontSize: 16, fontWeight: 700 }}>{cropBusy ? "Applying crop…" : "Apply Crop"}</button>
+          </footer>
         </div>}
 
         {activeEvaluation && <details open className="custom-mains-section custom-mains-evaluation custom-mains-accordion" style={{ marginTop: 14 }}>
