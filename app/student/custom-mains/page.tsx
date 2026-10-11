@@ -271,8 +271,9 @@ export default function CustomMainsPage() {
         {error && <div role="alert" style={{ padding: 12, margin: "14px 0", borderRadius: 8, background: "#fff0f0", color: "#9b1c1c" }}>{error}</div>}
         {notice && <div role="status" style={{ padding: 12, margin: "14px 0", borderRadius: 8, background: "#edf8ef", color: "#176b31" }}>{notice}</div>}
 
-        <section className="custom-mains-section" style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 20 }}>
-          <h2 style={{ marginTop: 0 }}>1. Add your question</h2>
+        <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 20 }} open>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">01</span><span><strong>Add your question</strong><small>Type a question or upload a PDF/image</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+          <div className="custom-mains-panel-content">
           <p className="muted">Type/paste the question or upload a PDF/image. AI prepares a model answer and marking rubric privately on the server.</p>
           <form onSubmit={createQuestion}>
             <label htmlFor="custom-subject">Subject (optional)</label>
@@ -288,10 +289,12 @@ export default function CustomMainsPage() {
             {questionFile && <p className="muted">Selected: {questionFile.name}</p>}
             <button className="primary" type="submit" disabled={working} style={{ marginTop: 16 }}>{working ? "Preparing question…" : "Create question & marking guide"}</button>
           </form>
-        </section>
+          </div>
+        </details>
 
-        <section className="custom-mains-section" style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 18 }}>
-          <h2 style={{ marginTop: 0 }}>2. Submit your answer</h2>
+        <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 14 }} open={questions.length > 0}>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">02</span><span><strong>Write your answer</strong><small>{questions.length ? "Choose a question and submit your response" : "Create a question first to unlock this step"}</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+          <div className="custom-mains-panel-content">
           {questions.length === 0 ? <p className="muted">Create a question above to begin.</p> : <>
             <label htmlFor="custom-question-select">Choose your question</label>
             <select id="custom-question-select" value={selectedQuestionId} onChange={(event) => { setSelectedQuestionId(event.target.value); setActiveEvaluation(null); }} style={{ width: "100%", marginBottom: 12 }}>
@@ -326,10 +329,12 @@ export default function CustomMainsPage() {
               <p className="muted">After OCR, choose the matching submission below to save corrections and evaluate it.</p>
             )}
           </>}
-        </section>
+          </div>
+        </details>
 
-        {submissions.length > 0 && <section className="custom-mains-section" style={{ border: "1px solid var(--border, #ddd)", borderRadius: 12, padding: 18, marginTop: 18 }}>
-          <h2 style={{ marginTop: 0 }}>3. Your submissions & results</h2>
+        {submissions.length > 0 && <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 14 }}>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">03</span><span><strong>Your submissions & results</strong><small>{submissions.length} submission{submissions.length === 1 ? "" : "s"} · Open to review feedback</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+          <div className="custom-mains-panel-content">
           <div style={{ display: "grid", gap: 12 }}>
             {submissions.map((submission) => {
               const question = questions.find((item) => item.id === submission.custom_question_id);
@@ -347,10 +352,12 @@ export default function CustomMainsPage() {
               </article>;
             })}
           </div>
-        </section>}
+          </div>
+        </details>}
 
-        {activeEvaluation && <section className="custom-mains-section custom-mains-evaluation" style={{ border: "2px solid var(--accent, #3559e0)", borderRadius: 12, padding: 18, marginTop: 18 }}>
-          <h2 style={{ marginTop: 0 }}>Evaluation result</h2>
+        {activeEvaluation && <details open className="custom-mains-section custom-mains-evaluation custom-mains-accordion" style={{ marginTop: 14 }}>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number custom-mains-number-gold">✓</span><span><strong>Evaluation result</strong><small>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks · Detailed feedback</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+          <div className="custom-mains-panel-content">
           <div style={{ fontSize: 28, fontWeight: 750 }}>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks</div>
           <p className="muted">{activeEvaluation.word_count} words{activeEvaluation.word_limit ? ` · Word limit: ${activeEvaluation.word_limit}` : ""} · AI confidence: {Math.round(activeEvaluation.evaluation_confidence * 100)}%</p>
           <h3>Criterion-wise marks</h3>
@@ -366,7 +373,8 @@ export default function CustomMainsPage() {
           <h3>Factual errors</h3>{activeEvaluation.factual_errors.length ? <ul>{activeEvaluation.factual_errors.map((item, index) => <li key={index}>{item}</li>)}</ul> : <p>None identified.</p>}
           <h3>Suggested answer framework</h3><p style={{ whiteSpace: "pre-wrap" }}>{activeEvaluation.answer_framework}</p>
           <h3>Improved model answer</h3><div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{activeEvaluation.improved_answer}</div>
-        </section>}
+          </div>
+        </details>}
       </section>
     </main>
   );
