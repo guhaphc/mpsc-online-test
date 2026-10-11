@@ -1042,3 +1042,52 @@ svg {
   .inline-actions { display: grid; grid-template-columns: 1fr; }.inline-actions .primary { width: 100%; }
   .admin-row-actions { justify-content: stretch; }.admin-row-actions > * { flex: 1; }
 }
+
+
+/* =========================================================
+   CUSTOM MAINS WORKSPACE — polished responsive study UI
+   ========================================================= */
+.custom-mains-page { align-items: flex-start; }
+.custom-mains-shell { width: min(100%, 1000px); margin: 0 auto; }
+.custom-mains-shell > .secondary { width: auto; min-height: 40px; }
+.custom-mains-eyebrow { display: inline-flex; align-items: center; padding: 7px 10px; border: 1px solid #e8d9b0; border-radius: 999px; background: #fff9e9; color: #755316; font-size: 11px; font-weight: 850; letter-spacing: .08em; }
+.custom-mains-title { max-width: 760px; margin: 12px 0 8px; font-size: clamp(27px, 4vw, 39px); line-height: 1.12; letter-spacing: -.035em; }
+.custom-mains-intro { max-width: 760px; margin: 0; font-size: 15px; line-height: 1.65; }
+.custom-mains-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 18px 0 4px; }
+.custom-mains-steps span { display: block; padding: 10px 11px; border: 1px solid #e1e8f0; border-radius: 10px; background: #f8fafc; color: #35465c; font-size: 12px; font-weight: 750; line-height: 1.35; }
+.custom-mains-section { min-width: 0; background: linear-gradient(180deg, #fff 0%, #fcfdff 100%); box-shadow: 0 6px 22px rgba(24, 45, 75, .045); }
+.custom-mains-section h2 { color: var(--ink, #172033); font-size: clamp(20px, 3vw, 25px); letter-spacing: -.025em; line-height: 1.25; }
+.custom-mains-section > p.muted { font-size: 14px; line-height: 1.6; }
+.custom-mains-section form { min-width: 0; }
+.custom-mains-section label { display: block; margin: 12px 0 6px; color: #263348; font-size: 14px; font-weight: 750; line-height: 1.4; }
+.custom-mains-section input:not([type="file"]):not([type="checkbox"]), .custom-mains-section select, .custom-mains-section textarea { display: block; width: 100%; max-width: 100%; min-width: 0; min-height: 46px; padding: 11px 13px; border: 1px solid #cfd8e5; border-radius: 10px; background: #fff; color: #172033; font: inherit; font-size: 16px; line-height: 1.45; box-sizing: border-box; box-shadow: 0 1px 2px rgba(15, 23, 42, .025); }
+.custom-mains-section textarea { min-height: 130px; resize: vertical; }
+.custom-mains-section textarea::placeholder, .custom-mains-section input::placeholder { color: #8a95a5; opacity: 1; }
+.custom-mains-section input:focus, .custom-mains-section select:focus, .custom-mains-section textarea:focus { outline: none; border-color: #315b87; box-shadow: 0 0 0 3px rgba(34, 78, 119, .12); }
+.custom-mains-section input[type="file"] { display: block; width: 100%; max-width: 100%; min-width: 0; padding: 11px; border: 1px dashed #aebdd0; border-radius: 10px; background: #f8fafc; color: #334155; font: inherit; font-size: 14px; box-sizing: border-box; }
+.custom-mains-section .primary { min-height: 48px; padding: 12px 17px; border-radius: 11px; font-weight: 800; line-height: 1.35; white-space: normal; }
+.custom-mains-section .secondary { min-height: 42px; border-radius: 10px; }
+.custom-mains-section button:disabled { cursor: wait; opacity: .68; }
+.custom-mains-section article { min-width: 0; background: #fff; box-shadow: 0 2px 8px rgba(24, 45, 75, .035); }
+.custom-mains-section article strong, .custom-mains-section article p { overflow-wrap: anywhere; }
+.custom-mains-section [role="group"] button { flex: 1 1 160px; }
+.custom-mains-section [role="alert"], .custom-mains-section [role="status"] { overflow-wrap: anywhere; line-height: 1.5; }
+.custom-mains-evaluation { border-color: #d7bd7b !important; background: linear-gradient(180deg, #fffdf7, #fff) !important; }
+@media (max-width: 600px) {
+  .custom-mains-page { padding: 10px; }
+  .custom-mains-shell { padding: 16px; }
+  .custom-mains-title { font-size: 29px; line-height: 1.15; }
+  .custom-mains-intro { font-size: 14px; }
+  .custom-mains-steps { gap: 6px; }
+  .custom-mains-steps span { padding: 9px 7px; font-size: 10.5px; text-align: center; }
+  .custom-mains-section { padding: 14px !important; border-radius: 13px !important; }
+  .custom-mains-section input:not([type="file"]):not([type="checkbox"]), .custom-mains-section select { min-height: 46px; }
+  .custom-mains-section textarea { min-height: 140px; }
+  .custom-mains-section .primary { width: 100%; }
+}
+@media (max-width: 360px) {
+  .custom-mains-page { padding: 7px; }
+  .custom-mains-shell { padding: 13px; }
+  .custom-mains-title { font-size: 26px; }
+  .custom-mains-steps span { font-size: 9.5px; }
+}
