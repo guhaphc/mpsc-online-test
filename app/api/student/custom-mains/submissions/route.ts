@@ -6,7 +6,7 @@ export const maxDuration = 60;
 
 const BUCKET = "mpsc-student-custom-mains";
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 const ocrSchema = {
   type: "OBJECT",
@@ -73,13 +73,19 @@ export async function POST(request: NextRequest) {
     if (answerText.length > 50000) {
       return NextResponse.json({ error: "Typed answer is too long." }, { status: 400 });
     }
-    if (files.length > 12) {
-      return NextResponse.json({ error: "Upload a maximum of 12 files/pages at a time." }, { status: 400 });
+    if (files.length > 4) {
+      return NextResponse.json({ error: "Upload a maximum of 4 image files/pages at a time. For longer answers, combine pages into one PDF." }, { status: 400 });
     }
+    let totalUploadBytes = 0;
     for (const file of files) {
+      totalUploadBytes += file.size;
       if (!ALLOWED_TYPES.has(file.type) || file.size > MAX_FILE_BYTES) {
-        return NextResponse.json({ error: "Each page must be a PDF, JPG, PNG, or WebP file up to 8 MB." }, { status: 400 });
+        return NextResponse.json({ error: "Each file must be a PDF, JPG, PNG, or WebP file up to 4 MB." }, { status: 400 });
       }
+    }
+    // Vercel serverless request bodies have a small platform limit; leave room for multipart form overhead.
+    if (totalUploadBytes > MAX_FILE_BYTES) {
+      return NextResponse.json({ error: "The combined upload must be 4 MB or smaller. For multiple pages, use a compressed multi-page PDF." }, { status: 413 });
     }
 
     const { data: saved, error: saveError } = await context.adminClient
