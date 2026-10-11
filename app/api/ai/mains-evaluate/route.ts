@@ -3,6 +3,19 @@ import { createClient } from "@supabase/supabase-js";
 
 const MODEL = "gemini-3.1-flash-lite";
 
+const CRITERION_NAMES = [
+  "relevance",
+  "content",
+  "analysis",
+  "structure",
+  "examples",
+  "conclusion"
+] as const;
+
+type CriterionName = (typeof CRITERION_NAMES)[number];
+
+type CriteriaScores = Record<CriterionName, number>;
+
 const evaluationSchema = {
   type: "object",
   properties: {
@@ -70,16 +83,17 @@ export async function POST(request: NextRequest) {
     const token = authHeader.replace("Bearer ", "").trim();
 
     const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-  {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  }
-);
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
     const {
       data: { user },
       error: userError
@@ -111,7 +125,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!questionText || !answerText) {
+    if (
+      typeof questionText !== "string" ||
+      !questionText.trim() ||
+      typeof answerText !== "string" ||
+      !answerText.trim()
+    ) {
       return NextResponse.json(
         { error: "Question and answer text are required." },
         { status: 400 }
@@ -133,9 +152,11 @@ export async function POST(request: NextRequest) {
       .filter(Boolean).length;
 
     const prompt = `
-You are an expert UPSC/MPSC Mains answer evaluator.
+You are an expert UPSC/MPSC Mains descriptive-answer evaluator.
 
-Evaluate the student's answer strictly against the question.
+Evaluate the student's answer strictly against the question and the
+standards expected in a competitive civil-services examination.
+
 QUESTION:
 ${questionText}
 
@@ -151,29 +172,84 @@ ${answerText}
 MODEL ANSWER / REFERENCE ANSWER:
 ${modelAnswer || "No model answer supplied."}
 
-Evaluate the answer as a real descriptive civil-services examination answer.
+EVALUATION CRITERIA:
 
-Consider:
-1. Relevance to the exact question
-2. Factual accuracy
-3. Depth and quality of content
-4. Analysis and multiple dimensions
-5. Structure and logical flow
-6. Examples, facts and constitutional/institutional references where relevant
-7. Introduction
-8. Body
-9. Conclusion
-10. Adherence to the word limit
+Evaluate these six criteria separately:
 
-The awarded marks MUST NOT exceed the maximum marks.
+1. relevance
+   How directly and accurately the answer addresses the question.
 
-Do not award marks merely because the answer is lengthy.
+2. content
+   Factual accuracy, conceptual understanding, and completeness.
 
-Do not invent factual errors. Mention an error only when the student's statement is clearly incorrect or materially misleading.
+3. analysis
+   Depth of reasoning, explanation, critical analysis, and coverage
+   of relevant dimensions.
 
-Give practical feedback that helps the student improve.
+4. structure
+   Organization, logical flow, introduction, body, and conclusion.
 
-The improved answer should be an original exam-ready answer, not a copy of any supplied reference.
+5. examples
+   Relevant examples, facts, data, constitutional provisions,
+   case laws, schemes, and institutional references where applicable.
+
+6. conclusion
+   Quality, relevance, balance, and completeness of the conclusion.
+
+CRITERION SCORING RULES:
+
+- Score each of the six criteria on a scale from 0 to 10.
+- Use whole numbers or decimal values.
+- 0 means the criterion is completely absent or incorrect.
+- 5 means an average or partially satisfactory performance.
+- 10 means excellent performance for that criterion.
+- Use intermediate scores when appropriate.
+- Do not award high marks merely because the answer is lengthy.
+- Evaluate the actual answer, not what the student might have intended.
+- Apply the same standards consistently across all six criteria.
+
+FINAL MARKS CALCULATION:
+
+The server will calculate the final awarded marks from the six criterion
+scores. Therefore, your awarded_marks field is informational only and
+will not override the server-calculated result.
+
+The server calculation is:
+
+1. Add the six criterion scores.
+2. Divide the sum by 60 to obtain the proportion of marks earned.
+3. Multiply that proportion by the maximum marks for the question.
+4. Round the final result to two decimal places.
+
+For example, if the six criterion scores are:
+relevance = 8
+content = 7
+analysis = 6
+structure = 8
+examples = 7
+conclusion = 8
+
+Their total is 44 out of 60.
+
+For a question worth 10 marks, the final awarded marks will be:
+(44 / 60) * 10 = 7.33 marks.
+
+Do not manipulate criterion scores to produce a desired total.
+Score every criterion honestly and independently.
+
+ADDITIONAL EVALUATION RULES:
+
+- Consider factual accuracy, depth, analysis, structure, examples,
+  introduction, body, conclusion, and adherence to the word limit.
+- Do not invent factual errors.
+- Report an error only when a statement is clearly incorrect or
+  materially misleading.
+- Do not award marks merely because the answer is lengthy.
+- Give specific, practical feedback that helps the student improve.
+- Identify important missing points that are relevant to the question.
+- The improved answer must be an original, exam-ready answer, not a
+  copy of the supplied reference answer.
+- Keep feedback relevant to UPSC/MPSC descriptive-answer standards.
 
 Return ONLY the requested JSON structure.
 `;
@@ -188,7 +264,7 @@ Return ONLY the requested JSON structure.
     }
 
     const response = await fetch(
-     `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       {
         method: "POST",
         headers: {
@@ -235,14 +311,44 @@ Return ONLY the requested JSON structure.
 
     const evaluation = JSON.parse(generatedText);
 
-    const awardedMarks = Math.max(
-      0,
-      Math.min(maxMarks, Number(evaluation.awarded_marks) || 0)
+    /*
+     * SCORING FIX
+     *
+     * Normalize all six criterion scores to the 0–10 scale.
+     * Invalid, missing, or non-numeric criterion values become zero.
+     * Calculate final marks from these normalized scores rather than
+     * trusting the independent awarded_marks value generated by AI.
+     */
+
+    const rawCriteria = evaluation.criteria_scores || {};
+
+    const criteriaScores = Object.fromEntries(
+      CRITERION_NAMES.map((name) => {
+        const rawScore = Number(rawCriteria[name]);
+
+        const score = Number.isFinite(rawScore)
+          ? Math.max(0, Math.min(10, rawScore))
+          : 0;
+
+        return [name, Math.round(score * 10) / 10];
+      })
+    ) as CriteriaScores;
+
+    const totalCriteriaScore = CRITERION_NAMES.reduce(
+      (total, name) => total + criteriaScores[name],
+      0
     );
+
+    const awardedMarks = Math.round(
+      (totalCriteriaScore / 60) * maxMarks * 100
+    ) / 100;
 
     const confidence = Math.max(
       0,
-      Math.min(1, Number(evaluation.evaluation_confidence) || 0)
+      Math.min(
+        1,
+        Number(evaluation.evaluation_confidence) || 0
+      )
     );
 
     const { data: submission, error: submissionError } =
@@ -260,7 +366,9 @@ Return ONLY the requested JSON structure.
       );
     }
 
-    if (Number(submission.mains_question_id) !== Number(questionId)) {
+    if (
+      Number(submission.mains_question_id) !== Number(questionId)
+    ) {
       return NextResponse.json(
         { error: "Question does not match the submission." },
         { status: 400 }
@@ -282,6 +390,7 @@ Return ONLY the requested JSON structure.
         { status: 500 }
       );
     }
+
     return NextResponse.json({
       success: true,
       evaluation: {
@@ -290,7 +399,7 @@ Return ONLY the requested JSON structure.
         evaluation_confidence: confidence,
         word_count: wordCount,
         word_limit: wordLimit || null,
-        criteria_scores: evaluation.criteria_scores || {},
+        criteria_scores: criteriaScores,
         strengths: evaluation.strengths || [],
         missing_points: evaluation.missing_points || [],
         factual_errors: evaluation.factual_errors || [],
