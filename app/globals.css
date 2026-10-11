@@ -1612,3 +1612,40 @@ svg {
   .auth-photo-panel .auth-submit { min-height: 42px; }
   .auth-photo-panel .auth-panel-footer { margin-top: 7px; padding-top: 6px; }
 }
+
+
+/* Keep the original MPSC emblem and Marathi plaque unobstructed */
+.auth-photo-image { object-position: center center; }
+.auth-photo-shade {
+  background:
+    linear-gradient(90deg, rgba(7,25,45,.12) 0%, rgba(7,25,45,.03) 46%, rgba(7,25,45,.48) 100%),
+    linear-gradient(0deg, rgba(7,25,45,.76) 0%, rgba(7,25,45,.08) 62%);
+}
+.auth-photo-caption {
+  width: min(58%, 560px);
+  margin-left: auto;
+  text-align: right;
+}
+.auth-photo-caption h1 {
+  font-size: clamp(25px, 3.8vw, 38px);
+  line-height: 1.16;
+  letter-spacing: -.02em;
+  overflow-wrap: anywhere;
+}
+.auth-photo-caption > span { text-shadow: 0 1px 5px rgba(0,0,0,.55); }
+@media (max-width: 760px) {
+  .auth-photo-image { object-position: center center; }
+  .auth-photo-shade {
+    background:
+      linear-gradient(90deg, rgba(7,25,45,0) 0%, rgba(7,25,45,.04) 44%, rgba(7,25,45,.55) 100%),
+      linear-gradient(0deg, rgba(7,25,45,.8) 0%, rgba(7,25,45,.02) 75%);
+  }
+  .auth-photo-caption {
+    width: 64%;
+    max-width: 390px;
+    margin-left: auto;
+    text-align: right;
+  }
+  .auth-photo-caption h1 { font-size: clamp(19px, 5.1vw, 27px); }
+  .auth-photo-caption p { font-size: 10px; }
+}
