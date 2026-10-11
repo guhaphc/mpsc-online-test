@@ -82,6 +82,11 @@ export default function CustomMainsPage() {
   const [activeEvaluation, setActiveEvaluation] = useState<Evaluation | null>(null);
   const [activeSubmissionId, setActiveSubmissionId] = useState<string | null>(null);
   const [answerSectionOpen, setAnswerSectionOpen] = useState(false);
+  const [cropTarget, setCropTarget] = useState<"question" | "answer" | null>(null);
+  const [cropIndex, setCropIndex] = useState(0);
+  const [cropMargins, setCropMargins] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
+  const [cropBusy, setCropBusy] = useState(false);
+  const [cropPreviewUrl, setCropPreviewUrl] = useState("");
 
   const selectedQuestion = useMemo(
     () => questions.find((question) => question.id === selectedQuestionId) || null,
@@ -370,6 +375,78 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
     }
   }
 
+  const cropFile = cropTarget === "question" ? questionFile : answerFiles[cropIndex] || null;
+
+  useEffect(() => {
+    if (!cropFile || cropFile.type === "application/pdf" || !cropTarget) {
+      setCropPreviewUrl("");
+      return;
+    }
+    const url = URL.createObjectURL(cropFile);
+    setCropPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [cropFile, cropTarget]);
+
+  function openCrop(target: "question" | "answer", index = 0) {
+    setCropTarget(target);
+    setCropIndex(index);
+    setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 });
+    setError("");
+  }
+
+  function closeCrop() {
+    if (cropBusy) return;
+    setCropTarget(null);
+    setCropPreviewUrl("");
+    setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 });
+  }
+
+  async function applyCrop() {
+    if (!cropFile || !cropTarget || cropFile.type === "application/pdf") return;
+    setCropBusy(true);
+    try {
+      const image = new Image();
+      const sourceUrl = URL.createObjectURL(cropFile);
+      try {
+        image.src = sourceUrl;
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error("Could not load this image for cropping."));
+        });
+        const left = Math.min(45, Math.max(0, cropMargins.left));
+        const right = Math.min(45, Math.max(0, cropMargins.right));
+        const top = Math.min(45, Math.max(0, cropMargins.top));
+        const bottom = Math.min(45, Math.max(0, cropMargins.bottom));
+        if (left + right >= 95 || top + bottom >= 95) throw new Error("Keep a readable area of the image inside the crop.");
+        const x = Math.round(image.naturalWidth * left / 100);
+        const y = Math.round(image.naturalHeight * top / 100);
+        const width = Math.max(1, Math.round(image.naturalWidth * (100 - left - right) / 100));
+        const height = Math.max(1, Math.round(image.naturalHeight * (100 - top - bottom) / 100));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Could not prepare the cropped image.");
+        context.drawImage(image, x, y, width, height, 0, 0, width, height);
+        const mime = cropFile.type === "image/png" ? "image/png" : cropFile.type === "image/webp" ? "image/webp" : "image/jpeg";
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mime, 0.94));
+        if (!blob) throw new Error("Could not create the cropped image.");
+        const extension = mime === "image/png" ? ".png" : mime === "image/webp" ? ".webp" : ".jpg";
+        const cropped = new File([blob], cropFile.name.replace(/\\.[^.]+$/, "") + "-cropped" + extension, { type: mime, lastModified: Date.now() });
+        if (cropTarget === "question") setQuestionFile(cropped);
+        else setAnswerFiles((current) => current.map((file, index) => index === cropIndex ? cropped : file));
+        setNotice("Cropped image prepared. The original upload is not changed on your device; you can choose it again to reset.");
+        setCropTarget(null);
+      } finally {
+        URL.revokeObjectURL(sourceUrl);
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not crop this image.");
+    } finally {
+      setCropBusy(false);
+    }
+  }
+
   function handleAnswerFiles(event: ChangeEvent<HTMLInputElement>) {
     setAnswerFiles(Array.from(event.target.files || []));
   }
@@ -406,7 +483,12 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
             <textarea id="custom-question-text" value={questionText} onChange={(event) => setQuestionText(event.target.value)} rows={5} maxLength={15000} placeholder="Type or paste the complete question here…" />
             <label htmlFor="custom-question-file" style={{ display: "block", marginTop: 12 }}>Or upload question (PDF/JPG/PNG/WebP, up to 4 MB)</label>
             <input id="custom-question-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => setQuestionFile(event.target.files?.[0] || null)} />
-            {questionFile && <p className="muted">Selected: {questionFile.name}</p>}
+            {questionFile && <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <p className="muted" style={{ margin: 0 }}>Selected: {questionFile.name}</p>
+              {questionFile.type.startsWith("image/") && <button type="button" className="secondary" onClick={() => openCrop("question")}>✂️ Crop question image</button>}
+              {questionFile.type === "application/pdf" && <span className="muted">Cropping is available for image uploads; PDF pages remain unchanged.</span>}
+              <button type="button" className="secondary" onClick={() => { setQuestionFile(null); const input = document.getElementById("custom-question-file") as HTMLInputElement | null; if (input) input.value = ""; }}>Remove / Reset</button>
+            </div>}
             <button className="primary" type="submit" disabled={working} style={{ marginTop: 16 }}>{working ? "Preparing question…" : "Create question & marking guide"}</button>
           </form>
           </div>
@@ -436,7 +518,15 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
               </> : <>
                 <label htmlFor="custom-answer-files">Handwritten pages or one multi-page PDF (maximum 4 MB total; up to 4 images)</label>
                 <input id="custom-answer-files" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" multiple onChange={handleAnswerFiles} />
-                {answerFiles.length > 0 && <p className="muted">{answerFiles.length} file(s) selected. Keep all files under 4 MB combined and arrange image files in page order before selecting.</p>}
+                {answerFiles.length > 0 && <>
+                  <p className="muted">{answerFiles.length} file(s) selected. Keep all files under 4 MB combined and arrange image files in page order before selecting.</p>
+                  <div style={{ display: "grid", gap: 8, margin: "10px 0" }}>
+                    {answerFiles.map((file, index) => <div key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", border: "1px solid var(--border, #ddd)", borderRadius: 8, padding: 10 }}>
+                      <span style={{ overflowWrap: "anywhere" }}>Page {index + 1}: {file.name}</span>
+                      {file.type.startsWith("image/") ? <button type="button" className="secondary" onClick={() => openCrop("answer", index)} disabled={working}>✂️ Crop page</button> : <span className="muted">PDF page — crop unavailable</span>}
+                    </div>)}
+                  </div>
+                </>}
                 {answerText && <>
                   <label htmlFor="custom-ocr-text" style={{ display: "block", marginTop: 14 }}>OCR transcription — review and correct before evaluation</label>
                   <textarea id="custom-ocr-text" value={answerText} onChange={(event) => setAnswerText(event.target.value)} rows={8} />
@@ -474,6 +564,16 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
           </div>
           </div>
         </details>}
+
+        {cropTarget && cropFile && <div role="dialog" aria-modal="true" aria-label="Crop uploaded image" style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,.72)", display: "grid", placeItems: "center", padding: 12 }}>
+          <section className="card" style={{ width: "min(100%, 760px)", maxHeight: "92vh", overflow: "auto", padding: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}><div><h2 style={{ margin: 0 }}>Crop {cropTarget === "question" ? "question image" : `answer page ${cropIndex + 1}`}</h2><p className="muted">Adjust each edge to remove unwanted background. Keep all text, question numbers and instructions.</p></div><button type="button" className="secondary" onClick={closeCrop} disabled={cropBusy}>Close</button></div>
+            {cropPreviewUrl ? <div style={{ maxHeight: "42vh", overflow: "auto", background: "#eef2f7", padding: 8, textAlign: "center", borderRadius: 8 }}><img src={cropPreviewUrl} alt="Crop preview" style={{ display: "block", maxWidth: "100%", maxHeight: "40vh", margin: "0 auto", objectFit: "contain", clipPath: `inset(${cropMargins.top}% ${cropMargins.right}% ${cropMargins.bottom}% ${cropMargins.left}%)` }} /></div> : <p role="alert">Image preview unavailable. Please reselect the image.</p>}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, margin: "14px 0" }}>{(["top", "right", "bottom", "left"] as const).map((side) => <label key={side} style={{ display: "grid", gap: 5 }}>{side[0].toUpperCase() + side.slice(1)} edge: {cropMargins[side]}%<input type="range" min="0" max="45" value={cropMargins[side]} onChange={(event) => setCropMargins((current) => ({ ...current, [side]: Number(event.target.value) }))} /></label>)}</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" className="secondary" onClick={() => setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 })} disabled={cropBusy}>Reset crop</button><button type="button" className="primary" onClick={applyCrop} disabled={cropBusy || !cropPreviewUrl}>{cropBusy ? "Preparing crop…" : "Apply crop"}</button></div>
+            <p className="muted" style={{ marginBottom: 0, marginTop: 10 }}>Cropping removes margins; it does not sharpen blurry text. The cropped copy is used for OCR, and you can reselect the original file to reset.</p>
+          </section>
+        </div>}
 
         {activeEvaluation && <details open className="custom-mains-section custom-mains-evaluation custom-mains-accordion" style={{ marginTop: 14 }}>
           <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number custom-mains-number-gold">✓</span><span><strong>Evaluation result</strong><small>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks · Detailed feedback</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
