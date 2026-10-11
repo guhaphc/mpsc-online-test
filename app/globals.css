@@ -1448,3 +1448,61 @@ svg {
   .auth-form input { min-height: 52px; }
   .auth-password-wrap input { min-height: 50px; }
 }
+
+
+/* Photo-led MPSC guidance login */
+.auth-photo-page {
+  min-height: 100svh; padding: 22px; overflow-x: hidden; overflow-y: auto;
+  background: #edf2f8;
+}
+.auth-photo-shell {
+  width: min(100%, 1000px); margin: 0 auto; overflow: hidden;
+  border: 1px solid #e0e7ef; border-radius: 22px; background: #fff;
+  box-shadow: 0 22px 60px rgba(18, 47, 79, .13);
+}
+.auth-photo-hero {
+  position: relative; display: flex; min-height: 320px; align-items: flex-end; overflow: hidden;
+  padding: 30px clamp(24px, 5vw, 48px); isolation: isolate;
+  background: linear-gradient(125deg,#b51f2b,#174b83 70%,#0d2c4a);
+}
+.auth-photo-image { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+.auth-photo-shade { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg,rgba(8,27,49,.78) 0%,rgba(9,37,65,.48) 55%,rgba(9,37,65,.14) 100%),linear-gradient(0deg,rgba(8,27,49,.72),transparent 75%); }
+.auth-photo-brand { position: absolute; top: 26px; left: clamp(24px, 5vw, 48px); display: flex; align-items: center; gap: 12px; color: white; }
+.auth-photo-logo { display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid rgba(255,225,154,.7); border-radius: 13px; background: rgba(16,55,88,.86); color: #f3d17b; font: 900 29px Georgia,serif; box-shadow: 0 5px 16px rgba(0,0,0,.2); }
+.auth-photo-brand > div:last-child { display: grid; gap: 5px; }
+.auth-photo-brand strong { font-size: 13px; font-weight: 900; letter-spacing: .08em; text-shadow: 0 2px 8px rgba(0,0,0,.2); }
+.auth-photo-brand span { color: #f0f4f8; font-size: 11px; }
+.auth-photo-caption { max-width: 600px; color: white; }
+.auth-photo-caption > span { color: #ffdf91; font-size: 9px; font-weight: 900; letter-spacing: .17em; }
+.auth-photo-caption h1 { margin: 10px 0 8px; color: #fff; font-size: clamp(28px,4.4vw,44px); line-height: 1.07; letter-spacing: -.04em; text-shadow: 0 2px 12px rgba(0,0,0,.15); }
+.auth-photo-caption p { margin: 0; color: rgba(255,255,255,.9); font-size: 13px; }
+.auth-photo-panel { width: min(100%, 560px); margin: 0 auto; padding: 30px clamp(22px,5vw,48px) 26px; }
+.auth-photo-panel .auth-panel-heading { margin-bottom: 20px; }
+.auth-photo-panel .auth-panel-heading h2 { font-size: clamp(25px,3vw,31px); }
+.auth-photo-panel .auth-tabs { margin-bottom: 20px; }
+.auth-forgot-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #8a96a5; font-size: 10px; }
+.auth-forgot-row button { padding: 5px 0; border: 0; background: transparent; color: #1c4d78; font-size: 11px; font-weight: 800; }
+.auth-photo-panel .auth-panel-footer { margin-top: 20px; }
+@media (max-width: 760px) {
+  .auth-photo-page { padding: 0 0 max(14px, env(safe-area-inset-bottom)); background: #fff; }
+  .auth-photo-shell { width: 100%; border: 0; border-radius: 0; box-shadow: none; }
+  .auth-photo-hero { min-height: 300px; padding: 26px 22px; }
+  .auth-photo-brand { top: 20px; left: 22px; }
+  .auth-photo-logo { width: 42px; height: 42px; font-size: 26px; }
+  .auth-photo-brand strong { font-size: 11px; }
+  .auth-photo-brand span { font-size: 10px; }
+  .auth-photo-caption h1 { font-size: clamp(27px,7vw,36px); }
+  .auth-photo-caption p { font-size: 12px; line-height: 1.5; }
+  .auth-photo-panel { width: 100%; padding: 25px 22px 22px; }
+  .auth-photo-panel .auth-panel-heading h2 { font-size: 27px; }
+  .auth-photo-panel .auth-form { gap: 15px; }
+  .auth-photo-panel .auth-form input { min-height: 52px; }
+  .auth-photo-panel .auth-password-wrap input { min-height: 50px; }
+  .auth-photo-panel .auth-submit { min-height: 54px; }
+  .auth-forgot-row { align-items: flex-start; }
+}
+@media (max-width: 360px) {
+  .auth-photo-hero { min-height: 270px; padding: 22px 17px; }
+  .auth-photo-brand { left: 17px; }
+  .auth-photo-panel { padding-right: 17px; padding-left: 17px; }
+}
