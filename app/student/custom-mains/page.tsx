@@ -282,7 +282,7 @@ export default function CustomMainsPage() {
             </div>
             <label htmlFor="custom-question-text" style={{ display: "block", marginTop: 12 }}>Question text</label>
             <textarea id="custom-question-text" value={questionText} onChange={(event) => setQuestionText(event.target.value)} rows={5} maxLength={15000} placeholder="Type or paste the complete question here…" />
-            <label htmlFor="custom-question-file" style={{ display: "block", marginTop: 12 }}>Or upload question (PDF/JPG/PNG/WebP, up to 8 MB)</label>
+            <label htmlFor="custom-question-file" style={{ display: "block", marginTop: 12 }}>Or upload question (PDF/JPG/PNG/WebP, up to 4 MB)</label>
             <input id="custom-question-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={(event) => setQuestionFile(event.target.files?.[0] || null)} />
             {questionFile && <p className="muted">Selected: {questionFile.name}</p>}
             <button className="primary" type="submit" disabled={working} style={{ marginTop: 16 }}>{working ? "Preparing question…" : "Create question & marking guide"}</button>
@@ -310,9 +310,9 @@ export default function CustomMainsPage() {
                 <textarea id="custom-answer-text" value={answerText} onChange={(event) => setAnswerText(event.target.value)} rows={10} maxLength={50000} placeholder="Write your answer with introduction, main points and conclusion…" />
                 <p className="muted">{wordCount(answerText)} words</p>
               </> : <>
-                <label htmlFor="custom-answer-files">Handwritten pages or one PDF (up to 12 files; 8 MB each)</label>
+                <label htmlFor="custom-answer-files">Handwritten pages or one multi-page PDF (maximum 4 MB total; up to 4 images)</label>
                 <input id="custom-answer-files" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" multiple onChange={handleAnswerFiles} />
-                {answerFiles.length > 0 && <p className="muted">{answerFiles.length} file(s) selected. Arrange image files in page order before selecting.</p>}
+                {answerFiles.length > 0 && <p className="muted">{answerFiles.length} file(s) selected. Keep all files under 4 MB combined and arrange image files in page order before selecting.</p>}
                 {answerText && <>
                   <label htmlFor="custom-ocr-text" style={{ display: "block", marginTop: 14 }}>OCR transcription — review and correct before evaluation</label>
                   <textarea id="custom-ocr-text" value={answerText} onChange={(event) => setAnswerText(event.target.value)} rows={8} />
