@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 const questionSchema = {
   type: "OBJECT",
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Question text is too long (maximum 15,000 characters)." }, { status: 400 });
     }
     if (questionFile && (!ALLOWED_TYPES.has(questionFile.type) || questionFile.size > MAX_FILE_BYTES)) {
-      return NextResponse.json({ error: "Upload a PDF, JPG, PNG, or WebP file up to 8 MB." }, { status: 400 });
+      return NextResponse.json({ error: "Upload a PDF, JPG, PNG, or WebP file up to 4 MB." }, { status: 400 });
     }
 
     const attachments: Array<{ mimeType: string; data: string }> = [];
