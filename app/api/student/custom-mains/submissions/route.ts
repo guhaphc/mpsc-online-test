@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", context.user.id)
       .single();
 
-    if (questionError || !question || question.status !== "active") {
+    if (questionError || !question || question.status !== "ready") {
       return NextResponse.json({ error: "Question not found or unavailable." }, { status: 404 });
     }
 
