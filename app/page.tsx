@@ -65,7 +65,7 @@ export default function Home() {
           <img src="/mpsc-guidance.jpg" alt="Maharashtra Public Service Commission guidance and examination hall" className="auth-photo-image" />
           <div className="auth-photo-shade" />
           <div className="auth-photo-brand"><div className="auth-photo-logo">M</div><div><strong>MPSC ALL-IN-ONE</strong><span>Your Journey to Public Service Starts Here.</span></div></div>
-          <div className="auth-photo-caption"><span>LEARN · PRACTISE · PROGRESS</span><h1>Your public service<br/>journey starts here.</h1><p>One focused space for your MPSC preparation.</p></div>
+          <div className="auth-photo-caption"><span>MPSC मार्गदर्शन व परीक्षा तयारी</span><h1>महाराष्ट्र लोकसेवा आयोग</h1><p>एमपीएससी परीक्षेच्या तयारीसाठी एकाच ठिकाणी.</p></div>
         </header>
         <section className="auth-panel auth-photo-panel" aria-label={mode === "login" ? "Login" : "Create account"}>
           <div className="auth-panel-heading">
