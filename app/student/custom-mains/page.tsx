@@ -51,6 +51,7 @@ export default function CustomMainsPage() {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null);
+  const [editingSubmissionId, setEditingSubmissionId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [questions, setQuestions] = useState<CustomQuestion[]>([]);
@@ -217,6 +218,7 @@ export default function CustomMainsPage() {
       setSubmissions((current) => current.map((item) => item.id === submission.id
         ? { ...item, answer_text: answerText, word_count: wordCount(answerText), status: "submitted" }
         : item));
+      setEditingSubmissionId(null);
       setNotice("Transcription saved. Evaluate when you are ready.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not save transcription.");
@@ -337,7 +339,8 @@ export default function CustomMainsPage() {
                 </div>
                 <p className="muted">{submission.answer_type === "handwritten" ? "Handwritten/OCR" : "Typed"} · {submission.word_count} words</p>
                 {submission.status !== "evaluated" ? <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {submission.answer_type === "handwritten" && <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setAnswerMode("handwritten"); setAnswerText(submission.answer_text || ""); }}>Review transcription</button>}
+                  {submission.answer_type === "handwritten" && <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setAnswerMode("handwritten"); setAnswerText(submission.answer_text || ""); setEditingSubmissionId(submission.id); }}>Review transcription</button>
+                  {submission.answer_type === "handwritten" && editingSubmissionId === submission.id && <button type="button" className="secondary" disabled={working} onClick={() => saveTranscription(submission)}>{working ? "Saving…" : "Save corrected transcription"}</button>}}
                   <button type="button" className="primary" disabled={evaluatingId === submission.id} onClick={() => evaluateSubmission(submission)}>{evaluatingId === submission.id ? "Evaluating…" : "Evaluate answer"}</button>
                 </div> : <button type="button" className="secondary" onClick={() => setActiveEvaluation(submission.evaluation)}>View evaluation</button>}
               </article>;
