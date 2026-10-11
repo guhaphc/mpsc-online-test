@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const subject = String(form.get("subject") || "").trim().slice(0, 120) || null;
     const marks = Number(form.get("marks"));
     const wordLimitInput = String(form.get("word_limit") || "").trim();
-    const wordLimit = wordLimitInput ? Number(wordLimitInput) : null;
+    const wordLimit = wordLimitInput ? Number(wordLimitInput) : 150;
     const file = form.get("question_file");
     const questionFile = file instanceof File && file.size > 0 ? file : null;
 
@@ -164,7 +164,7 @@ The rubric must be question-specific, avoid double-counting, and reward relevanc
         source_filename: questionFile ? safeFilename(questionFile.name) : null,
         model_answer: modelAnswer,
         evaluation_rubric: normalizedRubric,
-        status: "active",
+        status: "ready",
       })
       .select("id,subject,question_text,marks,word_limit,source_filename,status,created_at")
       .single();
