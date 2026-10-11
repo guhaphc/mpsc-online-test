@@ -86,7 +86,6 @@ export default function CustomMainsPage() {
   const [cropIndex, setCropIndex] = useState(0);
   const [cropMargins, setCropMargins] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
   const [cropDrag, setCropDrag] = useState<{ edges: string[]; startX: number; startY: number; initial: typeof cropMargins } | null>(null);
-  const [cropRotation, setCropRotation] = useState(0);
   const [cropBusy, setCropBusy] = useState(false);
   const [cropPreviewUrl, setCropPreviewUrl] = useState("");
 
@@ -441,25 +440,16 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
         const top = Math.min(80, Math.max(0, cropMargins.top));
         const bottom = Math.min(80, Math.max(0, cropMargins.bottom));
         if (left + right >= 95 || top + bottom >= 95) throw new Error("Keep a readable area of the image inside the crop.");
-        const rotatedCanvas = document.createElement("canvas");
-        const rotatedContext = rotatedCanvas.getContext("2d");
-        if (!rotatedContext) throw new Error("Could not prepare the image.");
-        const rotation = ((cropRotation % 360) + 360) % 360;
-        rotatedCanvas.width = rotation === 90 || rotation === 270 ? image.naturalHeight : image.naturalWidth;
-        rotatedCanvas.height = rotation === 90 || rotation === 270 ? image.naturalWidth : image.naturalHeight;
-        rotatedContext.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
-        rotatedContext.rotate((rotation * Math.PI) / 180);
-        rotatedContext.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
-        const x = Math.round(rotatedCanvas.width * left / 100);
-        const y = Math.round(rotatedCanvas.height * top / 100);
-        const width = Math.max(1, Math.round(rotatedCanvas.width * (100 - left - right) / 100));
-        const height = Math.max(1, Math.round(rotatedCanvas.height * (100 - top - bottom) / 100));
+        const x = Math.round(image.naturalWidth * left / 100);
+        const y = Math.round(image.naturalHeight * top / 100);
+        const width = Math.max(1, Math.round(image.naturalWidth * (100 - left - right) / 100));
+        const height = Math.max(1, Math.round(image.naturalHeight * (100 - top - bottom) / 100));
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Could not prepare the cropped image.");
-        context.drawImage(rotatedCanvas, x, y, width, height, 0, 0, width, height);
+        context.drawImage(image, x, y, width, height, 0, 0, width, height);
         const mime = cropFile.type === "image/png" ? "image/png" : cropFile.type === "image/webp" ? "image/webp" : "image/jpeg";
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mime, 0.94));
         if (!blob) throw new Error("Could not create the cropped image.");
@@ -601,11 +591,11 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
           <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, minHeight: 48, flexShrink: 0 }}>
             <button type="button" onClick={closeCrop} disabled={cropBusy} aria-label="Close crop editor" style={{ border: 0, color: "#fff", background: "transparent", fontSize: 26, padding: "4px 10px" }}>✕</button>
             <div style={{ minWidth: 0, textAlign: "center" }}><strong style={{ display: "block", fontSize: 16 }}>Crop image</strong><small style={{ color: "#cbd5e1" }}>{cropTarget === "question" ? "Question image" : `Answer page ${cropIndex + 1}`}</small></div>
-            <button type="button" onClick={() => { setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 }); setCropRotation(0); }} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "8px 12px", color: "#fff", background: "#263449" }}>Reset</button>
+            <button type="button" onClick={() => { setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 }); }} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "8px 12px", color: "#fff", background: "#263449" }}>Reset</button>
           </header>
           <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", margin: "8px 0 12px", touchAction: "none" }}>
-            {cropPreviewUrl ? <div style={{ position: "relative", display: "inline-block", maxWidth: "96vw", maxHeight: "100%", lineHeight: 0, userSelect: "none", touchAction: "none" }}>
-              <img id="crop-editor-image" src={cropPreviewUrl} alt="Image to crop" draggable={false} style={{ display: "block", width: "auto", height: "auto", maxWidth: "96vw", maxHeight: "100%", objectFit: "contain", transform: `rotate(${cropRotation}deg)`, transformOrigin: "center" }} />
+            {cropPreviewUrl ? <div style={{ position: "relative", display: "inline-block", maxWidth: "96vw", maxHeight: "72vh", lineHeight: 0, userSelect: "none", touchAction: "none" }}>
+              <img id="crop-editor-image" src={cropPreviewUrl} alt="Image to crop" draggable={false} style={{ display: "block", width: "auto", height: "auto", maxWidth: "96vw", maxHeight: "72vh", objectFit: "contain" }} />
               <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
                 <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.48)", clipPath: `polygon(0 0, 100% 0, 100% ${100 - cropMargins.bottom}%, ${100 - cropMargins.right}% ${100 - cropMargins.bottom}%, ${100 - cropMargins.right}% ${cropMargins.top}%, ${cropMargins.left}% ${cropMargins.top}%, ${cropMargins.left}% ${100 - cropMargins.bottom}%, 0 ${100 - cropMargins.bottom}%)` }} />
                 <div style={{ position: "absolute", left: `${cropMargins.left}%`, right: `${cropMargins.right}%`, top: `${cropMargins.top}%`, bottom: `${cropMargins.bottom}%`, border: "2px solid #fff", boxShadow: "0 0 0 1px rgba(15,23,42,.75)", pointerEvents: "auto", touchAction: "none" }}
@@ -629,10 +619,6 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
           </div>
           <footer style={{ flexShrink: 0, borderTop: "1px solid #334155", paddingTop: 10 }}>
             <p style={{ color: "#cbd5e1", fontSize: 13, textAlign: "center", margin: "0 0 10px" }}>Drag the corner or side handles to frame the text. The area outside the frame will be removed.</p>
-            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 12 }}>
-              <button type="button" onClick={() => setCropRotation((current) => (current + 270) % 360)} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "9px 14px", color: "#fff", background: "#263449" }}>↶ Rotate 90°</button>
-              <button type="button" onClick={() => setCropRotation((current) => (current + 90) % 360)} disabled={cropBusy} style={{ border: "1px solid #64748b", borderRadius: 9, padding: "9px 14px", color: "#fff", background: "#263449" }}>Rotate 90° ↻</button>
-            </div>
             <button type="button" onClick={applyCrop} disabled={cropBusy || !cropPreviewUrl || cropMargins.left + cropMargins.right >= 95 || cropMargins.top + cropMargins.bottom >= 95} style={{ width: "100%", border: 0, borderRadius: 12, padding: "14px 18px", color: "#fff", background: "#2563eb", fontSize: 16, fontWeight: 700 }}>{cropBusy ? "Applying crop…" : "Apply Crop"}</button>
           </footer>
         </div>}
