@@ -32,7 +32,7 @@ export async function getStudentContext(request: NextRequest) {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profileError || !profile || profile.access_status !== "approved" || profile.role !== "student") {
+  if (profileError || !profile || profile.access_status !== "approved" || !["user", "student"].includes(String(profile.role))) {
     return { ok: false as const, response: NextResponse.json({ error: "An approved student account is required." }, { status: 403 }) };
   }
 
