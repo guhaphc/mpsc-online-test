@@ -21,6 +21,10 @@ type Evaluation = {
   evaluation_confidence: number;
   word_count: number;
   word_limit: number | null;
+  word_limit_exceeded_by: number;
+  word_limit_overage_percent: number;
+  word_limit_warning_level: "none" | "notice" | "strict";
+  word_limit_warning: string | null;
   criteria_scores: Array<{ criterion: string; awarded_points: number; max_points: number; feedback: string }>;
   strengths: string[];
   missing_points: string[];
@@ -360,6 +364,11 @@ export default function CustomMainsPage() {
           <div className="custom-mains-panel-content">
           <div style={{ fontSize: 28, fontWeight: 750 }}>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks</div>
           <p className="muted">{activeEvaluation.word_count} words{activeEvaluation.word_limit ? ` · Word limit: ${activeEvaluation.word_limit}` : ""} · AI confidence: {Math.round(activeEvaluation.evaluation_confidence * 100)}%</p>
+          {activeEvaluation.word_limit_warning && <div role="alert" aria-live="polite" style={{ padding: 14, margin: "12px 0 18px", borderRadius: 10, border: activeEvaluation.word_limit_warning_level === "strict" ? "1px solid #d97706" : "1px solid #e5b85c", background: activeEvaluation.word_limit_warning_level === "strict" ? "#fff4e5" : "#fff9e8", color: "#78350f" }}>
+            <strong>{activeEvaluation.word_limit_warning_level === "strict" ? "⚠ Strict word-limit warning" : "⚠ Word-limit notice"}</strong>
+            <p style={{ margin: "6px 0 0" }}>{activeEvaluation.word_limit_warning}</p>
+            <small>No marks are deducted solely for exceeding the word limit.</small>
+          </div>}
           <h3>Criterion-wise marks</h3>
           <div style={{ display: "grid", gap: 10 }}>
             {activeEvaluation.criteria_scores.map((criterion) => <div key={criterion.criterion} style={{ padding: 10, borderRadius: 8, background: "var(--surface, #f7f7f7)" }}>
