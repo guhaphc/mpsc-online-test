@@ -1546,3 +1546,69 @@ svg {
   .auth-photo-panel .auth-form input { color: #203047; }
   .auth-photo-panel .auth-submit { width: 100%; }
 }
+
+
+/* Compact viewport fit: keep the complete sign-in form visible on phones */
+.auth-photo-page { box-sizing: border-box; }
+.auth-photo-page *, .auth-photo-page *::before, .auth-photo-page *::after { box-sizing: border-box; }
+.auth-photo-shell { overflow: hidden; }
+.auth-photo-hero { min-height: 270px; }
+.auth-photo-panel { padding-top: 24px; padding-bottom: 20px; }
+.auth-photo-panel .auth-panel-heading { margin-bottom: 14px; }
+.auth-photo-panel .auth-panel-heading h2 { margin-top: 6px; margin-bottom: 5px; }
+.auth-photo-panel .auth-panel-heading p { line-height: 1.4; }
+.auth-photo-panel .auth-tabs { margin-bottom: 15px; }
+.auth-photo-panel .auth-form { gap: 11px; }
+.auth-photo-panel .auth-form label { gap: 5px; }
+.auth-photo-panel .auth-form input { min-height: 46px; padding: 10px 14px; }
+.auth-photo-panel .auth-password-wrap input { min-height: 44px; }
+.auth-photo-panel .auth-password-wrap { border-radius: 13px; }
+.auth-photo-panel .auth-form input { border-radius: 13px; }
+.auth-photo-panel .auth-submit { min-height: 49px; border-radius: 13px; }
+.auth-photo-panel .auth-panel-footer { margin-top: 13px; padding-top: 10px; }
+@media (max-width: 760px) {
+  .auth-photo-page {
+    min-height: 100svh;
+    padding: 0 0 max(8px, env(safe-area-inset-bottom));
+  }
+  .auth-photo-shell { min-height: 0; }
+  .auth-photo-hero {
+    min-height: clamp(205px, 29svh, 255px);
+    padding: 20px 20px 22px;
+  }
+  .auth-photo-brand { top: 14px; left: 20px; }
+  .auth-photo-logo { width: 36px; height: 36px; border-radius: 10px; font-size: 22px; }
+  .auth-photo-brand strong { font-size: 10px; }
+  .auth-photo-brand span { font-size: 9px; }
+  .auth-photo-caption > span { font-size: 8px; }
+  .auth-photo-caption h1 { margin: 7px 0 5px; font-size: clamp(25px, 6.5vw, 32px); line-height: 1.05; }
+  .auth-photo-caption p { font-size: 11px; line-height: 1.35; }
+  .auth-photo-panel { padding: 17px 20px 12px; }
+  .auth-photo-panel .auth-panel-heading { margin-bottom: 11px; }
+  .auth-photo-panel .auth-panel-heading h2 { font-size: 24px; }
+  .auth-photo-panel .auth-panel-heading p { font-size: 12px; }
+  .auth-photo-panel .auth-tabs { margin-bottom: 12px; padding: 4px; border-radius: 12px; }
+  .auth-photo-panel .auth-tabs button { min-height: 39px; padding: 7px 5px; font-size: 12px; }
+  .auth-photo-panel .auth-form { gap: 10px; }
+  .auth-photo-panel .auth-form label { gap: 5px; font-size: 11px; }
+  .auth-photo-panel .auth-form input { min-height: 44px; padding: 9px 12px; font-size: 15px; }
+  .auth-photo-panel .auth-password-wrap { padding-right: 9px; }
+  .auth-photo-panel .auth-password-wrap input { min-height: 42px; }
+  .auth-photo-panel .auth-show-password { font-size: 11px; }
+  .auth-photo-panel .auth-forgot-row { font-size: 9px; gap: 5px; }
+  .auth-photo-panel .auth-forgot-row button { font-size: 10px; }
+  .auth-photo-panel .auth-submit { min-height: 46px; margin-top: 0; font-size: 14px; }
+  .auth-photo-panel .auth-submit span { font-size: 18px; }
+  .auth-photo-panel .auth-panel-footer { margin-top: 10px; padding-top: 8px; font-size: 9px; }
+}
+@media (max-height: 760px) and (max-width: 760px) {
+  .auth-photo-hero { min-height: 190px; }
+  .auth-photo-panel { padding-top: 13px; }
+  .auth-photo-panel .auth-panel-heading { margin-bottom: 8px; }
+  .auth-photo-panel .auth-tabs { margin-bottom: 9px; }
+  .auth-photo-panel .auth-form { gap: 8px; }
+  .auth-photo-panel .auth-form input { min-height: 40px; }
+  .auth-photo-panel .auth-password-wrap input { min-height: 38px; }
+  .auth-photo-panel .auth-submit { min-height: 42px; }
+  .auth-photo-panel .auth-panel-footer { margin-top: 7px; padding-top: 6px; }
+}
