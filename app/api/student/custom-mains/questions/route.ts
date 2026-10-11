@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { countWords, geminiJson, getStudentContext, safeFilename } from "../_lib";
+import { geminiJson, getStudentContext, safeFilename } from "../_lib";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -139,13 +139,14 @@ The rubric must be question-specific, avoid double-counting, and reward relevanc
 
     // Normalize AI-proposed points to the question's maximum so the saved rubric always totals exactly max marks.
     const rawTotal = rubric.reduce((sum: number, item: { max_points: number }) => sum + item.max_points, 0);
-    let assigned = 0;
+    let assignedCents = 0;
+    const targetCents = marks * 100;
     const normalizedRubric = rubric.map((item: { criterion: string; max_points: number; what_to_look_for: string }, index: number) => {
-      const points = index === rubric.length - 1
-        ? Math.max(0, Math.round((marks - assigned) * 100) / 100)
-        : Math.round((item.max_points / rawTotal) * marks * 100) / 100;
-      assigned = Math.round((assigned + points) * 100) / 100;
-      return { ...item, max_points: points };
+      const pointsCents = index === rubric.length - 1
+        ? targetCents - assignedCents
+        : Math.floor((item.max_points / rawTotal) * targetCents);
+      assignedCents += pointsCents;
+      return { ...item, max_points: pointsCents / 100 };
     });
 
     if (normalizedRubric.some((item: { max_points: number }) => item.max_points <= 0)) {
