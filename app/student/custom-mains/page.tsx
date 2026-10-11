@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
@@ -403,7 +403,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
     setCropMargins({ top: 0, right: 0, bottom: 0, left: 0 });
   }
 
-  function updateCropFromPointer(event: React.PointerEvent<HTMLElement>, edges: string[], startX: number, startY: number, initial: typeof cropMargins) {
+  function updateCropFromPointer(event: ReactPointerEvent<HTMLElement>, edges: string[], startX: number, startY: number, initial: typeof cropMargins) {
     const imageElement = document.getElementById("crop-editor-image");
     if (!imageElement) return;
     const bounds = imageElement.getBoundingClientRect();
@@ -417,7 +417,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
     });
   }
 
-  function beginCropDrag(event: React.PointerEvent<HTMLElement>, edges: string[]) {
+  function beginCropDrag(event: ReactPointerEvent<HTMLElement>, edges: string[]) {
     event.preventDefault();
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -441,26 +441,25 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
         const top = Math.min(80, Math.max(0, cropMargins.top));
         const bottom = Math.min(80, Math.max(0, cropMargins.bottom));
         if (left + right >= 95 || top + bottom >= 95) throw new Error("Keep a readable area of the image inside the crop.");
-        const x = Math.round(image.naturalWidth * left / 100);
-        const y = Math.round(image.naturalHeight * top / 100);
-        const width = Math.max(1, Math.round(image.naturalWidth * (100 - left - right) / 100));
-        const height = Math.max(1, Math.round(image.naturalHeight * (100 - top - bottom) / 100));
+        const rotatedCanvas = document.createElement("canvas");
+        const rotatedContext = rotatedCanvas.getContext("2d");
+        if (!rotatedContext) throw new Error("Could not prepare the image.");
+        const rotation = ((cropRotation % 360) + 360) % 360;
+        rotatedCanvas.width = rotation === 90 || rotation === 270 ? image.naturalHeight : image.naturalWidth;
+        rotatedCanvas.height = rotation === 90 || rotation === 270 ? image.naturalWidth : image.naturalHeight;
+        rotatedContext.translate(rotatedCanvas.width / 2, rotatedCanvas.height / 2);
+        rotatedContext.rotate((rotation * Math.PI) / 180);
+        rotatedContext.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+        const x = Math.round(rotatedCanvas.width * left / 100);
+        const y = Math.round(rotatedCanvas.height * top / 100);
+        const width = Math.max(1, Math.round(rotatedCanvas.width * (100 - left - right) / 100));
+        const height = Math.max(1, Math.round(rotatedCanvas.height * (100 - top - bottom) / 100));
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Could not prepare the cropped image.");
-        context.save();
-        if (cropRotation) {
-          canvas.width = height;
-          canvas.height = width;
-          context.translate(canvas.width / 2, canvas.height / 2);
-          context.rotate((cropRotation * Math.PI) / 180);
-          context.drawImage(image, x, y, width, height, -width / 2, -height / 2, width, height);
-        } else {
-          context.drawImage(image, x, y, width, height, 0, 0, width, height);
-        }
-        context.restore();
+        context.drawImage(rotatedCanvas, x, y, width, height, 0, 0, width, height);
         const mime = cropFile.type === "image/png" ? "image/png" : cropFile.type === "image/webp" ? "image/webp" : "image/jpeg";
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mime, 0.94));
         if (!blob) throw new Error("Could not create the cropped image.");
@@ -621,7 +620,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
                     { name: "bottom", edges: ["bottom"], pos: { bottom: -5, left: "50%", transform: "translateX(-50%)", cursor: "ns-resize", width: 42, height: 10 } },
                     { name: "bottom-left", edges: ["bottom", "left"], pos: { bottom: -8, left: -8, cursor: "nesw-resize" } },
                     { name: "left", edges: ["left"], pos: { left: -5, top: "50%", transform: "translateY(-50%)", cursor: "ew-resize", width: 10, height: 42 } },
-                  ].map((handle) => <button key={handle.name} type="button" aria-label={`Adjust ${handle.name} crop edge`} onPointerDown={(event) => beginCropDrag(event, handle.edges)} style={{ position: "absolute", ...handle.pos, width: handle.pos.width || 18, height: handle.pos.height || 18, border: "2px solid #fff", borderRadius: handle.name.length > 5 && handle.name.includes("-") ? 4 : 7, background: "#2563eb", boxShadow: "0 1px 5px rgba(0,0,0,.6)", padding: 0, pointerEvents: "auto", touchAction: "none" }} />)}
+                  ].map((handle) => <button key={handle.name} type="button" aria-label={`Adjust ${handle.name} crop edge`} onPointerDown={(event) => beginCropDrag(event, handle.edges)} onPointerMove={(event) => { if (cropDrag) updateCropFromPointer(event, cropDrag.edges, cropDrag.startX, cropDrag.startY, cropDrag.initial); }} onPointerUp={() => setCropDrag(null)} onPointerCancel={() => setCropDrag(null)} style={{ position: "absolute", ...handle.pos, width: handle.pos.width || 18, height: handle.pos.height || 18, border: "2px solid #fff", borderRadius: handle.name.length > 5 && handle.name.includes("-") ? 4 : 7, background: "#2563eb", boxShadow: "0 1px 5px rgba(0,0,0,.6)", padding: 0, pointerEvents: "auto", touchAction: "none" }} />)}
                   <div style={{ position: "absolute", left: "33.33%", right: "33.33%", top: 0, bottom: 0, borderLeft: "1px solid rgba(255,255,255,.55)", borderRight: "1px solid rgba(255,255,255,.55)", pointerEvents: "none" }} />
                   <div style={{ position: "absolute", top: "33.33%", bottom: "33.33%", left: 0, right: 0, borderTop: "1px solid rgba(255,255,255,.55)", borderBottom: "1px solid rgba(255,255,255,.55)", pointerEvents: "none" }} />
                 </div>
