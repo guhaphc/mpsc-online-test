@@ -565,7 +565,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
         </details>
 
         {submissions.length > 0 && <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 14 }}>
-          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">03</span><span><strong>Your submissions & results</strong><small>{submissions.length} submission{submissions.length === 1 ? "" : "s"} · Open to review feedback</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">03</span><span><strong>Previous Evaluations</strong><small>{submissions.filter((item) => item.status === "evaluated").length} completed · Open to view past results</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
           <div className="custom-mains-panel-content">
           <div style={{ display: "grid", gap: 12 }}>
             {submissions.map((submission) => {
@@ -623,8 +623,8 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
           </footer>
         </div>}
 
-        {activeEvaluation && <details open className="custom-mains-section custom-mains-evaluation custom-mains-accordion" style={{ marginTop: 14 }}>
-          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number custom-mains-number-gold">✓</span><span><strong>Evaluation result</strong><small>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks · Detailed feedback</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+        {activeEvaluation && <details className="custom-mains-section custom-mains-evaluation custom-mains-accordion" style={{ marginTop: 14 }}>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number custom-mains-number-gold">✓</span><span><strong>Evaluation Details</strong><small>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks · Tap to open detailed feedback</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
           <div className="custom-mains-panel-content">
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}><button type="button" className="primary" onClick={printEvaluationPdf}>📄 Print / Download Evaluation PDF</button></div>
           <div style={{ fontSize: 28, fontWeight: 750 }}>{activeEvaluation.awarded_marks} / {activeEvaluation.max_marks} marks</div>
