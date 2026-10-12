@@ -171,22 +171,20 @@ export async function POST(req: NextRequest) {
     if (bankError || !bank) return fail("Could not save a draft. Confirm the Question Bank Studio migration is applied.", 500);
     bankId = String(bank.id);
     const targets: Record<Difficulty,number> = { Easy: distribution[0], Moderate: distribution[1], Tough: distribution[2], "Extra Tough": distribution[3] };
+    const allSlots: Difficulty[] = [];
+    const remaining = { ...targets };
+    while (allSlots.length < count) {
+      for (const level of levels) {
+        if (remaining[level] > 0) { allSlots.push(level); remaining[level] -= 1; }
+      }
+    }
     let order = 0;
     for (let start = 0; start < count; start += 10) {
       const size = Math.min(10,count-start);
-      const slots: Difficulty[] = [];
-      for (const level of levels) {
-        const before = Math.floor(start * targets[level] / count);
-        const after = Math.floor(Math.min(count,start+size) * targets[level] / count);
-        for (let i=before;i<after;i++) slots.push(level);
-      }
-      while (slots.length < size) {
-        const fallback = levels.find(level => slots.filter(x=>x===level).length + Math.floor(start*targets[level]/count) < targets[level]) || "Moderate";
-        slots.push(fallback);
-      }
+      const slots = allSlots.slice(start,start+size);
       const prompt = `Generate exactly ${size} unique, high-quality single-correct MPSC/UPSC prelims MCQs in ${language}. Bank: ${title}; Exam: ${exam}; Subject: ${subject}; Topic: ${topic || "as supported by source"}.\nDifficulty for each question in order: ${slots.map((x,i)=>`${i+1}. ${x}`).join("\n")}\n${sourceMode === "source_only" ? "STRICT SOURCE MODE: questions, answers and explanations must be supported by the supplied source; cite page/heading in source_reference when possible." : "SOURCE + AI KNOWLEDGE MODE: use the source as foundation and supplement with established knowledge relevant to MPSC/UPSC. Never invent citations or disputed facts."}\nSource text:\n${sourceText || "Read the attached PDF/image as the source."}\nRules: four distinct options; exactly one defensible answer; plausible distractors; explanation supports the answer; avoid duplicates, ambiguity and unsupported claims. Extra Tough means integrated reasoning, not obscure trivia. Return JSON only.`;
       const raw = await generate(prompt,attachment);
-      const clean = raw.map(cleanQuestion).filter(Boolean) as Array<NonNullable<ReturnType<typeof cleanQuestion>>>;
+      const clean = raw.map((value,index) => { const question = cleanQuestion(value); return question ? { ...question, difficulty: slots[index] } : null; }).filter(Boolean) as Array<NonNullable<ReturnType<typeof cleanQuestion>>>;
       if (clean.length !== size) throw new Error(`AI returned ${clean.length} valid questions for a batch of ${size}. A partial draft has been saved; try again with a clearer source.`);
       const rows = clean.map(q=>({bank_id:bankId,question_order:++order,...q}));
       const { error } = await ctx.db.from("mpsc_ai_question_bank_items").insert(rows);
