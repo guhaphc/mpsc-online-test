@@ -490,7 +490,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
         {error && <div role="alert" style={{ padding: 12, margin: "14px 0", borderRadius: 8, background: "#fff0f0", color: "#9b1c1c" }}>{error}</div>}
         {notice && <div role="status" style={{ padding: 12, margin: "14px 0", borderRadius: 8, background: "#edf8ef", color: "#176b31" }}>{notice}</div>}
 
-        <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 20 }} open>
+        <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 20 }}>
           <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">01</span><span><strong>Add your question</strong><small>Type a question or upload a PDF/image</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
           <div className="custom-mains-panel-content">
           <p className="muted">Type/paste the question or upload a PDF/image. AI prepares a model answer and marking rubric privately on the server.</p>
