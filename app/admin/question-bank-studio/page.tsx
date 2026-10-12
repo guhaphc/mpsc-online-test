@@ -100,13 +100,13 @@ export default function QuestionBankStudioPage() {
     }catch(e){setError(e instanceof Error?e.message:"Could not update status.");}
     finally{setWorking(false);}
   }
-  const canEdit=!!selectedBank&&selectedBank.status==="draft"&&(role==="admin"||selectedBank.created_by===banks.find(b=>b.id===selectedBank.id)?.created_by);
+  const canEdit=!!selectedBank&&(selectedBank.status==="draft"||(role==="admin"&&selectedBank.status==="pending_review"))&&(role==="admin"||selectedBank.created_by===banks.find(b=>b.id===selectedBank.id)?.created_by);
   const isAdmin=role==="admin";
 
   return <main className="page"><section className="card" style={{maxWidth:1050,margin:"0 auto"}}>
     <header style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:20}}>
       <div><div className="eyebrow">AI QUESTION BANK STUDIO</div><h1>Create MCQ Question Bank</h1><p className="muted">Upload source material, generate four difficulty levels, review and publish through approval.</p></div>
-      <button className="secondary" type="button" onClick={()=>router.push(isAdmin?"/admin":"/teacher")}>Back to Dashboard</button>
+      <button className="secondary" type="button" onClick={()=>router.push(isAdmin?"/admin":"/student")}>Back to Dashboard</button>
     </header>
     {error&&<div role="alert" className="form-error" style={{marginBottom:14}}>{error}</div>}
     {notice&&<div role="status" className="form-success" style={{marginBottom:14}}>{notice}</div>}
