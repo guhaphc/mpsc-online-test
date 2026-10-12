@@ -233,6 +233,9 @@ export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
     const submissionId = String(body.submission_id || "");
+    if (body.confirmation !== "DELETE") {
+      return NextResponse.json({ error: "Explicit DELETE confirmation is required." }, { status: 400 });
+    }
     if (!/^[0-9a-f-]{36}$/i.test(submissionId)) {
       return NextResponse.json({ error: "A valid submission ID is required." }, { status: 400 });
     }
