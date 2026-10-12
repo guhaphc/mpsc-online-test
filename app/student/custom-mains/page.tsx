@@ -562,32 +562,46 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
             )}
           </>}
           </div>
-        </details>
+                  {submissions.some((item) => item.status !== "evaluated") && <section aria-label="Answers awaiting evaluation" style={{ marginTop: 22, padding: 14, borderRadius: 12, border: "1px solid #f0d7a2", background: "#fffbeb" }}>
+            <div style={{ marginBottom: 12 }}><strong style={{ display: "block", color: "#854d0e", fontSize: 17 }}>Current work · Awaiting evaluation</strong><span style={{ color: "#92400e", fontSize: 13 }}>{submissions.filter((item) => item.status !== "evaluated").length} answer(s) need review</span></div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {submissions.filter((item) => item.status !== "evaluated").map((submission) => {
+                const question = questions.find((item) => item.id === submission.custom_question_id);
+                return <article key={submission.id} style={{ border: "1px solid #f0d7a2", background: "#fff", borderRadius: 10, padding: 13 }}>
+                  <strong style={{ color: "#1f2937" }}>{question?.subject || "Mains answer"} · {question?.marks || "—"} marks</strong>
+                  <p style={{ color: "#92400e", margin: "6px 0" }}>Awaiting evaluation · {new Date(submission.created_at).toLocaleDateString()}</p>
+                  <p className="muted">{submission.answer_type === "handwritten" ? "Handwritten / OCR" : "Typed answer"} · {submission.word_count} words</p>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {submission.answer_type === "handwritten" && <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setAnswerMode("handwritten"); setAnswerText(submission.answer_text || ""); setEditingSubmissionId(submission.id); }}>Review transcription</button>}
+                    {submission.answer_type === "handwritten" && editingSubmissionId === submission.id && <button type="button" className="secondary" disabled={working} onClick={() => saveTranscription(submission)}>{working ? "Saving…" : "Save corrected transcription"}</button>}
+                    <button type="button" className="primary" disabled={evaluatingId === submission.id} onClick={() => evaluateSubmission(submission)}>{evaluatingId === submission.id ? "Evaluating…" : "Evaluate answer"}</button>
+                  </div>
+                </article>;
+              })}
+            </div>
+          </section>}
+          </details>
 
-        {submissions.length > 0 && <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 14 }}>
-          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number">03</span><span><strong>Previous Evaluations</strong><small>{submissions.filter((item) => item.status === "evaluated").length} completed · Open to view past results</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
+        {submissions.some((item) => item.status === "evaluated") && <details className="custom-mains-section custom-mains-accordion" style={{ marginTop: 14 }}>
+          <summary className="custom-mains-summary"><span className="custom-mains-summary-title"><span className="custom-mains-number custom-mains-number-gold">03</span><span><strong>Evaluation History</strong><small>{submissions.filter((item) => item.status === "evaluated").length} completed · Green cards are saved results</small></span></span><span className="custom-mains-chevron" aria-hidden="true">⌄</span></summary>
           <div className="custom-mains-panel-content">
-          <div style={{ display: "grid", gap: 12 }}>
-            {submissions.map((submission) => {
-              const question = questions.find((item) => item.id === submission.custom_question_id);
-              return <article key={submission.id} style={{ border: "1px solid var(--border, #ddd)", borderRadius: 10, padding: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <strong>{question?.subject || "Mains answer"} · {question?.marks || submission.evaluation?.max_marks || "—"} marks</strong>
-                  <span className="muted">{submission.status === "evaluated" ? "Evaluated" : "Awaiting evaluation"} · {new Date(submission.created_at).toLocaleDateString()}</span>
-                </div>
-                <p className="muted">{submission.answer_type === "handwritten" ? "Handwritten/OCR" : "Typed"} · {submission.word_count} words</p>
-                {submission.status !== "evaluated" ? <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {submission.answer_type === "handwritten" && <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setAnswerMode("handwritten"); setAnswerText(submission.answer_text || ""); setEditingSubmissionId(submission.id); }}>Review transcription</button>}
-                  {submission.answer_type === "handwritten" && editingSubmissionId === submission.id && <button type="button" className="secondary" disabled={working} onClick={() => saveTranscription(submission)}>{working ? "Saving…" : "Save corrected transcription"}</button>}
-                  <button type="button" className="primary" disabled={evaluatingId === submission.id} onClick={() => evaluateSubmission(submission)}>{evaluatingId === submission.id ? "Evaluating…" : "Evaluate answer"}</button>
-                </div> : <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setActiveEvaluation(submission.evaluation); setActiveSubmissionId(submission.id); }}>View evaluation</button>}
-              </article>;
-            })}
-          </div>
+            <div style={{ display: "grid", gap: 12 }}>
+              {submissions.filter((submission) => submission.status === "evaluated").map((submission) => {
+                const question = questions.find((item) => item.id === submission.custom_question_id);
+                return <article key={submission.id} style={{ border: "1px solid #bbdfc8", background: "#f0fdf4", borderRadius: 10, padding: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+                    <strong style={{ color: "#14532d" }}>{question?.subject || "Mains answer"} · {question?.marks || submission.evaluation?.max_marks || "—"} marks</strong>
+                    <span style={{ background: "#dcfce7", color: "#166534", borderRadius: 999, padding: "4px 9px", fontSize: 12, fontWeight: 700 }}>✓ Evaluated</span>
+                  </div>
+                  <p className="muted" style={{ margin: "8px 0" }}>{new Date(submission.created_at).toLocaleDateString()} · {submission.answer_type === "handwritten" ? "Handwritten / OCR" : "Typed"} · {submission.word_count} words</p>
+                  <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setActiveEvaluation(submission.evaluation); setActiveSubmissionId(submission.id); }}>View result · {submission.evaluation?.awarded_marks ?? "—"} / {submission.evaluation?.max_marks ?? question?.marks ?? "—"} marks</button>
+                </article>;
+              })}
+            </div>
           </div>
         </details>}
 
-        {cropTarget && cropFile && <div role="dialog" aria-modal="true" aria-label="Crop uploaded image" style={{ position: "fixed", inset: 0, zIndex: 2000, background: "#101827", display: "flex", flexDirection: "column", padding: "max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom))", color: "#fff" }}>
+{cropTarget && cropFile && <div role="dialog" aria-modal="true" aria-label="Crop uploaded image" style={{ position: "fixed", inset: 0, zIndex: 2000, background: "#101827", display: "flex", flexDirection: "column", padding: "max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom))", color: "#fff" }}>
           <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, minHeight: 48, flexShrink: 0 }}>
             <button type="button" onClick={closeCrop} disabled={cropBusy} aria-label="Close crop editor" style={{ border: 0, color: "#fff", background: "transparent", fontSize: 26, padding: "4px 10px" }}>✕</button>
             <div style={{ minWidth: 0, textAlign: "center" }}><strong style={{ display: "block", fontSize: 16 }}>Crop image</strong><small style={{ color: "#cbd5e1" }}>{cropTarget === "question" ? "Question image" : `Answer page ${cropIndex + 1}`}</small></div>
