@@ -37,6 +37,7 @@ export async function POST(request:NextRequest) {
     }
     const {data:questions,error}=await ctx.db.from("mpsc_ai_question_bank_items").select("id,question_order,question_text,option_a,option_b,option_c,option_d,correct_answer,explanation,difficulty,source_reference").eq("bank_id",bankId).order("question_order");
     if(error||!questions?.length)return NextResponse.json({error:"Questions could not be loaded."},{status:500});
+    if (submitted.size !== questions.length || questions.some((q) => !submitted.has(String(q.id)))) return NextResponse.json({error:"Submit an answer choice for every question before viewing the answer key."},{status:400});
     const reviewed=questions.map(q=>({question_id:q.id,question_order:q.question_order,question_text:q.question_text,options:{A:q.option_a,B:q.option_b,C:q.option_c,D:q.option_d},selected_answer:submitted.get(String(q.id))||"",correct_answer:q.correct_answer,correct:submitted.get(String(q.id))===q.correct_answer,explanation:q.explanation,difficulty:q.difficulty,source_reference:q.source_reference}));
     const correct=reviewed.filter(q=>q.correct).length;
     return NextResponse.json({bank_title:bank.title,total:reviewed.length,answered:reviewed.filter(q=>q.selected_answer).length,correct,score_percent:Math.round(correct/Math.max(1,reviewed.length)*100),results:reviewed});
