@@ -69,6 +69,9 @@ export default function StudentPage() {
           <button type="button" className="student-feature student-feature-study" onClick={() => router.push("/study-material")}>
             <span className="student-feature-icon" aria-hidden="true">▤</span><span className="student-feature-label">LEARN</span><strong>Study Material</strong><small>Subject-wise notes and resources</small><span className="student-feature-arrow" aria-hidden="true">↗</span>
           </button>
+          <button type="button" className="student-feature student-feature-tests" onClick={() => router.push("/question-banks")}>
+            <span className="student-feature-icon" aria-hidden="true">▤</span><span className="student-feature-label">PRACTISE</span><strong>AI Question Banks</strong><small>Practise approved MCQs by difficulty</small><span className="student-feature-arrow" aria-hidden="true">↗</span>
+          </button>
           <button type="button" className="student-feature student-feature-tests" onClick={() => router.push("/tests")}>
             <span className="student-feature-icon" aria-hidden="true">✓</span><span className="student-feature-label">PRACTISE</span><strong>Prelims Tests</strong><small>Attempt objective practice tests</small><span className="student-feature-arrow" aria-hidden="true">↗</span>
           </button>
