@@ -181,3 +181,60 @@ The rubric must be question-specific, avoid double-counting, and reward relevanc
     return NextResponse.json({ error: error instanceof Error ? error.message : "Could not create your question." }, { status: 500 });
   }
 }
+
+
+export async function DELETE(request: NextRequest) {
+  const context = await getStudentContext(request);
+  if (!context.ok) return context.response;
+
+  try {
+    const body = await request.json();
+    const questionId = String(body.question_id || "");
+    if (!/^[0-9a-f-]{36}$/i.test(questionId)) {
+      return NextResponse.json({ error: "A valid question ID is required." }, { status: 400 });
+    }
+    if (body.confirmation !== "DELETE") {
+      return NextResponse.json({ error: "Explicit DELETE confirmation is required." }, { status: 400 });
+    }
+
+    const { data: question, error: questionError } = await context.adminClient
+      .from("mpsc_student_custom_mains_questions")
+      .select("id,status")
+      .eq("id", questionId)
+      .eq("user_id", context.user.id)
+      .single();
+
+    if (questionError || !question) {
+      return NextResponse.json({ error: "Question not found." }, { status: 404 });
+    }
+
+    const { count, error: submissionsError } = await context.adminClient
+      .from("mpsc_student_custom_mains_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("custom_question_id", questionId)
+      .eq("user_id", context.user.id);
+
+    if (submissionsError) {
+      return NextResponse.json({ error: "Could not check whether this question has saved answers. Nothing was deleted." }, { status: 500 });
+    }
+    if ((count || 0) > 0) {
+      return NextResponse.json({ error: "This question still has saved answers or evaluations. Delete those individually first, then try again." }, { status: 409 });
+    }
+
+    const { error: deleteError } = await context.adminClient
+      .from("mpsc_student_custom_mains_questions")
+      .delete()
+      .eq("id", questionId)
+      .eq("user_id", context.user.id);
+
+    if (deleteError) {
+      console.error("Custom Mains question deletion failed:", deleteError);
+      return NextResponse.json({ error: "Could not delete this question." }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, deleted_question_id: questionId });
+  } catch (error) {
+    console.error("Custom Mains question deletion failed:", error);
+    return NextResponse.json({ error: "Could not permanently delete this question." }, { status: 500 });
+  }
+}
