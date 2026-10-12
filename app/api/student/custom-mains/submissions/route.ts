@@ -224,3 +224,81 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Could not save the transcription." }, { status: 500 });
   }
 }
+
+
+export async function DELETE(request: NextRequest) {
+  const context = await getStudentContext(request);
+  if (!context.ok) return context.response;
+
+  try {
+    const body = await request.json();
+    const submissionId = String(body.submission_id || "");
+    if (body.confirmation !== "DELETE") {
+      return NextResponse.json({ error: "Explicit DELETE confirmation is required." }, { status: 400 });
+    }
+    if (!/^[0-9a-f-]{36}$/i.test(submissionId)) {
+      return NextResponse.json({ error: "A valid submission ID is required." }, { status: 400 });
+    }
+
+    const { data: submission, error: submissionError } = await context.adminClient
+      .from("mpsc_student_custom_mains_submissions")
+      .select("id,status")
+      .eq("id", submissionId)
+      .eq("user_id", context.user.id)
+      .single();
+
+    if (submissionError || !submission) {
+      return NextResponse.json({ error: "Evaluation not found." }, { status: 404 });
+    }
+    if (submission.status !== "evaluated") {
+      return NextResponse.json({ error: "Only completed evaluations can be permanently deleted from history." }, { status: 409 });
+    }
+
+    const { data: pages, error: pagesReadError } = await context.adminClient
+      .from("mpsc_student_custom_mains_pages")
+      .select("storage_path")
+      .eq("submission_id", submissionId)
+      .eq("user_id", context.user.id);
+
+    if (pagesReadError) {
+      return NextResponse.json({ error: "Could not prepare the evaluation for deletion. Nothing was deleted." }, { status: 500 });
+    }
+
+    const storagePaths = (pages || []).map((page) => String(page.storage_path || "")).filter(Boolean);
+    if (storagePaths.length) {
+      const { error: storageError } = await context.adminClient.storage.from(BUCKET).remove(storagePaths);
+      if (storageError) {
+        console.error("Custom Mains evaluation file deletion failed:", storageError);
+        return NextResponse.json({ error: "Could not delete the saved answer files. The evaluation was kept." }, { status: 500 });
+      }
+    }
+
+    const { error: pagesDeleteError } = await context.adminClient
+      .from("mpsc_student_custom_mains_pages")
+      .delete()
+      .eq("submission_id", submissionId)
+      .eq("user_id", context.user.id);
+
+    if (pagesDeleteError) {
+      console.error("Custom Mains page record deletion failed:", pagesDeleteError);
+      return NextResponse.json({ error: "Answer files were removed, but page records could not be deleted. Please contact support before retrying." }, { status: 500 });
+    }
+
+    const { error: deleteError } = await context.adminClient
+      .from("mpsc_student_custom_mains_submissions")
+      .delete()
+      .eq("id", submissionId)
+      .eq("user_id", context.user.id)
+      .eq("status", "evaluated");
+
+    if (deleteError) {
+      console.error("Custom Mains evaluation deletion failed:", deleteError);
+      return NextResponse.json({ error: "The evaluation record could not be deleted. Please try again or contact support." }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, deleted_submission_id: submissionId });
+  } catch (error) {
+    console.error("Custom Mains evaluation deletion failed:", error);
+    return NextResponse.json({ error: "Could not permanently delete this evaluation." }, { status: 500 });
+  }
+}

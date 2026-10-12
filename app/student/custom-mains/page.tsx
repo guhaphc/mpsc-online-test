@@ -376,6 +376,40 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
     }
   }
 
+  async function deleteEvaluation(submission: Submission) {
+    const question = questions.find((item) => item.id === submission.custom_question_id);
+    const label = question?.subject || "Mains answer";
+    if (!window.confirm(`Permanently delete this evaluated answer (${label}) and its saved handwritten pages? This cannot be undone.`)) return;
+    const confirmation = window.prompt("To permanently delete this evaluation, type DELETE. This action cannot be undone.");
+    if (confirmation !== "DELETE") {
+      setNotice("Deletion cancelled. Your evaluation is unchanged.");
+      return;
+    }
+    setError("");
+    setNotice("");
+    setWorking(true);
+    try {
+      const token = await getToken();
+      const response = await fetch("/api/student/custom-mains/submissions", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ submission_id: submission.id, confirmation }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not permanently delete this evaluation.");
+      setSubmissions((current) => current.filter((item) => item.id !== submission.id));
+      if (activeSubmissionId === submission.id) {
+        setActiveEvaluation(null);
+        setActiveSubmissionId(null);
+      }
+      setNotice("Evaluation permanently deleted.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not permanently delete this evaluation.");
+    } finally {
+      setWorking(false);
+    }
+  }
+
   const cropFile = cropTarget === "question" ? questionFile : answerFiles[cropIndex] || null;
 
   useEffect(() => {
@@ -594,7 +628,10 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
                     <span style={{ background: "#dcfce7", color: "#166534", borderRadius: 999, padding: "4px 9px", fontSize: 12, fontWeight: 700 }}>✓ Evaluated</span>
                   </div>
                   <p className="muted" style={{ margin: "8px 0" }}>{new Date(submission.created_at).toLocaleDateString()} · {submission.answer_type === "handwritten" ? "Handwritten / OCR" : "Typed"} · {submission.word_count} words</p>
-                  <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setActiveEvaluation(submission.evaluation); setActiveSubmissionId(submission.id); }}>View result · {submission.evaluation?.awarded_marks ?? "—"} / {submission.evaluation?.max_marks ?? question?.marks ?? "—"} marks</button>
+                  <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                    <button type="button" className="secondary" onClick={() => { setSelectedQuestionId(submission.custom_question_id); setActiveEvaluation(submission.evaluation); setActiveSubmissionId(submission.id); }}>View result · {submission.evaluation?.awarded_marks ?? "—"} / {submission.evaluation?.max_marks ?? question?.marks ?? "—"} marks</button>
+                    <button type="button" disabled={working} onClick={() => deleteEvaluation(submission)} style={{ width: "100%", border: "1px solid #fecaca", borderRadius: 9, padding: "10px 12px", background: "#fff7f7", color: "#b91c1c", fontWeight: 700, cursor: working ? "not-allowed" : "pointer" }}>{working ? "Please wait…" : "Delete evaluation permanently"}</button>
+                  </div>
                 </article>;
               })}
             </div>
