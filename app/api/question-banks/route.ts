@@ -116,7 +116,8 @@ export async function GET(req: NextRequest) {
     if (!student && !admin(ctx.role) && bank.created_by !== ctx.user.id) return fail("You cannot view this question bank.", 403);
     const { data: questions, error: qError } = await ctx.db.from("mpsc_ai_question_bank_items").select("*").eq("bank_id", bankId).order("question_order");
     if (qError) return fail("Could not load questions.", 500);
-    return NextResponse.json({ bank, questions: questions || [] });
+    const safeQuestions = student ? (questions || []).map((q) => ({ id: q.id, question_order: q.question_order, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d, difficulty: q.difficulty, source_reference: q.source_reference })) : (questions || []);
+    return NextResponse.json({ bank: { id: bank.id, title: bank.title, exam: bank.exam, subject: bank.subject, topic: bank.topic, language: bank.language, status: bank.status }, questions: safeQuestions });
   }
   let query = ctx.db.from("mpsc_ai_question_banks").select("id,title,exam,subject,topic,language,source_type,source_name,source_mode,created_by,status,created_at,updated_at,published_at").order("created_at", { ascending: false }).limit(100);
   if (student) query = query.eq("status", "published");
