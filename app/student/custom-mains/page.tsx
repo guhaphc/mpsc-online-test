@@ -376,6 +376,42 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
     }
   }
 
+  async function deleteQuestion(question: CustomQuestion) {
+    const related = submissions.filter((item) => item.custom_question_id === question.id);
+    if (related.length > 0) {
+      setError("Delete this question's saved evaluations first. Questions with saved answers cannot be deleted.");
+      return;
+    }
+    if (!window.confirm(`Permanently delete the unused question "${question.subject || question.question_text.slice(0, 80)}"? This cannot be undone.`)) return;
+    const confirmation = window.prompt("To permanently delete this question, type DELETE.");
+    if (confirmation !== "DELETE") {
+      setNotice("Deletion cancelled. Your question is unchanged.");
+      return;
+    }
+    setError("");
+    setNotice("");
+    setWorking(true);
+    try {
+      const token = await getToken();
+      const response = await fetch("/api/student/custom-mains/questions", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ question_id: question.id, confirmation }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Could not delete this question.");
+      setQuestions((current) => current.filter((item) => item.id !== question.id));
+      setSelectedQuestionId((current) => current === question.id ? (questions.find((item) => item.id !== question.id)?.id || "") : current);
+      setNotice("Question permanently deleted.");
+      setActiveEvaluation(null);
+      setActiveSubmissionId(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Could not permanently delete this question.");
+    } finally {
+      setWorking(false);
+    }
+  }
+
   async function deleteEvaluation(submission: Submission) {
     const question = questions.find((item) => item.id === submission.custom_question_id);
     const label = question?.subject || "Mains answer";
@@ -561,6 +597,7 @@ ${evaluation.word_limit_warning ? `<h3>Word-limit guidance</h3><p>${escapeHtml(e
             {selectedQuestion && <div style={{ background: "var(--surface, #f7f7f7)", borderRadius: 8, padding: 14, marginBottom: 14 }}>
               <strong>{selectedQuestion.subject || "Mains question"} · {selectedQuestion.marks} marks{selectedQuestion.word_limit ? ` · ${selectedQuestion.word_limit} words` : ""}</strong>
               <p style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>{selectedQuestion.question_text}</p>
+              {submissions.every((item) => item.custom_question_id !== selectedQuestion.id) && <button type="button" disabled={working} onClick={() => deleteQuestion(selectedQuestion)} style={{ marginTop: 12, border: "1px solid #fecaca", borderRadius: 9, padding: "9px 12px", background: "#fff7f7", color: "#b91c1c", fontWeight: 700, cursor: working ? "not-allowed" : "pointer" }}>{working ? "Please wait…" : "Delete unused question permanently"}</button>}
             </div>}
             <div role="group" aria-label="Answer type" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
               <button type="button" className={answerMode === "typed" ? "primary" : "secondary"} onClick={() => setAnswerMode("typed")}>Type answer</button>
