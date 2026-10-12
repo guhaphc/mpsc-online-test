@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -43,8 +45,18 @@ async function readWebpage(raw: string) {
   const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || host === "localhost" ||
     host.endsWith(".localhost") || host.endsWith(".local") || host === "::1" || host.startsWith("fc") ||
-    host.startsWith("fd") || host.startsWith("fe80:") || privateIPv4(host)) {
+    host.startsWith("fd") || host.startsWith("fe80:") || privateIPv4(host) || host === "0.0.0.0" || host === "::") {
     throw new Error("Only public HTTP/HTTPS webpage URLs are allowed.");
+  }
+  try {
+    const addresses = isIP(host) ? [{ address: host }] : await lookup(host, { all: true, verbatim: true });
+    if (!addresses.length || addresses.some((entry) => privateIPv4(entry.address) || entry.address === "::1" ||
+      entry.address.startsWith("fc") || entry.address.startsWith("fd") || entry.address.startsWith("fe80:") ||
+      entry.address.startsWith("::ffff:127.") || entry.address === "::")) {
+      throw new Error("Only public webpage hosts are allowed.");
+    }
+  } catch {
+    throw new Error("The webpage host could not be verified as public.");
   }
   const response = await fetch(url.toString(), { redirect: "manual", signal: AbortSignal.timeout(12000), headers: { "user-agent": "MPSC-QuestionBank/1.0", accept: "text/html,text/plain" } });
   if (response.status >= 300 && response.status < 400) throw new Error("This webpage redirects. Use its final public URL directly.");
