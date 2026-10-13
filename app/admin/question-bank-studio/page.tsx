@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 
 type Bank = { id:string; title:string; exam:string; subject:string; topic:string; language:string; source_type:string; source_name:string; source_mode:string; created_by:string; status:string; created_at:string };
 type Item = { id:string; question_order:number; question_text:string; option_a:string; option_b:string; option_c:string; option_d:string; correct_answer:string; explanation:string; difficulty:string; source_reference:string };
+type Revision = { id:string; bank_id:string; question_id:string; question_type:string; candidate:Item; status:string; created_at:string };
 
 export default function QuestionBankStudioPage() {
   const router=useRouter();
@@ -14,6 +15,10 @@ export default function QuestionBankStudioPage() {
   const [selectedId,setSelectedId]=useState("");
   const [selectedBank,setSelectedBank]=useState<Bank|null>(null);
   const [items,setItems]=useState<Item[]>([]);
+  const [revisions,setRevisions]=useState<Revision[]>([]);
+  const [regenTypes,setRegenTypes]=useState<Record<string,string>>({});
+  const [importForm,setImportForm]=useState({title:"",exam:"MPSC",subject:"",topic:"",language:"English",text:""});
+  const [timeLimit,setTimeLimit]=useState("30");
   const [form,setForm]=useState({title:"",exam:"MPSC",subject:"",topic:"",language:"English",source_mode:"source_only",count:"10",easy:"2",moderate:"3",tough:"3",extra_tough:"2",webpage_url:"",source_text:""});
   const [sourceFile,setSourceFile]=useState<File|null>(null);
   const [loading,setLoading]=useState(true);
@@ -41,7 +46,8 @@ export default function QuestionBankStudioPage() {
   async function loadBank(id:string) {
     setSelectedId(id);setError("");setNotice("");
     const result=await api("/api/question-banks?bank_id="+encodeURIComponent(id));
-    setSelectedBank(result.bank);setItems(result.questions||[]);
+    setSelectedBank(result.bank);setItems(result.questions||[]);setTimeLimit(String(result.bank?.time_limit_minutes||30));
+    try { const r=await api("/api/question-banks/revisions?bank_id="+encodeURIComponent(id)); setRevisions(r.revisions||[]); } catch { setRevisions([]); }
   }
   useEffect(()=>{(async()=>{
     try {
@@ -75,6 +81,43 @@ export default function QuestionBankStudioPage() {
       if(result.bank_id)await loadBank(result.bank_id);
     }catch(e){setError(e instanceof Error?e.message:"Question generation failed.");}
     finally{setWorking(false);}
+  }
+  async function importExisting(event:FormEvent<HTMLFormElement>) {
+    event.preventDefault();setError("");setNotice("");setWorking(true);
+    try {
+      const result=await api("/api/question-banks/import",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(importForm)});
+      setNotice(result.message||"Imported question bank saved as draft.");
+      setImportForm({title:"",exam:"MPSC",subject:"",topic:"",language:"English",text:""});
+      await loadBanks();if(result.bank_id)await loadBank(result.bank_id);
+    } catch(e) { setError(e instanceof Error?e.message:"Could not import questions."); }
+    finally { setWorking(false); }
+  }
+  async function regenerateQuestion(q:Item) {
+    if(!selectedBank)return;
+    const question_type=regenTypes[q.id]||"statement_based";
+    setWorking(true);setError("");setNotice("");
+    try {
+      const result=await api("/api/question-banks/regenerate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bank_id:selectedBank.id,question_id:q.id,question_type})});
+      setRevisions(old=>[result.revision,...old]);setNotice("Regenerated question saved as a separate draft. Original question is unchanged.");
+    } catch(e) { setError(e instanceof Error?e.message:"Could not regenerate question."); }
+    finally { setWorking(false); }
+  }
+  async function reviewRevision(revisionId:string,action:"accept"|"discard") {
+    setWorking(true);setError("");setNotice("");
+    try {
+      await api("/api/question-banks/revisions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({revision_id:revisionId,action})});
+      setNotice(action==="accept"?"Regenerated version accepted.":"Regenerated draft discarded.");
+      if(selectedBank)await loadBank(selectedBank.id);
+    } catch(e) { setError(e instanceof Error?e.message:"Could not review regenerated question."); }
+    finally { setWorking(false); }
+  }
+  async function saveBankSettings() {
+    if(!selectedBank)return;setWorking(true);setError("");setNotice("");
+    try {
+      await api("/api/question-banks",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({bank_id:selectedBank.id,action:"bank_settings",time_limit_minutes:Number(timeLimit)})});
+      setNotice("Test time limit saved.");await loadBank(selectedBank.id);await loadBanks();
+    } catch(e) { setError(e instanceof Error?e.message:"Could not save test settings."); }
+    finally { setWorking(false); }
   }
   function editItem(id:string,key:keyof Item,value:string) {
     setItems(old=>old.map(q=>q.id===id?({...q,[key]:value} as Item):q));
@@ -137,8 +180,23 @@ export default function QuestionBankStudioPage() {
         <p className="muted" style={{fontSize:13}}>Generated questions remain drafts until reviewed and approved. AI answers must be checked before publication.</p>
       </form>
     </details>
+    <details style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16,marginBottom:20}}>
+      <summary style={{fontSize:19,fontWeight:750,cursor:"pointer"}}>2 · Import an existing question bank (paste text)</summary>
+      <p className="muted">Paste prepared MCQs. AI will structure them into editable draft questions; review every answer before publishing.</p>
+      <form onSubmit={importExisting} style={{display:"grid",gap:12,marginTop:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}}>
+          <label>Question bank title<input required maxLength={180} value={importForm.title} onChange={e=>setImportForm({...importForm,title:e.target.value})}/></label>
+          <label>Exam<select value={importForm.exam} onChange={e=>setImportForm({...importForm,exam:e.target.value})}><option>MPSC</option><option>UPSC</option><option>Other</option></select></label>
+          <label>Subject<input required maxLength={160} value={importForm.subject} onChange={e=>setImportForm({...importForm,subject:e.target.value})}/></label>
+          <label>Topic<input maxLength={180} value={importForm.topic} onChange={e=>setImportForm({...importForm,topic:e.target.value})}/></label>
+          <label>Language<select value={importForm.language} onChange={e=>setImportForm({...importForm,language:e.target.value})}><option>English</option><option>Marathi</option></select></label>
+        </div>
+        <label>Paste existing questions<textarea required rows={9} maxLength={60000} value={importForm.text} onChange={e=>setImportForm({...importForm,text:e.target.value})} placeholder={"Q1. Example question?\nA. Option one\nB. Option two\nC. Option three\nD. Option four\nCorrect Answer: B\nExplanation: ..."} /></label>
+        <button className="primary" type="submit" disabled={working}>{working?"Importing and structuring questions…":"Import as a new draft"}</button>
+      </form>
+    </details>
     <section style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16,marginBottom:20}}>
-      <h2>2 · Saved question banks</h2>
+      <h2>3 · Saved question banks</h2>
       {loading?<p>Loading…</p>:banks.length===0?<p className="muted">No question banks yet.</p>:<div style={{display:"grid",gap:8}}>
         {banks.map(bank=><button type="button" key={bank.id} className={selectedId===bank.id?"primary":"secondary"} onClick={()=>void loadBank(bank.id)} style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"center",textAlign:"left",padding:12}}>
           <span><strong>{bank.title}</strong><small style={{display:"block",fontWeight:400,marginTop:4}}>{bank.exam} · {bank.subject}{bank.topic?" · "+bank.topic:""} · {new Date(bank.created_at).toLocaleDateString()}</small></span><span>{bank.status.replace("_"," ")}</span>
@@ -146,7 +204,7 @@ export default function QuestionBankStudioPage() {
       </div>}
     </section>
     {selectedBank&&<section style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16}}>
-      <div className="eyebrow">3 · REVIEW & PUBLISH</div><h2>{selectedBank.title}</h2>
+      <div className="eyebrow">4 · REVIEW & PUBLISH</div><h2>{selectedBank.title}</h2>
       <p className="muted">{selectedBank.source_type.toUpperCase()} · {selectedBank.source_name} · {selectedBank.source_mode==="source_only"?"Source only":"Source + AI knowledge"} · Status: <strong>{selectedBank.status.replace("_"," ")}</strong></p>
       {items.length===0?<p className="muted">No saved questions.</p>:<div style={{display:"grid",gap:14}}>
         {items.map((q,index)=><article className="qb-question-card" key={q.id} style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:14}}>
@@ -160,7 +218,22 @@ export default function QuestionBankStudioPage() {
             <label>Source reference<input disabled={!canEdit} value={q.source_reference||""} onChange={e=>editItem(q.id,"source_reference",e.target.value)}/></label>
           </div>
           <label>Explanation<textarea rows={3} disabled={!canEdit} value={q.explanation} onChange={e=>editItem(q.id,"explanation",e.target.value)}/></label>
+          {canEdit&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:8,marginTop:12,padding:12,borderRadius:10,background:"var(--surface,#f7f7f7)"}}>
+            <label>Regenerate this question as<select value={regenTypes[q.id]||"statement_based"} onChange={e=>setRegenTypes(old=>({...old,[q.id]:e.target.value}))}><option value="statement_based">Statement-Based</option><option value="pairing">Pairing / Strict Elimination</option><option value="assertion_reason">Assertion and Reason</option><option value="single_liner">Single-Liner / Factual</option><option value="conceptual">Definitional / Conceptual</option></select></label>
+            <div style={{display:"flex",alignItems:"end"}}><button type="button" className="secondary" disabled={working} onClick={()=>void regenerateQuestion(q)}>✨ Regenerate this question</button></div>
+          </div>}
+          {revisions.filter(r=>r.question_id===q.id&&r.status==="draft").map(rev=><div key={rev.id} style={{marginTop:12,padding:12,border:"1px solid #e8c66a",borderRadius:10}}>
+            <strong>Regenerated draft · {({"statement_based":"Statement-Based","pairing":"Pairing / Strict Elimination","assertion_reason":"Assertion and Reason","single_liner":"Single-Liner / Factual","conceptual":"Definitional / Conceptual"} as Record<string,string>)[rev.question_type]||rev.question_type}</strong>
+            <p style={{whiteSpace:"pre-wrap"}}>{rev.candidate.question_text}</p>
+            {(["option_a","option_b","option_c","option_d"] as const).map((key,i)=><p key={key} style={{margin:"4px 0"}}><strong>{String.fromCharCode(65+i)}.</strong> {rev.candidate[key]}</p>)}
+            <p><strong>Correct answer:</strong> {rev.candidate.correct_answer}</p><p>{rev.candidate.explanation}</p>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" className="primary" disabled={working} onClick={()=>void reviewRevision(rev.id,"accept")}>Accept regenerated version</button><button type="button" className="secondary" disabled={working} onClick={()=>void reviewRevision(rev.id,"discard")}>Discard draft</button></div>
+          </div>)}
         </article>)}
+      </div>}
+      {canEdit&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12,marginTop:16,padding:12,border:"1px solid var(--border,#d8dee8)",borderRadius:10}}>
+        <label>Time allowed for this test (minutes)<input type="number" min="1" max="300" value={timeLimit} onChange={e=>setTimeLimit(e.target.value)}/></label>
+        <div style={{display:"flex",alignItems:"end"}}><button type="button" className="secondary" disabled={working||!Number.isInteger(Number(timeLimit))||Number(timeLimit)<1||Number(timeLimit)>300} onClick={()=>void saveBankSettings()}>Save test settings</button></div>
       </div>}
       {canEdit&&<div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}><button className="secondary" disabled={working} onClick={()=>void saveItems()}>Save edits</button><button className="primary" disabled={working||!items.length} onClick={()=>void doAction("submit")}>Submit for admin approval</button></div>}
       {isAdmin&&selectedBank.status==="pending_review"&&<div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}><button className="primary" disabled={working||!items.length} onClick={()=>void doAction("publish")}>Approve & publish to students</button><button className="secondary" disabled={working} onClick={()=>void doAction("reject")}>Reject bank</button></div>}
