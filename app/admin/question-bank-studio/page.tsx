@@ -183,8 +183,8 @@ export default function QuestionBankStudioPage() {
     <details style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16,marginBottom:20}}>
       <summary style={{fontSize:19,fontWeight:750,cursor:"pointer"}}>2 · Import an existing question bank (paste text)</summary>
       <p className="muted">Paste prepared MCQs. AI will structure them into editable draft questions; review every answer before publishing.</p>
-      <form onSubmit={importExisting} style={{display:"grid",gap:12,marginTop:12}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}}>
+      <form className="qb-studio-form qb-import-form" onSubmit={importExisting} style={{display:"grid",gap:12,marginTop:12,minWidth:0}}>
+        <div className="qb-studio-fields" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12,minWidth:0}}>
           <label>Question bank title<input required maxLength={180} value={importForm.title} onChange={e=>setImportForm({...importForm,title:e.target.value})}/></label>
           <label>Exam<select value={importForm.exam} onChange={e=>setImportForm({...importForm,exam:e.target.value})}><option>MPSC</option><option>UPSC</option><option>Other</option></select></label>
           <label>Subject<input required maxLength={160} value={importForm.subject} onChange={e=>setImportForm({...importForm,subject:e.target.value})}/></label>
