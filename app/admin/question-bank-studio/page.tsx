@@ -103,7 +103,7 @@ export default function QuestionBankStudioPage() {
   const canEdit=!!selectedBank&&(selectedBank.status==="draft"||(role==="admin"&&selectedBank.status==="pending_review"))&&(role==="admin"||selectedBank.created_by===banks.find(b=>b.id===selectedBank.id)?.created_by);
   const isAdmin=role==="admin";
 
-  return <main className="page"><section className="card" style={{maxWidth:1050,margin:"0 auto"}}>
+  return <main className="page qb-studio-page"><section className="card qb-studio-card" style={{maxWidth:1050,margin:"0 auto"}}>
     <header style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:20}}>
       <div><div className="eyebrow">AI QUESTION BANK STUDIO</div><h1>Create MCQ Question Bank</h1><p className="muted">Upload source material, generate four difficulty levels, review and publish through approval.</p></div>
       <button className="secondary" type="button" onClick={()=>router.push(isAdmin?"/admin":"/student")}>Back to Dashboard</button>
@@ -112,8 +112,8 @@ export default function QuestionBankStudioPage() {
     {notice&&<div role="status" className="form-success" style={{marginBottom:14}}>{notice}</div>}
     <details open={!selectedBank} style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16,marginBottom:20}}>
       <summary style={{fontSize:19,fontWeight:750,cursor:"pointer"}}>1 · Source and generation settings</summary>
-      <form onSubmit={generate} style={{display:"grid",gap:14,marginTop:16}}>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
+      <form className="qb-studio-form" onSubmit={generate} style={{display:"grid",gap:14,marginTop:16}}>
+        <div className="qb-studio-fields" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
           <label>Question bank title<input required maxLength={180} value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="Indian Constitution — Fundamental Rights"/></label>
           <label>Exam<select value={form.exam} onChange={e=>setForm({...form,exam:e.target.value})}><option>MPSC</option><option>UPSC</option><option>Other</option></select></label>
           <label>Subject<input required maxLength={160} value={form.subject} onChange={e=>setForm({...form,subject:e.target.value})} placeholder="Polity, History, Geography"/></label>
@@ -122,14 +122,14 @@ export default function QuestionBankStudioPage() {
           <label>Generation mode<select value={form.source_mode} onChange={e=>setForm({...form,source_mode:e.target.value})}><option value="source_only">Strictly from source</option><option value="source_plus_ai">Source + AI knowledge</option></select></label>
           <label>Total questions<select value={form.count} onChange={e=>setCount(e.target.value)}><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label>
         </div>
-        <div style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:14}}>
+        <div className="qb-studio-source" style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:14}}>
           <strong>Choose exactly one source</strong>
           <label style={{display:"block",marginTop:12}}>Upload PDF or image (max 4 MB)<input id="qb-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={e=>{setSourceFile(e.target.files?.[0]||null);setForm(c=>({...c,webpage_url:"",source_text:""}));}}/><small className="muted">PDF, JPG, PNG or WebP</small></label>
           <label style={{display:"block",marginTop:12}}>Or public webpage URL<input type="url" value={form.webpage_url} onChange={e=>{setForm(c=>({...c,webpage_url:e.target.value,source_text:""}));setSourceFile(null);const el=document.getElementById("qb-file") as HTMLInputElement|null;if(el)el.value="";}} placeholder="https://..."/></label>
           <label style={{display:"block",marginTop:12}}>Or paste source text<textarea rows={6} maxLength={60000} value={form.source_text} onChange={e=>{setForm(c=>({...c,source_text:e.target.value,webpage_url:""}));setSourceFile(null);const el=document.getElementById("qb-file") as HTMLInputElement|null;if(el)el.value="";}} placeholder="Paste at least 100 characters of source material"/></label>
         </div>
         <div><strong>Difficulty distribution</strong><p className="muted">Counts must total {form.count}. Defaults: 20% Easy, 30% Moderate, 30% Tough, 20% Extra Tough.</p>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
+          <div className="qb-studio-difficulty" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
             {([["easy","Easy"],["moderate","Moderate"],["tough","Tough"],["extra_tough","Extra Tough"]] as const).map(([key,label])=><label key={key}>{label}<input type="number" min="0" max={form.count} value={form[key]} onChange={e=>setForm({...form,[key]:e.target.value})}/></label>)}
           </div>
         </div>
