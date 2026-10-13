@@ -18,7 +18,7 @@ export default function QuestionBanksPage(){
  const [score,setScore]=useState<{total:number;answered:number;correct:number;score_percent:number}|null>(null);
  const [loading,setLoading]=useState(true);
  const [working,setWorking]=useState(false);
- const [explanationWorking,setExplanationWorking]=useState(false);
+ const [explanationWorking,setExplanationWorking]=useState<string | null>(null);
  const [error,setError]=useState("");
  async function getToken(){const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)throw new Error("Please sign in again.");return session.access_token;}
  async function api(path:string,init:RequestInit={}){const token=await getToken();const res=await fetch(path,{...init,headers:{...(init.headers||{}),Authorization:"Bearer "+token}});const json=await res.json();if(!res.ok)throw new Error(json.error||"Request failed.");return json;}
@@ -26,7 +26,17 @@ export default function QuestionBanksPage(){
  useEffect(()=>{void load();},[]);
  async function openBank(id:string){setWorking(true);setError("");setResults(null);setScore(null);setAnswers({});try{const data=await api("/api/question-banks?bank_id="+encodeURIComponent(id));setBank(data.bank);setQuestions(data.questions||[]);}catch(e){setError(e instanceof Error?e.message:"Could not open bank.");}finally{setWorking(false);}}
  async function submit(){if(!bank)return;setWorking(true);setError("");try{const payload=questions.map(q=>({question_id:q.id,answer:answers[q.id]||""}));const data=await api("/api/question-banks/attempt",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bank_id:bank.id,answers:payload})});setResults(data.results||[]);setScore({total:data.total,answered:data.answered,correct:data.correct,score_percent:data.score_percent});window.scrollTo({top:0,behavior:"smooth"});}catch(e){setError(e instanceof Error?e.message:"Could not grade attempt.");}finally{setWorking(false);}}
- async function generateDeepExplanations(){if(!bank||!results)return;setExplanationWorking(true);setError("");try{const payload=questions.map(q=>({question_id:q.id,answer:answers[q.id]||""}));const data=await api("/api/question-banks/explanations",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bank_id:bank.id,answers:payload})});const deep:DeepExplanation[]=data.explanations||[];setResults(old=>(old||[]).map(r=>({...r,deep_explanation:deep.find(x=>x.question_id===r.question_id)})));}catch(e){setError(e instanceof Error?e.message:"Could not generate in-depth explanations.");}finally{setExplanationWorking(false);}}
+ async function generateDeepExplanation(questionId:string){
+  if(!bank||!results)return;
+  setExplanationWorking(questionId);setError("");
+  try{
+   const payload=questions.map(q=>({question_id:q.id,answer:answers[q.id]||""}));
+   const data=await api("/api/question-banks/explanation",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bank_id:bank.id,question_id:questionId,answers:payload})});
+   const deep:DeepExplanation={question_id:questionId,...data.explanation};
+   setResults(old=>(old||[]).map(r=>r.question_id===questionId?{...r,deep_explanation:deep}:r));
+  }catch(e){setError(e instanceof Error?e.message:"Could not generate in-depth explanation.");}
+  finally{setExplanationWorking(null);}
+ }
  return <main className="page"><section className="card" style={{maxWidth:950,margin:"0 auto"}}>
   <header style={{display:"flex",justifyContent:"space-between",gap:12,flexWrap:"wrap",alignItems:"flex-start"}}><div><div className="eyebrow">MPSC / UPSC</div><h1>Practice Question Banks</h1><p className="muted">Practise published AI-generated MCQs and review explanations after submitting.</p></div><button className="secondary" onClick={()=>router.push("/student")}>Dashboard</button></header>
   {error&&<p className="form-error" role="alert">{error}</p>}
@@ -56,7 +66,8 @@ export default function QuestionBanksPage(){
        {result && <div style={{marginTop:12,padding:12,background:"var(--surface,#f7f7f7)",borderRadius:8}}>
         <strong>Basic explanation</strong><p style={{whiteSpace:"pre-wrap",marginBottom:6}}>{result.explanation}</p>
         {result.source_reference && <small className="muted">Source: {result.source_reference}</small>}
-        {result.deep_explanation && <div style={{marginTop:14,display:"grid",gap:10}}>
+        <button className="secondary" style={{marginTop:12,width:"100%",display:"flex",justifyContent:"center",alignItems:"center",gap:8}} disabled={explanationWorking!==null} onClick={()=>void generateDeepExplanation(q.id)}>{explanationWorking===q.id?"✨ Generating explanation…":result.deep_explanation?"✨ View saved AI explanation":"✨ AI in-depth explanation"}</button>
+        {result.deep_explanation && <div style={{marginTop:14,display:"grid",gap:10,borderTop:"1px solid var(--border,#d8dee8)",paddingTop:12}}>
          <h4 style={{margin:"4px 0"}}>AI in-depth explanation</h4>
          <div><strong>Concept</strong><p>{result.deep_explanation.concept}</p></div>
          <div><strong>Detailed explanation</strong><p style={{whiteSpace:"pre-wrap"}}>{result.deep_explanation.detailed_explanation}</p></div>
@@ -71,7 +82,7 @@ export default function QuestionBanksPage(){
      );
     })}
    </div>
-   {!results?<button className="primary" style={{marginTop:18,width:"100%"}} disabled={working||!questions.length} onClick={()=>void submit()}>{working?"Checking answers…":"Submit answers and view results"}</button>:<div style={{display:"grid",gap:10,marginTop:18}}><button className="primary" style={{width:"100%"}} disabled={explanationWorking} onClick={()=>void generateDeepExplanations()}>{explanationWorking?"Generating in-depth explanations…":results.some(r=>r.deep_explanation)?"Regenerate AI explanations":"Generate in-depth AI explanations for all questions"}</button><button className="secondary" onClick={()=>{setBank(null);setQuestions([]);setResults(null);setScore(null);setAnswers({});}}>Finish practice</button></div>}
+   {!results?<button className="primary" style={{marginTop:18,width:"100%"}} disabled={working||!questions.length} onClick={()=>void submit()}>{working?"Checking answers…":"Submit answers and view results"}</button>:<button className="secondary" style={{marginTop:18,width:"100%"}} onClick={()=>{setBank(null);setQuestions([]);setResults(null);setScore(null);setAnswers({});}}>Finish practice</button>}
   </section>}
  </section></main>;
 }
