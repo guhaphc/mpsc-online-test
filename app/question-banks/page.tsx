@@ -35,7 +35,42 @@ export default function QuestionBanksPage(){
    <button className="secondary" onClick={()=>{setBank(null);setQuestions([]);setResults(null);setScore(null);setAnswers({});}}>← All question banks</button>
    <h2>{bank.title}</h2><p className="muted">{bank.subject}{bank.topic?" · "+bank.topic:""} · {questions.length} questions</p>
    {score&&<div style={{border:"1px solid #bbdfc8",background:"#f0fdf4",borderRadius:12,padding:16,margin:"16px 0"}}><div className="eyebrow">YOUR RESULT</div><h2 style={{margin:"6px 0"}}>{score.correct} / {score.total} correct · {score.score_percent}%</h2><p style={{margin:0}}>Answered {score.answered} of {score.total}. Review the explanations below.</p></div>}
-   <div style={{display:"grid",gap:14,marginTop:16}}>{questions.map((q,index)=>{const result=results?.find(r=>r.question_id===q.id);return <article key={q.id} style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:16}}><div style={{display:"flex",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><strong>Q{index+1}</strong><span className="eyebrow">{q.difficulty}</span></div><h3 style={{whiteSpace:"pre-wrap"}}>{q.question_text}</h3><div style={{display:"grid",gap:8}}>{(["A","B","C","D"] as const).map(letter=>{const value=q["option_"+letter.toLowerCase() as "option_a"|"option_b"|"option_c"|"option_d"];const isCorrect=result?.correct_answer===letter;const isWrong=result?.selected_answer===letter&&!result.correct;return <label key={letter} style={{display:"flex",alignItems:"flex-start",gap:10,padding:10,border:"1px solid "+(result&&isCorrect?"#86efac":result&&isWrong?"#fca5a5":"var(--border,#d8dee8)"),borderRadius:9,background:result&&isCorrect?"#f0fdf4":result&&isWrong?"#fff1f2":"transparent"}}><input type="radio" name={q.id} value={letter} disabled={!!results||working} checked={(answers[q.id]||"")===letter} onChange={()=>setAnswers(old=>({...old,[q.id]:letter}))}/><span><strong>{letter}.</strong> {value}{result&&isCorrect?" ✓ Correct answer":""}{result&&isWrong?" — Your answer":""}</span></label>;})}</div>{result&&<div style={{marginTop:12,padding:12,background:"var(--surface,#f7f7f7)",borderRadius:8}}><strong>Basic explanation</strong><p style={{whiteSpace:"pre-wrap",marginBottom:6}}>{result.explanation}</p>{result.source_reference&&<small className="muted">Source: {result.source_reference}</small>}{result.deep_explanation&&<div style={{marginTop:14,display:"grid",gap:10}}><h4 style={{margin:"4px 0"}}>AI in-depth explanation</h4><div><strong>Concept</strong><p style={{whiteSpace:"pre-wrap",margin:"5px 0"}}>{result.deep_explanation.concept}</p></div><div><strong>Detailed explanation</strong><p style={{whiteSpace:"pre-wrap",margin:"5px 0"}}>{result.deep_explanation.detailed_explanation}</p></div><div><strong>Why each option is right or wrong</strong>{(["A","B","C","D"] as const).map(letter=><p key={letter} style={{whiteSpace:"pre-wrap",margin:"5px 0"}}><b>{letter}.</b> {result.deep_explanation?.option_analysis[letter]}</p>)}</div><div><strong>Example</strong><p style={{whiteSpace:"pre-wrap",margin:"5px 0"}}>{result.deep_explanation.example}</p></div><div><strong>MPSC/UPSC exam takeaways</strong><ul>{result.deep_explanation.exam_takeaways.map((point,i)=><li key={i}>{point}</li>)}</ul></div><div><strong>Memory aid</strong><p style={{whiteSpace:"pre-wrap",margin:"5px 0"}}>{result.deep_explanation.memory_aid}</p></div>{result.deep_explanation.caution&&<p className="muted" style={{whiteSpace:"pre-wrap",margin:0}}>{result.deep_explanation.caution}</p>}</div></div>}</article>;})}</div>
+   <div style={{display:"grid",gap:14,marginTop:16}}>
+    {questions.map((q,index)=>{
+     const result=results?.find(r=>r.question_id===q.id);
+     const options={A:q.option_a,B:q.option_b,C:q.option_c,D:q.option_d};
+     return (
+      <article key={q.id} style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:16}}>
+       <div style={{display:"flex",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><strong>Q{index+1}</strong><span className="eyebrow">{q.difficulty}</span></div>
+       <h3 style={{whiteSpace:"pre-wrap"}}>{q.question_text}</h3>
+       <div style={{display:"grid",gap:8}}>
+        {(["A","B","C","D"] as const).map(letter=>{
+         const correct=result?.correct_answer===letter;
+         const wrong=result?.selected_answer===letter&&!result.correct;
+         return <label key={letter} style={{display:"flex",alignItems:"flex-start",gap:10,padding:10,border:"1px solid "+(correct?"#86efac":wrong?"#fca5a5":"var(--border,#d8dee8)"),borderRadius:9,background:correct?"#f0fdf4":wrong?"#fff1f2":"transparent"}}>
+          <input type="radio" name={q.id} value={letter} disabled={!!results||working} checked={(answers[q.id]||"")===letter} onChange={()=>setAnswers(old=>({...old,[q.id]:letter}))}/>
+          <span><strong>{letter}.</strong> {options[letter]}{correct?" ✓ Correct answer":""}{wrong?" — Your answer":""}</span>
+         </label>;
+        })}
+       </div>
+       {result && <div style={{marginTop:12,padding:12,background:"var(--surface,#f7f7f7)",borderRadius:8}}>
+        <strong>Basic explanation</strong><p style={{whiteSpace:"pre-wrap",marginBottom:6}}>{result.explanation}</p>
+        {result.source_reference && <small className="muted">Source: {result.source_reference}</small>}
+        {result.deep_explanation && <div style={{marginTop:14,display:"grid",gap:10}}>
+         <h4 style={{margin:"4px 0"}}>AI in-depth explanation</h4>
+         <div><strong>Concept</strong><p>{result.deep_explanation.concept}</p></div>
+         <div><strong>Detailed explanation</strong><p style={{whiteSpace:"pre-wrap"}}>{result.deep_explanation.detailed_explanation}</p></div>
+         <div><strong>Why each option is right or wrong</strong>{(["A","B","C","D"] as const).map(letter=><p key={letter}><b>{letter}.</b> {result.deep_explanation?.option_analysis[letter]}</p>)}</div>
+         <div><strong>Example</strong><p>{result.deep_explanation.example}</p></div>
+         <div><strong>MPSC/UPSC exam takeaways</strong><ul>{result.deep_explanation.exam_takeaways.map((point,i)=><li key={i}>{point}</li>)}</ul></div>
+         <div><strong>Memory aid</strong><p>{result.deep_explanation.memory_aid}</p></div>
+         {result.deep_explanation.caution && <p className="muted">{result.deep_explanation.caution}</p>}
+        </div>}
+       </div>}
+      </article>
+     );
+    })}
+   </div>
    {!results?<button className="primary" style={{marginTop:18,width:"100%"}} disabled={working||!questions.length} onClick={()=>void submit()}>{working?"Checking answers…":"Submit answers and view results"}</button>:<div style={{display:"grid",gap:10,marginTop:18}}><button className="primary" style={{width:"100%"}} disabled={explanationWorking} onClick={()=>void generateDeepExplanations()}>{explanationWorking?"Generating in-depth explanations…":results.some(r=>r.deep_explanation)?"Regenerate AI explanations":"Generate in-depth AI explanations for all questions"}</button><button className="secondary" onClick={()=>{setBank(null);setQuestions([]);setResults(null);setScore(null);setAnswers({});}}>Finish practice</button></div>}
   </section>}
  </section></main>;
