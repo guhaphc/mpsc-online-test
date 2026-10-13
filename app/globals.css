@@ -1885,3 +1885,24 @@ svg {
   .qb-studio-card details { padding: 10px !important; }
   .qb-studio-difficulty label { padding: 7px; }
 }
+
+
+/* Question editor fields: prevent labels and controls colliding on mobile */
+.qb-question-card { display:grid; gap:14px; min-width:0; }
+.qb-question-card label { display:grid; align-content:start; gap:7px; min-width:0; color:var(--ink,#172033); font-size:14px; font-weight:650; line-height:1.35; }
+.qb-question-card input:not([type="checkbox"]), .qb-question-card select, .qb-question-card textarea { display:block; box-sizing:border-box; width:100%; max-width:100%; min-width:0; min-height:44px; padding:11px 12px; border:1px solid #d5dce6; border-radius:10px; background:#fff; color:#172033; font:inherit; font-size:16px; line-height:1.45; }
+.qb-question-card textarea { min-height:96px; resize:vertical; white-space:pre-wrap; overflow-wrap:anywhere; }
+.qb-question-head { align-items:center; }
+.qb-question-head > strong { font-size:18px; }
+.qb-question-head > label { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:8px; }
+.qb-question-head > label select { min-width:130px; }
+.qb-question-options, .qb-question-meta { min-width:0; }
+@media (max-width:600px) {
+ .qb-question-card { gap:12px; padding:12px !important; }
+ .qb-question-head { display:grid !important; grid-template-columns:minmax(0,1fr); align-items:stretch; gap:10px !important; }
+ .qb-question-head > label { grid-template-columns:minmax(0,1fr); gap:6px; }
+ .qb-question-head > label select { min-width:0; width:100%; }
+ .qb-question-options, .qb-question-meta { grid-template-columns:minmax(0,1fr) !important; gap:12px !important; }
+ .qb-question-card textarea { min-height:86px; }
+ .qb-question-card label { font-size:13px; }
+}
