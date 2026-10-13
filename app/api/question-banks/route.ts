@@ -129,9 +129,9 @@ export async function GET(req: NextRequest) {
     const { data: questions, error: qError } = await ctx.db.from("mpsc_ai_question_bank_items").select("*").eq("bank_id", bankId).order("question_order");
     if (qError) return fail("Could not load questions.", 500);
     const safeQuestions = student ? (questions || []).map((q) => ({ id: q.id, question_order: q.question_order, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d, difficulty: q.difficulty, source_reference: q.source_reference })) : (questions || []);
-    return NextResponse.json({ bank: { id: bank.id, title: bank.title, exam: bank.exam, subject: bank.subject, topic: bank.topic, language: bank.language, source_type: bank.source_type, source_name: bank.source_name, source_mode: bank.source_mode, created_by: bank.created_by, status: bank.status, created_at: bank.created_at }, questions: safeQuestions });
+    return NextResponse.json({ bank: { id: bank.id, title: bank.title, exam: bank.exam, subject: bank.subject, topic: bank.topic, language: bank.language, source_type: bank.source_type, source_name: bank.source_name, source_mode: bank.source_mode, created_by: bank.created_by, status: bank.status, created_at: bank.created_at, time_limit_minutes: bank.time_limit_minutes || 30, scheduled_publish_at: bank.scheduled_publish_at || null }, questions: safeQuestions });
   }
-  let query = ctx.db.from("mpsc_ai_question_banks").select("id,title,exam,subject,topic,language,source_type,source_name,source_mode,created_by,status,created_at,updated_at,published_at").order("created_at", { ascending: false }).limit(100);
+  let query = ctx.db.from("mpsc_ai_question_banks").select("id,title,exam,subject,topic,language,source_type,source_name,source_mode,created_by,status,created_at,updated_at,published_at,time_limit_minutes,scheduled_publish_at").order("created_at", { ascending: false }).limit(100);
   if (student) query = query.eq("status", "published");
   else if (!admin(ctx.role)) query = query.eq("created_by", ctx.user.id);
   const { data, error } = await query;
@@ -220,6 +220,14 @@ export async function PATCH(req: NextRequest) {
     if (!bank) return fail("Question bank not found.",404);
     if (!admin(ctx.role) && (!creator(ctx.role) || bank.created_by !== ctx.user.id)) return fail("You cannot manage this question bank.",403);
     const action = String(body.action || "save");
+    if (action === "bank_settings") {
+      if (bank.status !== "draft") return fail("Test settings can only be changed while the bank is a draft.", 409);
+      const minutes = Number(body.time_limit_minutes);
+      if (!Number.isInteger(minutes) || minutes < 1 || minutes > 300) return fail("Time limit must be between 1 and 300 minutes.");
+      const { error: settingsError } = await ctx.db.from("mpsc_ai_question_banks").update({time_limit_minutes:minutes,updated_at:new Date().toISOString()}).eq("id",bankId);
+      if (settingsError) return fail("Could not save test settings.",500);
+      return NextResponse.json({success:true,time_limit_minutes:minutes});
+    }
     if (action === "publish" || action === "reject") {
       if (!admin(ctx.role)) return fail("Only an administrator can approve and publish question banks.",403);
       if (bank.status !== "pending_review") return fail("Only submitted question banks can be approved or rejected.",409);
