@@ -1685,3 +1685,203 @@ svg {
 @media (max-height: 760px) and (max-width: 760px) {
   .auth-photo-hero { min-height: 138px; }
 }
+
+
+/* AI Question Bank Studio — responsive mobile-first layout */
+.qb-studio-page {
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(12px, 3vw, 28px);
+}
+.qb-studio-card {
+  width: 100%;
+  max-width: 1050px !important;
+  min-width: 0;
+  padding: clamp(16px, 3vw, 28px);
+  overflow: hidden;
+}
+.qb-studio-card > header {
+  align-items: flex-start;
+}
+.qb-studio-card h1 {
+  font-size: clamp(27px, 4vw, 38px);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.qb-studio-card p {
+  overflow-wrap: anywhere;
+}
+.qb-studio-form,
+.qb-studio-form > div,
+.qb-studio-fields,
+.qb-studio-source,
+.qb-studio-difficulty {
+  min-width: 0;
+}
+.qb-studio-form label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-width: 0;
+  color: var(--ink, #172033);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.qb-studio-form input:not([type="file"]),
+.qb-studio-form select,
+.qb-studio-form textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 12px;
+  border: 1px solid #d5dce6;
+  border-radius: 10px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.qb-studio-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+.qb-studio-form input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+.qb-studio-form input[type="file"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 14px;
+  color: #667085;
+}
+.qb-studio-form input[type="file"]::file-selector-button {
+  max-width: 100%;
+  margin: 0 10px 8px 0;
+  padding: 10px 12px;
+  border: 1px solid #d5dce6;
+  border-radius: 9px;
+  background: #f7f9fc;
+  color: #172033;
+  font: inherit;
+  font-weight: 700;
+}
+.qb-studio-source {
+  display: grid;
+  gap: 14px;
+  padding: clamp(12px, 2.5vw, 18px) !important;
+  background: #fbfcfe;
+}
+.qb-studio-source > strong {
+  font-size: 16px;
+}
+.qb-studio-source label {
+  margin-top: 0 !important;
+}
+.qb-studio-source small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+}
+.qb-studio-difficulty label {
+  padding: 10px;
+  border: 1px solid #e3e8ef;
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.qb-studio-card details,
+.qb-studio-card article,
+.qb-studio-card section {
+  min-width: 0;
+}
+.qb-studio-card details > summary {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.qb-studio-card button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .qb-studio-page {
+    display: block;
+    min-height: 100svh;
+    padding: 10px;
+  }
+  .qb-studio-card {
+    padding: 16px 13px;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(23, 32, 51, .06);
+  }
+  .qb-studio-card > header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px !important;
+    margin-bottom: 18px !important;
+  }
+  .qb-studio-card > header > button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .qb-studio-card h1 {
+    margin-top: 5px;
+    font-size: clamp(26px, 7.4vw, 34px);
+  }
+  .qb-studio-card .muted {
+    font-size: 14px;
+  }
+  .qb-studio-card details {
+    padding: 13px !important;
+    border-radius: 13px !important;
+  }
+  .qb-studio-card details > summary {
+    font-size: 17px !important;
+  }
+  .qb-studio-fields {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 13px !important;
+  }
+  .qb-studio-form label {
+    font-size: 13px;
+  }
+  .qb-studio-form input:not([type="file"]),
+  .qb-studio-form select,
+  .qb-studio-form textarea {
+    min-height: 46px;
+    padding: 11px 12px;
+    font-size: 16px;
+  }
+  .qb-studio-form textarea {
+    min-height: 132px;
+  }
+  .qb-studio-source {
+    gap: 13px;
+  }
+  .qb-studio-difficulty {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .qb-studio-difficulty label {
+    padding: 9px;
+    font-size: 12px;
+  }
+  .qb-studio-card .primary,
+  .qb-studio-card .secondary {
+    min-height: 46px;
+  }
+  .qb-studio-card section[style*="border"] {
+    padding: 13px !important;
+  }
+}
+@media (max-width: 360px) {
+  .qb-studio-page { padding: 7px; }
+  .qb-studio-card { padding: 13px 10px; }
+  .qb-studio-card details { padding: 10px !important; }
+  .qb-studio-difficulty label { padding: 7px; }
+}
