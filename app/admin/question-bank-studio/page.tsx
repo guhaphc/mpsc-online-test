@@ -149,13 +149,13 @@ export default function QuestionBankStudioPage() {
       <div className="eyebrow">3 · REVIEW & PUBLISH</div><h2>{selectedBank.title}</h2>
       <p className="muted">{selectedBank.source_type.toUpperCase()} · {selectedBank.source_name} · {selectedBank.source_mode==="source_only"?"Source only":"Source + AI knowledge"} · Status: <strong>{selectedBank.status.replace("_"," ")}</strong></p>
       {items.length===0?<p className="muted">No saved questions.</p>:<div style={{display:"grid",gap:14}}>
-        {items.map((q,index)=><article key={q.id} style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:14}}>
-          <div style={{display:"flex",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><strong>Question {index+1}</strong><label>Difficulty<select disabled={!canEdit} value={q.difficulty} onChange={e=>editItem(q.id,"difficulty",e.target.value)}>{["Easy","Moderate","Tough","Extra Tough"].map(d=><option key={d}>{d}</option>)}</select></label></div>
+        {items.map((q,index)=><article className="qb-question-card" key={q.id} style={{border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:14}}>
+          <div className="qb-question-head" style={{display:"flex",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}><strong>Question {index+1}</strong><label>Difficulty<select disabled={!canEdit} value={q.difficulty} onChange={e=>editItem(q.id,"difficulty",e.target.value)}>{["Easy","Moderate","Tough","Extra Tough"].map(d=><option key={d}>{d}</option>)}</select></label></div>
           <label>Question<textarea rows={3} disabled={!canEdit} value={q.question_text} onChange={e=>editItem(q.id,"question_text",e.target.value)}/></label>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
+          <div className="qb-question-options" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
             {(["option_a","option_b","option_c","option_d"] as const).map((key,i)=><label key={key}>Option {String.fromCharCode(65+i)}<textarea rows={2} disabled={!canEdit} value={q[key]} onChange={e=>editItem(q.id,key,e.target.value)}/></label>)}
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
+          <div className="qb-question-meta" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10}}>
             <label>Correct answer<select disabled={!canEdit} value={q.correct_answer} onChange={e=>editItem(q.id,"correct_answer",e.target.value)}>{["A","B","C","D"].map(x=><option key={x}>{x}</option>)}</select></label>
             <label>Source reference<input disabled={!canEdit} value={q.source_reference||""} onChange={e=>editItem(q.id,"source_reference",e.target.value)}/></label>
           </div>
