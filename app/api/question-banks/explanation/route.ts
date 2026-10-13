@@ -23,6 +23,32 @@ async function getStudent(request: NextRequest) {
   return { db };
 }
 
+export async function GET(request: NextRequest) {
+  const ctx = await getStudent(request);
+  if ("error" in ctx) return ctx.error;
+  const bankId = request.nextUrl.searchParams.get("bank_id") || "";
+  if (!/^[0-9a-f-]{36}$/i.test(bankId)) return NextResponse.json({ error: "A valid question bank is required." }, { status: 400 });
+  const { data: bank } = await ctx.db.from("mpsc_ai_question_banks").select("id,language,status").eq("id", bankId).eq("status", "published").maybeSingle();
+  if (!bank) return NextResponse.json({ error: "Published question bank not found." }, { status: 404 });
+  const { data: questions, error } = await ctx.db.from("mpsc_ai_question_bank_items").select("id,question_text,option_a,option_b,option_c,option_d,correct_answer,explanation,difficulty,source_reference").eq("bank_id", bankId);
+  if (error) return NextResponse.json({ error: "Could not load question explanations." }, { status: 500 });
+  const ids = (questions || []).map(q => q.id);
+  if (!ids.length) return NextResponse.json({ explanations: {} });
+  const { data: rows, error: cacheError } = await ctx.db.from("mpsc_ai_question_explanations").select("question_id,language,question_fingerprint,explanation_version,explanation").in("question_id", ids).eq("language", String(bank.language || "English")).eq("explanation_version", 1);
+  if (cacheError) return NextResponse.json({ error: "Could not load saved explanations." }, { status: 500 });
+  const byId: Record<string, unknown> = {};
+  for (const q of questions || []) {
+    const fingerprint = createHash("sha256").update(JSON.stringify({
+      question_text: q.question_text, option_a: q.option_a, option_b: q.option_b,
+      option_c: q.option_c, option_d: q.option_d, correct_answer: q.correct_answer,
+      explanation: q.explanation, difficulty: q.difficulty, source_reference: q.source_reference
+    })).digest("hex");
+    const saved = (rows || []).find(row => row.question_id === q.id && row.question_fingerprint === fingerprint);
+    if (saved?.explanation) byId[String(q.id)] = saved.explanation;
+  }
+  return NextResponse.json({ explanations: byId });
+}
+
 export async function POST(request: NextRequest) {
   const ctx = await getStudent(request);
   if ("error" in ctx) return ctx.error;
