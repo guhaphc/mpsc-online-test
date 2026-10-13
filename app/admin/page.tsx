@@ -228,6 +228,16 @@ export default function AdminPage() {
         </div>
         <div className="admin-tools">
           <div>
+            <strong>AI Question Bank Studio</strong>
+            <span>Generate MCQs from PDFs, images, webpages or text; review teacher drafts and publish approved banks.</span>
+          </div>
+          <button className="secondary" onClick={() => router.push("/admin/question-bank-studio")}>
+            Open Question Bank Studio
+          </button>
+        </div>
+
+        <div className="admin-tools">
+          <div>
             <strong>Current Affairs & Important Information</strong>
             <span>Add, edit, publish and remove subject-wise current affairs for students.</span>
           </div>
