@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
   }
   let query = ctx.db.from("mpsc_ai_question_banks").select("id,title,exam,subject,topic,language,source_type,source_name,source_mode,created_by,status,created_at,updated_at,published_at,time_limit_minutes,scheduled_publish_at").order("created_at", { ascending: false }).limit(100);
   if (student) query = query.eq("status", "published");
-  else if (!admin(ctx.role)) query = query.eq("created_by", ctx.user.id);
+  else { query = query.neq("status", "archived"); if (!admin(ctx.role)) query = query.eq("created_by", ctx.user.id); }
   const { data, error } = await query;
   if (error) return fail("Could not load question banks. Apply the Question Bank Studio migration first.", 500);
   return NextResponse.json({ banks: data || [] });
@@ -220,8 +220,20 @@ export async function PATCH(req: NextRequest) {
     if (!bank) return fail("Question bank not found.",404);
     if (!admin(ctx.role) && (!creator(ctx.role) || bank.created_by !== ctx.user.id)) return fail("You cannot manage this question bank.",403);
     const action = String(body.action || "save");
+    if (action === "unpublish") {
+      if (bank.status !== "published") return fail("Only a published question bank can be unpublished.", 409);
+      const { error } = await ctx.db.from("mpsc_ai_question_banks").update({status:"unpublished",published_at:null,updated_at:new Date().toISOString()}).eq("id",bankId);
+      if (error) return fail("Could not unpublish this question bank.",500);
+      return NextResponse.json({success:true,status:"unpublished",attempt_history_preserved:true});
+    }
+    if (action === "archive") {
+      if (bank.status === "archived") return fail("This question bank has already been deleted.", 409);
+      const { error } = await ctx.db.from("mpsc_ai_question_banks").update({status:"archived",published_at:null,updated_at:new Date().toISOString()}).eq("id",bankId);
+      if (error) return fail("Could not delete this question bank.",500);
+      return NextResponse.json({success:true,status:"archived",attempt_history_preserved:true});
+    }
     if (action === "bank_settings") {
-      if (bank.status !== "draft") return fail("Test settings can only be changed while the bank is a draft.", 409);
+      if (!["draft","unpublished"].includes(bank.status)) return fail("Test settings can only be changed while the bank is a draft or unpublished.", 409);
       const minutes = Number(body.time_limit_minutes);
       if (!Number.isInteger(minutes) || minutes < 1 || minutes > 300) return fail("Time limit must be between 1 and 300 minutes.");
       const { error: settingsError } = await ctx.db.from("mpsc_ai_question_banks").update({time_limit_minutes:minutes,updated_at:new Date().toISOString()}).eq("id",bankId);
@@ -236,7 +248,7 @@ export async function PATCH(req: NextRequest) {
       if (error) return fail("Could not update publication status.",500);
       return NextResponse.json({success:true,status});
     }
-    if (bank.status === "published" || bank.status === "rejected") return fail("Published or rejected banks cannot be edited.",409);
+    if (["published","rejected","archived"].includes(bank.status)) return fail("Published, rejected or deleted banks cannot be edited.",409);
     if (action === "submit") {
       const {count,error} = await ctx.db.from("mpsc_ai_question_bank_items").select("id",{count:"exact",head:true}).eq("bank_id",bankId);
       if (error || !count) return fail("The bank must contain questions before submission.");

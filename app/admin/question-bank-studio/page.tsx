@@ -131,6 +131,20 @@ export default function QuestionBankStudioPage() {
     }catch(e){setError(e instanceof Error?e.message:"Could not save edits.");}
     finally{setWorking(false);}
   }
+  async function manageBank(bank:Bank, action:"unpublish"|"archive") {
+    const message = action==="unpublish"
+      ? `Unpublish “${bank.title}”? Students will no longer be able to start this test. Existing attempt history and saved explanations will be preserved. You can submit it for approval again later.`
+      : `Delete “${bank.title}” from the active question-bank list? It will be archived, not physically erased, so existing student scores and attempt history remain intact. This cannot be undone from this screen.`;
+    if(!window.confirm(message))return;
+    setWorking(true);setError("");setNotice("");
+    try {
+      await api("/api/question-banks",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({bank_id:bank.id,action})});
+      if(selectedId===bank.id){setSelectedId("");setSelectedBank(null);setItems([]);setRevisions([]);}
+      setNotice(action==="unpublish"?"Question bank unpublished. Student access is disabled; history is preserved.":"Question bank deleted from the active list. Student history is preserved.");
+      await loadBanks();
+    }catch(e){setError(e instanceof Error?e.message:"Could not update this question bank.");}
+    finally{setWorking(false);}
+  }
   async function doAction(action:string) {
     if(!selectedBank)return;
     const label=action==="submit"?"Submit this bank for admin approval?":action==="publish"?"Publish this bank to students?":"Reject this bank?";
@@ -143,7 +157,7 @@ export default function QuestionBankStudioPage() {
     }catch(e){setError(e instanceof Error?e.message:"Could not update status.");}
     finally{setWorking(false);}
   }
-  const canEdit=!!selectedBank&&(selectedBank.status==="draft"||(role==="admin"&&selectedBank.status==="pending_review"))&&(role==="admin"||selectedBank.created_by===banks.find(b=>b.id===selectedBank.id)?.created_by);
+  const canEdit=!!selectedBank&&(["draft","unpublished"].includes(selectedBank.status)||(role==="admin"&&selectedBank.status==="pending_review"))&&(role==="admin"||selectedBank.created_by===banks.find(b=>b.id===selectedBank.id)?.created_by);
   const isAdmin=role==="admin";
 
   return <main className="page qb-studio-page"><section className="card qb-studio-card" style={{maxWidth:1050,margin:"0 auto"}}>
@@ -198,9 +212,15 @@ export default function QuestionBankStudioPage() {
     <section style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16,marginBottom:20}}>
       <h2>3 · Saved question banks</h2>
       {loading?<p>Loading…</p>:banks.length===0?<p className="muted">No question banks yet.</p>:<div style={{display:"grid",gap:8}}>
-        {banks.map(bank=><button type="button" key={bank.id} className={selectedId===bank.id?"primary":"secondary"} onClick={()=>void loadBank(bank.id)} style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"center",textAlign:"left",padding:12}}>
-          <span><strong>{bank.title}</strong><small style={{display:"block",fontWeight:400,marginTop:4}}>{bank.exam} · {bank.subject}{bank.topic?" · "+bank.topic:""} · {new Date(bank.created_at).toLocaleDateString()}</small></span><span>{bank.status.replace("_"," ")}</span>
-        </button>)}
+        {banks.map(bank=><article key={bank.id} className="qb-saved-bank" style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",border:"1px solid var(--border,#d8dee8)",borderRadius:12,padding:12}}>
+          <button type="button" className={selectedId===bank.id?"primary":"secondary"} onClick={()=>void loadBank(bank.id)} style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"center",textAlign:"left",padding:8,flex:"1 1 220px",minWidth:0}}>
+            <span style={{minWidth:0,overflowWrap:"anywhere"}}><strong>{bank.title}</strong><small style={{display:"block",fontWeight:400,marginTop:4}}>{bank.exam} · {bank.subject}{bank.topic?" · "+bank.topic:""} · {new Date(bank.created_at).toLocaleDateString()}</small></span><span className={"qb-status-badge qb-status-"+bank.status}>{bank.status.replace("_"," ")}</span>
+          </button>
+          <div className="qb-bank-actions" style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {bank.status==="published"&&<button type="button" className="secondary" disabled={working} onClick={()=>void manageBank(bank,"unpublish")}>Unpublish</button>}
+            <button type="button" className="secondary" disabled={working} onClick={()=>void manageBank(bank,"archive")} aria-label={"Delete "+bank.title}>Delete</button>
+          </div>
+        </article>)}
       </div>}
     </section>
     {selectedBank&&<section style={{border:"1px solid var(--border,#d8dee8)",borderRadius:14,padding:16}}>
@@ -237,7 +257,7 @@ export default function QuestionBankStudioPage() {
       </div>}
       {canEdit&&<div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}><button className="secondary" disabled={working} onClick={()=>void saveItems()}>Save edits</button><button className="primary" disabled={working||!items.length} onClick={()=>void doAction("submit")}>Submit for admin approval</button></div>}
       {isAdmin&&selectedBank.status==="pending_review"&&<div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}><button className="primary" disabled={working||!items.length} onClick={()=>void doAction("publish")}>Approve & publish to students</button><button className="secondary" disabled={working} onClick={()=>void doAction("reject")}>Reject bank</button></div>}
-      {selectedBank.status==="published"&&<p className="form-success">Published and visible to students.</p>}
+      {selectedBank.status==="published"&&<div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}><p className="form-success" style={{margin:0}}>Published and visible to students.</p><button type="button" className="secondary" disabled={working} onClick={()=>void manageBank(selectedBank,"unpublish")}>Unpublish this bank</button></div>}
     </section>}
   </section></main>;
 }
